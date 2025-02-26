@@ -1,0 +1,20 @@
+{
+  "name": "chessfield",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write .",
+    "check-format": "prettier --check .",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "prettier": "^3.5.2",
+    "@types/three": "^0.173.0",
+    "three": "^0.173.0",
+    "typescript": "~5.7.3",
+    "vite": "^6.2.0"
+  }
+}
