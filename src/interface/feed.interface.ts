@@ -1,5 +1,5 @@
 export interface LichessTvFeed {
-  t: 'fen' | 'featured';
+  t: "fen" | "featured";
   d: {
     fen: string;
     lm: string;

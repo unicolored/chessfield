@@ -1,11 +1,11 @@
-import * as THREE from 'three';
-import { BufferGeometry, Group } from 'three';
-import FenParser from '@chess-fu/fen-parser';
-import { PieceProvider } from './piece.provider';
-import {LichessMoves} from "../interface/lichess.interface.ts";
-import {GLTF, GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {letters, PieceKey, PiecesEnum} from "../interface/board.interface.ts";
-import {Store} from "./store.ts";
+import * as THREE from "three";
+import { BufferGeometry, Group } from "three";
+import FenParser from "@chess-fu/fen-parser";
+import { PieceProvider } from "./piece.provider";
+import { LichessMoves } from "../interface/lichess.interface.ts";
+import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { letters, PieceKey, PiecesEnum } from "../interface/board.interface.ts";
+import { Store } from "./store.ts";
 
 export class GameProvider {
   // pieceProvider = inject(PieceProvider);
@@ -14,15 +14,12 @@ export class GameProvider {
 
   private loader: GLTFLoader;
 
-  constructor(
-      private store: Store
-  ) {
+  constructor(private store: Store) {
     this.loader = new GLTFLoader();
-
   }
 
-  initGamePieces(jsonData: LichessMoves)  {
-    let activeFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  initGamePieces(jsonData: LichessMoves) {
+    let activeFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     if (jsonData) {
       jsonData.moves.forEach((d) => {
@@ -36,13 +33,14 @@ export class GameProvider {
 
     const gamePiecesMap = new Map<string, Group>();
 
-    const whiteKeys = Array.from('RNBQKP');
+    const whiteKeys = Array.from("RNBQKP");
 
     let fenParsed = new FenParser(activeFen);
 
     if (!fenParsed) {
       if (jsonData) {
-        const fen = jsonData.moves?.pop()?.fen ?? jsonData.moves?.pop()?.initialFen;
+        const fen =
+          jsonData.moves?.pop()?.fen ?? jsonData.moves?.pop()?.initialFen;
         if (fen) {
           fenParsed = new FenParser(fen);
         }
@@ -52,11 +50,10 @@ export class GameProvider {
     fenParsed?.ranks.forEach((rank: string, index: number) => {
       const rankIndex = 8 - index;
       Array.from(rank).forEach(async (pieceStr: string, index: number) => {
-        if (pieceStr !== '-' && pieceStr in PiecesEnum) {
+        if (pieceStr !== "-" && pieceStr in PiecesEnum) {
           const coord = `${letters[index]}${rankIndex}`;
 
-          const color = whiteKeys.includes(pieceStr) ? 'white' : 'black';
-          // const piece = this.getOnePiece(pieceStr as PieceKey, color);
+          const color = whiteKeys.includes(pieceStr) ? "white" : "black";
           // const piece = await this.getOnePieceGltf(pieceStr as PieceKey, color);
           const piece = await this.getOnePiece(pieceStr as PieceKey, color);
           gamePiecesMap.set(coord, piece);
@@ -64,11 +61,13 @@ export class GameProvider {
       });
     });
 
-    // this.gamePiecesSignal.set(gamePiecesMap);
     this.store.updategamePieces(gamePiecesMap);
-}
+  }
 
-  public async getOnePieceGltf(pieceKey: PieceKey, color: 'white' | 'black' = 'white'): Promise<Group> {
+  public async getOnePieceGltf(
+    pieceKey: PieceKey,
+    color: "white" | "black" = "white",
+  ): Promise<Group> {
     const pieceGroup = new THREE.Group();
     console.log(color);
 
@@ -92,12 +91,12 @@ export class GameProvider {
 
     console.log(pieceKey);
     const piecesUrl = new Map();
-    piecesUrl.set(PiecesEnum.p, './../../../assets/pawn.glb');
-    piecesUrl.set(PiecesEnum.q, './../../../assets/queen.glb');
-    piecesUrl.set(PiecesEnum.k, './../../../assets/king.glb');
-    piecesUrl.set(PiecesEnum.n, './../../../assets/knight.glb');
-    piecesUrl.set(PiecesEnum.b, './../../../assets/bishop.glb');
-    piecesUrl.set(PiecesEnum.r, './../../../assets/rook.glb');
+    piecesUrl.set(PiecesEnum.p, "./../../../assets/pawn.glb");
+    piecesUrl.set(PiecesEnum.q, "./../../../assets/queen.glb");
+    piecesUrl.set(PiecesEnum.k, "./../../../assets/king.glb");
+    piecesUrl.set(PiecesEnum.n, "./../../../assets/knight.glb");
+    piecesUrl.set(PiecesEnum.b, "./../../../assets/bishop.glb");
+    piecesUrl.set(PiecesEnum.r, "./../../../assets/rook.glb");
 
     if (piecesUrl.has(piece)) {
       const group = await this.loadGLTF(piecesUrl.get(piece));
@@ -120,11 +119,14 @@ export class GameProvider {
     return pieceGroup;
   }
 
-  public getOnePiece(pieceKey: PieceKey, color: 'white' | 'black' = 'white'): Group {
+  public getOnePiece(
+    pieceKey: PieceKey,
+    color: "white" | "black" = "white",
+  ): Group {
     const pieceGroup = new THREE.Group();
     // Create and add a cylinder to the scene
     const pieceMaterial =
-      color === 'white'
+      color === "white"
         ? new THREE.MeshPhongMaterial({
             color: 0xdddddd,
             specular: 0x474747,
