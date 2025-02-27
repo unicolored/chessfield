@@ -1,5 +1,6 @@
 import { LichessTvFeed } from '../interface/feed.interface.ts';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
+// @ts-ignore
 import { StreamService } from '../service/stream.service.ts';
 import FenParser from '@chess-fu/fen-parser';
 import { LichessMoves } from '../interface/lichess.interface.ts';
@@ -12,31 +13,11 @@ export class MainController {
   constructor(
     private store: Store,
     private gameProvider: GameProvider,
-    private board: HTMLDivElement,
-    private config: ChessfieldConfig,
-  ) {
-    // // const stream = fetch('https://lichess.org/api/games/user/neio',{headers:{Accept:'application/x-ndjson'}});
-    // StreamService.listenToNdjsonStream('https://lichess.org/api/tv/feed').subscribe({
-    //     next: (data: LichessTvFeed) => {
-    //         // this.items.push(data); // Add new data to the array
-    //         if (data.t === 'fen') {
-    //             this.updateFen(data.d.fen);
-    //         }
-    //     },
-    //     error: (err) => {
-    //         console.error('Stream error:', err);
-    //     },
-    //     complete: () => {
-    //         console.log('Stream completed');
-    //     },
-    // });
-  }
-
-  onSubmit(): void {
-    // const fen = this.optionsForm.value.fen;
-    const fen = '';
-    this.updateFen(fen);
-  }
+    // @ts-ignore
+    private board: HTMLElement,
+    // @ts-ignore
+    private config?: ChessfieldConfig,
+  ) {}
 
   updateFen(fen: string | null | undefined) {
     if (fen && FenParser.isFen(fen)) {
