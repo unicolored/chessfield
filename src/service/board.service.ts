@@ -1,10 +1,10 @@
-import { Group, Vector3 } from "three";
-import * as THREE from "three";
-import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
-import { Font } from "three/examples/jsm/loaders/FontLoader.js";
-import { letters } from "../interface/board.interface.ts";
-import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
-import { Store } from "../provider/store.ts";
+import { Group, Vector3 } from 'three';
+import * as THREE from 'three';
+import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
+import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
+import { letters } from '../interface/board.interface.ts';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { Store } from '../provider/store.ts';
 
 export class BoardService {
   // updatePos = signal<boolean>(false);
@@ -18,12 +18,12 @@ export class BoardService {
     directLight.castShadow = false;
     directLight.position.set(1, 2, 1);
     lightGroup.add(directLight); // Add the target to the scene
-    gui.add(directLight, "intensity", 0, 200);
+    gui.add(directLight, 'intensity', 0, 200);
 
     // Add cone light with shadow map
     const coneLight = new THREE.SpotLight(0xffffff, 100);
     coneLight.position.set(3, 10, 0); // Position above the scene
-    gui.add(coneLight, "intensity", 0, 200);
+    gui.add(coneLight, 'intensity', 0, 200);
 
     // Define the target of the light (e.g., center of chessboard)
     const target = new THREE.Object3D();
@@ -52,7 +52,7 @@ export class BoardService {
     // lightGroup.add(coneLightHelper);
 
     const light = new THREE.AmbientLight(0x404040, 25); // soft white light
-    gui.add(light, "intensity", 0, 100);
+    gui.add(light, 'intensity', 0, 100);
     lightGroup.add(light);
 
     return lightGroup;
@@ -167,7 +167,7 @@ export class BoardService {
 
         const caseGroup = new THREE.Group();
         caseGroup.name = coord;
-        caseGroup.userData["coord"] = coord;
+        caseGroup.userData['coord'] = coord;
 
         const geometry = new TextGeometry(coord, {
           font: font,
@@ -181,11 +181,7 @@ export class BoardService {
           // bevelSegments: 5
         });
 
-        const squareGeometry = new THREE.BoxGeometry(
-          squareSize,
-          squareHeight,
-          squareSize,
-        );
+        const squareGeometry = new THREE.BoxGeometry(squareSize, squareHeight, squareSize);
         const squareMaterial = new THREE.MeshPhongMaterial({
           color: (i + j) % 2 === 0 ? themes.blue.light : themes.blue.dark,
         });
@@ -194,11 +190,7 @@ export class BoardService {
         });
         const textMesh = new THREE.Mesh(geometry, textMaterial);
         const square = new THREE.Mesh(squareGeometry, squareMaterial);
-        square.position.set(
-          i - boardSize / 2 + 0.5,
-          squareHeight / 2,
-          j - boardSize / 2 + 0.5,
-        );
+        square.position.set(i - boardSize / 2 + 0.5, squareHeight / 2, j - boardSize / 2 + 0.5);
         square.castShadow = true;
         square.receiveShadow = true;
 
@@ -217,7 +209,7 @@ export class BoardService {
     this.store.updatepiecesPositions(piecesPositions);
 
     chessboardGroup.position.set(0, 0.5, 0);
-    chessboardGroup.name = "chessboard";
+    chessboardGroup.name = 'chessboard';
 
     return chessboardGroup;
   }

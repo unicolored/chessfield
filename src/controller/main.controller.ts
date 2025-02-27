@@ -1,10 +1,10 @@
-import { LichessTvFeed } from "../interface/feed.interface.ts";
-import { ChessfieldConfig } from "../resource/chessfield.config.ts";
-import { StreamService } from "../service/stream.service.ts";
-import FenParser from "@chess-fu/fen-parser";
-import { LichessMoves } from "../interface/lichess.interface.ts";
-import { GameProvider } from "../provider/game.provider.ts";
-import { Store } from "../provider/store.ts";
+import { LichessTvFeed } from '../interface/feed.interface.ts';
+import { ChessfieldConfig } from '../resource/chessfield.config.ts';
+import { StreamService } from '../service/stream.service.ts';
+import FenParser from '@chess-fu/fen-parser';
+import { LichessMoves } from '../interface/lichess.interface.ts';
+import { GameProvider } from '../provider/game.provider.ts';
+import { Store } from '../provider/store.ts';
 
 export class MainController {
   items: LichessTvFeed[] = [];
@@ -34,7 +34,7 @@ export class MainController {
 
   onSubmit(): void {
     // const fen = this.optionsForm.value.fen;
-    const fen = "";
+    const fen = '';
     this.updateFen(fen);
   }
 

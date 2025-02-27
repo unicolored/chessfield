@@ -1,22 +1,19 @@
-import { Observable, Subject } from "rxjs";
+import { Observable, Subject } from 'rxjs';
 
 export class StreamService {
   static listenToNdjsonStream(streamUrl: string): Observable<any> {
     const dataSubject = new Subject<any>();
 
     fetch(streamUrl)
-      .then((response) => {
+      .then(response => {
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error('Network response was not ok');
         }
         const reader = response.body!.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
 
-        const processStream = ({
-          done,
-          value,
-        }: ReadableStreamReadResult<Uint8Array>) => {
+        const processStream = ({ done, value }: ReadableStreamReadResult<Uint8Array>) => {
           if (done) {
             dataSubject.complete();
             return;
@@ -26,10 +23,10 @@ export class StreamService {
           buffer += decoder.decode(value, { stream: true });
 
           // Split by newlines and process each line
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || ""; // Keep incomplete line in buffer
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
-          lines.forEach((line) => {
+          lines.forEach(line => {
             if (line.trim()) {
               // Skip empty lines
               try {
@@ -48,7 +45,7 @@ export class StreamService {
         // Start reading
         reader.read().then(processStream);
       })
-      .catch((error) => dataSubject.error(error));
+      .catch(error => dataSubject.error(error));
 
     return dataSubject.asObservable();
   }

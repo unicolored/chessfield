@@ -1,13 +1,13 @@
-import "./style.css";
+import './style.css';
 
-import { ChessfieldConfig } from "./resource/chessfield.config.ts";
-import { MainController } from "./controller/main.controller.ts";
-import { GameProvider } from "./provider/game.provider.ts";
-import { Store } from "./provider/store.ts";
-import { BoardController } from "./controller/board.controller.ts";
-import { BoardService } from "./service/board.service.ts";
+import { ChessfieldConfig } from './resource/chessfield.config.ts';
+import { MainController } from './controller/main.controller.ts';
+import { GameProvider } from './provider/game.provider.ts';
+import { Store } from './provider/store.ts';
+import { BoardController } from './controller/board.controller.ts';
+import { BoardService } from './service/board.service.ts';
 
-const container = document.querySelector("div.chessfield") as HTMLDivElement;
+const container = document.querySelector('div.chessfield') as HTMLDivElement;
 
 if (container) {
   const store = new Store();
@@ -15,17 +15,12 @@ if (container) {
   const boardService = new BoardService(store);
 
   const config: ChessfieldConfig = {
-    orientation: "white",
-    fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    orientation: 'white',
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
     coordinates: false,
   };
 
-  const mainController = new MainController(
-    store,
-    gameProvider,
-    container,
-    config,
-  );
+  const mainController = new MainController(store, gameProvider, container, config);
   mainController.updateFen(config.fen);
 
   const boardController = new BoardController(store, boardService, container);
