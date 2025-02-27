@@ -1,8 +1,4 @@
-import {
-  PieceKey,
-  PiecesEnum,
-  PiecesTypes,
-} from "../interface/board.interface.ts";
+import { PieceKey, PiecesEnum, PiecesTypes } from '../interface/board.interface.ts';
 
 export class PieceProvider {
   static getPiece(pieceId: PieceKey): PiecesEnum {

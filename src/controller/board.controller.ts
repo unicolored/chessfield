@@ -1,10 +1,10 @@
-import * as THREE from "three";
-import { Group } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
-import { Store } from "../provider/store.ts";
-import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
-import { BoardService } from "../service/board.service.ts";
+import * as THREE from 'three';
+import { Group } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
+import { Store } from '../provider/store.ts';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { BoardService } from '../service/board.service.ts';
 
 export class BoardController {
   // board = viewChild<ElementRef>('board');
@@ -31,7 +31,7 @@ export class BoardController {
   }
 
   async animate() {
-    const canvas = document.createElement("canvas") as HTMLCanvasElement;
+    const canvas = document.createElement('canvas') as HTMLCanvasElement;
 
     const gui: GUI = new GUI();
 
@@ -40,12 +40,7 @@ export class BoardController {
       height: 500, // 500
     };
 
-    const camera = new THREE.PerspectiveCamera(
-      44,
-      sizes.width / sizes.height,
-      0.1,
-      100,
-    );
+    const camera = new THREE.PerspectiveCamera(44, sizes.width / sizes.height, 0.1, 100);
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
@@ -75,26 +70,23 @@ export class BoardController {
     scene.add(camera);
 
     let pG: Group;
-    new FontLoader().load(
-      "assets/helvetiker_regular.typeface.json",
-      (font: any) => {
-        const chessboardGroup = this.boardService.chessBoard(font);
+    new FontLoader().load('assets/helvetiker_regular.typeface.json', (font: any) => {
+      const chessboardGroup = this.boardService.chessBoard(font);
 
-        this.updateGamePositions().then((piecesGroup: Group) => {
-          pG = piecesGroup;
-          scene.add(piecesGroup);
-        });
+      this.updateGamePositions().then((piecesGroup: Group) => {
+        pG = piecesGroup;
+        scene.add(piecesGroup);
+      });
 
-        const debugGroup = this.boardService.debug();
+      const debugGroup = this.boardService.debug();
 
-        const lightGroup = this.boardService.light(gui);
-        const decorGroup = this.boardService.decor();
+      const lightGroup = this.boardService.light(gui);
+      const decorGroup = this.boardService.decor();
 
-        scene.add(debugGroup, lightGroup, decorGroup, chessboardGroup);
+      scene.add(debugGroup, lightGroup, decorGroup, chessboardGroup);
 
-        this.store.updatePos(true);
-      },
-    );
+      this.store.updatePos(true);
+    });
 
     const debugGroup = this.boardService.debug();
     scene.add(debugGroup);
@@ -106,7 +98,7 @@ export class BoardController {
       camera.updateProjectionMatrix();
     };
 
-    gui.add(camera, "fov", 1, 180, 1).onChange(updateCamera);
+    gui.add(camera, 'fov', 1, 180, 1).onChange(updateCamera);
 
     /**
      * Animate
@@ -117,7 +109,7 @@ export class BoardController {
       // const elapsedTime = clock.getElapsedTime();
       // console.log(elapsedTime)
 
-      this.store.updatePosSubject$.subscribe((updatePos) => {
+      this.store.updatePosSubject$.subscribe(updatePos => {
         if (updatePos) {
           if (pG) {
             scene.remove(pG);
@@ -145,12 +137,12 @@ export class BoardController {
 
   async updateGamePositions(): Promise<Group> {
     const piecesGroupe = new THREE.Group();
-    piecesGroupe.name = "pieces";
+    piecesGroupe.name = 'pieces';
     // const piecesPositions = this.pieceProvider.piecesPositionsComputed();
-    this.store.piecesPositionsSubject$.subscribe((piecesPositions) => {
+    this.store.piecesPositionsSubject$.subscribe(piecesPositions => {
       piecesPositions.forEach((value: any, key: any) => {
         // const piece = this.gameProvider.gamePiecesSignalComputed(key);
-        this.store.gamePiecesSubject$.subscribe((map) => {
+        this.store.gamePiecesSubject$.subscribe(map => {
           const piece = map.get(key);
           if (piece) {
             piece.position.copy(value);

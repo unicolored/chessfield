@@ -1,5 +1,5 @@
-import { BehaviorSubject, Observable } from "rxjs";
-import { Group, Vector3 } from "three";
+import { BehaviorSubject, Observable } from 'rxjs';
+import { Group, Vector3 } from 'three';
 
 export class Store {
   private updatePosSubject = new BehaviorSubject<boolean>(false);
@@ -8,20 +8,14 @@ export class Store {
     this.updatePosSubject.next(b);
   };
 
-  private gamePiecesSubject = new BehaviorSubject<Map<string, Group>>(
-    new Map(),
-  );
-  gamePiecesSubject$: Observable<Map<string, Group>> =
-    this.gamePiecesSubject.asObservable();
+  private gamePiecesSubject = new BehaviorSubject<Map<string, Group>>(new Map());
+  gamePiecesSubject$: Observable<Map<string, Group>> = this.gamePiecesSubject.asObservable();
   updategamePieces = (map: Map<string, Group>) => {
     this.gamePiecesSubject.next(map);
   };
 
-  private piecesPositionsSubject = new BehaviorSubject<Map<string, Vector3>>(
-    new Map(),
-  );
-  piecesPositionsSubject$: Observable<Map<string, Vector3>> =
-    this.piecesPositionsSubject.asObservable();
+  private piecesPositionsSubject = new BehaviorSubject<Map<string, Vector3>>(new Map());
+  piecesPositionsSubject$: Observable<Map<string, Vector3>> = this.piecesPositionsSubject.asObservable();
   updatepiecesPositions = (map: Map<string, Vector3>) => {
     this.piecesPositionsSubject.next(map);
   };
