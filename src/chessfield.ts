@@ -1,10 +1,9 @@
 import './style.css';
 
 import { ChessfieldConfig } from './resource/chessfield.config.ts';
-import { MainController } from './controller/main.controller.ts';
+import { ApiController } from './controller/api.controller.ts';
 import { GameProvider } from './provider/game.provider.ts';
 import { Store } from './provider/store.ts';
-import { BoardController } from './controller/board.controller.ts';
 import { BoardService } from './service/board.service.ts';
 import { ChessfieldState, defaults, HeadlessState } from './resource/chessfield.state.ts';
 import { configure } from './resource/chessfield.config.ts';
@@ -14,26 +13,23 @@ const Chessfield = (container: HTMLElement | null, config?: ChessfieldConfig) =>
 
   configure(maybeState, config || {});
 
-  console.log('Chessfield!');
-
   if (!container) {
     console.log('Container not found.');
     return;
   }
 
-  const store = new Store();
+  const store = new Store(config);
   const gameProvider = new GameProvider(store);
   const boardService = new BoardService(store);
 
-  const mainControllerApi = new MainController(store, gameProvider, container, config);
+  const apiController = new ApiController(store, gameProvider, boardService);
   if (config && config.fen) {
-    mainControllerApi.updateFen(config.fen);
+    apiController.setFen(config.fen);
   }
 
-  const boardController = new BoardController(store, boardService, container);
-  boardController.init();
+  apiController.init(container);
 
-  return mainControllerApi;
+  return apiController;
 };
 
 export { Chessfield };

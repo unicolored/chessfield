@@ -206,7 +206,8 @@ export class BoardService {
       }
     }
 
-    this.store.updatepiecesPositions(piecesPositions);
+    // this.store.updatepiecesPositions(piecesPositions);
+    this.store.setPiecesPositions(piecesPositions);
 
     chessboardGroup.position.set(0, 0.5, 0);
     chessboardGroup.name = 'chessboard';

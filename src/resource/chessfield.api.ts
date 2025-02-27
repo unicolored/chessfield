@@ -3,13 +3,8 @@ import * as board from './chessfield.board.ts';
 import * as field from './chessfield.field.ts';
 import { write as fenWrite } from 'chessground/fen';
 import * as cg from 'chessground/types';
-import { ChessfieldConfig } from './chessfield.config.ts';
 
 export interface ChessfieldApi {
-  // reconfigure the instance. Accepts all config options, except for viewOnly & drawable.visible.
-  // board will be animated accordingly, if animations are enabled.
-  set(config: ChessfieldConfig): void;
-
   // read chessfield state; write at your own risks.
   state: ChessfieldState;
 
@@ -36,10 +31,6 @@ export function start(state: ChessfieldState, redrawAll: cg.Redraw): ChessfieldA
   }
 
   return {
-    set(config: ChessfieldConfig): void {
-      if (config.view && config.view !== state.view) toggleView();
-    },
-
     state,
 
     getFen: () => fenWrite(state.pieces),
