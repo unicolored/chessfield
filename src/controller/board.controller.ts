@@ -7,21 +7,11 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { BoardService } from '../service/board.service.ts';
 
 export class BoardController {
-  // board = viewChild<ElementRef>('board');
-
-  // inputFen = input<string | null>(null);
-
-  // document = inject(DOCUMENT);
-  // boardService = inject(BoardService);
-  // gameService = inject(GameService);
-  // pieceProvider = inject(PieceProvider);
-  // gameProvider = inject(GameProvider);
-  // @Input() config!: ChessfieldConfig;
 
   constructor(
     private store: Store,
     private boardService: BoardService,
-    private board: HTMLDivElement,
+    private board: HTMLElement,
   ) {}
 
   init() {
