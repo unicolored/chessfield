@@ -6,23 +6,34 @@ import { GameProvider } from './provider/game.provider.ts';
 import { Store } from './provider/store.ts';
 import { BoardController } from './controller/board.controller.ts';
 import { BoardService } from './service/board.service.ts';
+import { ChessfieldState, defaults, HeadlessState } from './resource/chessfield.state.ts';
+import { configure } from './resource/chessfield.config.ts';
 
-const container: HTMLDivElement | null = document.querySelector('div.chessfield');
+const Chessfield = (container: HTMLElement | null, config?: ChessfieldConfig) => {
+  const maybeState: ChessfieldState | HeadlessState = defaults();
 
-if (container) {
+  configure(maybeState, config || {});
+
+  console.log('Chessfield!');
+
+  if (!container) {
+    console.log('Container not found.');
+    return;
+  }
+
   const store = new Store();
   const gameProvider = new GameProvider(store);
   const boardService = new BoardService(store);
 
-  const config: ChessfieldConfig = {
-    orientation: 'white',
-    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-    coordinates: false,
-  };
-
   const mainController = new MainController(store, gameProvider, container, config);
-  mainController.updateFen(config.fen);
+  if (config && config.fen) {
+    mainController.updateFen(config.fen);
+  }
 
   const boardController = new BoardController(store, boardService, container);
   boardController.init();
-}
+
+  return mainController;
+};
+
+export { Chessfield };
