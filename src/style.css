@@ -4,7 +4,7 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color: rgba(0, 0, 0, 0.87);
   background-color: #ecebe8;
 
   font-synthesis: none;
@@ -22,8 +22,7 @@ body {
 }
 
 div.chessfield {
-  background-color: blue;
-  padding: 10px;
+  background-color: cyan;
 }
 
 canvas {

@@ -1,7 +1,16 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Group, Vector3 } from 'three';
+import { ChessfieldConfig } from '../resource/chessfield.config.ts';
 
 export class Store {
+  private piecesPositions!: Map<string, Vector3>;
+
+  constructor(private readonly config?: ChessfieldConfig) {}
+
+  getConfig(): ChessfieldConfig {
+    return this.config ?? {};
+  }
+
   private updatePosSubject = new BehaviorSubject<boolean>(false);
   updatePosSubject$: Observable<boolean> = this.updatePosSubject.asObservable();
   updatePos = (b: boolean) => {
@@ -14,11 +23,20 @@ export class Store {
     this.gamePiecesSubject.next(map);
   };
 
-  private piecesPositionsSubject = new BehaviorSubject<Map<string, Vector3>>(new Map());
-  piecesPositionsSubject$: Observable<Map<string, Vector3>> = this.piecesPositionsSubject.asObservable();
-  updatepiecesPositions = (map: Map<string, Vector3>) => {
-    this.piecesPositionsSubject.next(map);
-  };
+  // private piecesPositionsSubject = new BehaviorSubject<Map<string, Vector3>>(new Map());
+  // piecesPositionsSubject$: Observable<Map<string, Vector3>> = this.piecesPositionsSubject.asObservable();
+  // updatepiecesPositions = (map: Map<string, Vector3>) => {
+  //   // this.piecesPositionsSubject.next(map);
+  //   this.setPiecesPositions(map);
+  // };
+
+  getPiecesPositions(): Map<string, Vector3> {
+    return this.piecesPositions;
+  }
+
+  setPiecesPositions(piecesPositions: Map<string, Vector3>) {
+    this.piecesPositions = piecesPositions;
+  }
 
   // loadBlogPosts(limit = 3) {
   // return this.appService.getBlogPosts({ limit }).pipe(
