@@ -7,7 +7,7 @@ import { Store } from './provider/store.ts';
 import { BoardController } from './controller/board.controller.ts';
 import { BoardService } from './service/board.service.ts';
 
-const container = document.querySelector('div.chessfield') as HTMLDivElement;
+const container: HTMLDivElement | null = document.querySelector('div.chessfield');
 
 if (container) {
   const store = new Store();
