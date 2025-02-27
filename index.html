@@ -1,30 +1,100 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chessfield</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chessfield Demo</title>
+
+    <link rel="stylesheet" type="text/css" href="assets/chessfield.base.css" />
+    <style>
+      body {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      body > div {
+        margin: 10px;
+      }
+
+      .chessfield {
+        width: 500px;
+        height: 500px;
+      }
+
+      cf-board {
+        background-color: #bfcfdd;
+      }
+    </style>
+
+    <script type="module">
+      import { Chessfield } from './src/chessfield.ts';
+
+      Chessfield(document.getElementById('board-1'), {});
+      Chessfield(document.getElementById('board-2'), {
+        fen: 'r2q2k1/1p6/p2p4/2pN1rp1/N1Pb2Q1/8/PP1B4/R6K b - - 2 25',
+      });
+
+      const chessfieldTv = Chessfield(document.getElementById('board-3'));
+
+      // const stream = fetch('https://lichess.org/api/games/user/neio',{headers:{Accept:'application/x-ndjson'}});
+      fetch('https://lichess.org/api/tv/feed')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+
+          const processStream = ({ done, value }) => {
+            if (done) {
+              dataSubject.complete();
+              return;
+            }
+
+            // Decode the chunk and append to buffer
+            buffer += decoder.decode(value, { stream: true });
+
+            // Split by newlines and process each line
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+            lines.forEach(line => {
+              if (line.trim()) {
+                // Skip empty lines
+                try {
+                  const json = JSON.parse(line);
+                  const fen = json.d.fen;
+                  // chessfieldTv.updateFen(fen);
+                } catch (e) {
+                  console.error(`JSON Parse Error: ${e}`);
+                }
+              }
+            });
+
+            // Continue reading the stream
+            reader.read().then(processStream);
+          };
+
+          // Start reading
+          reader.read().then(processStream);
+        })
+        .catch(error => dataSubject.error(error));
+    </script>
   </head>
   <body>
-    <div class="flex">
-      <div class="flex">
-        <!--<chessthree-board [inputFen]="fen()" [config]="commonConfig"></chessthree-board>-->
-        <div class="chessfield"></div>
-      </div>
-
-      <!--<div class="flex">
-      <div class="chessground" #board></div>
-    </div>-->
+    <div>
+      basic board, default config
+      <div class="chessfield" id="board-1"></div>
     </div>
-    <hr />
-
-    <!--<form [formGroup]="optionsForm" (ngSubmit)="onSubmit()">
-    <label for="fen">Fen: </label>
-    <input id="fen" type="text" formControlName="fen" class="w-full border p-1" />
-
-    <button type="button" class="bg-primary uppercase" [disabled]="isDisabled()">Envoyer</button>
-  </form>-->
+    <div>
+      board with a fen
+      <div class="chessfield" id="board-2"></div>
+    </div>
+    <div>
+      board with a fen updated
+      <div class="chessfield" id="board-3"></div>
+    </div>
 
     <script type="module" src="/src/chessfield.ts"></script>
   </body>
