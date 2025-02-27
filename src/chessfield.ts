@@ -25,15 +25,15 @@ const Chessfield = (container: HTMLElement | null, config?: ChessfieldConfig) =>
   const gameProvider = new GameProvider(store);
   const boardService = new BoardService(store);
 
-  const mainController = new MainController(store, gameProvider, container, config);
+  const mainControllerApi = new MainController(store, gameProvider, container, config);
   if (config && config.fen) {
-    mainController.updateFen(config.fen);
+    mainControllerApi.updateFen(config.fen);
   }
 
   const boardController = new BoardController(store, boardService, container);
   boardController.init();
 
-  return mainController;
+  return mainControllerApi;
 };
 
 export { Chessfield };
