@@ -1,1 +1,1 @@
-export type View = 'white' | 'right' | 'black' | 'left';
+export type View = 'white' | 'right' | 'black' | 'left' | 'top';
