@@ -2,15 +2,14 @@ import * as THREE from 'three';
 import { BufferGeometry, Group } from 'three';
 import FenParser from '@chess-fu/fen-parser';
 import { PieceProvider } from './piece.provider';
-import { LichessMoves } from '../interface/lichess.interface.ts';
+import { LichessMoves, LichessStreamData } from '../interface/lichess.interface.ts';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { letters, PieceKey, PiecesEnum } from '../interface/board.interface.ts';
 import { Store } from './store.ts';
+import { FEN } from 'chessground/types';
 
 export class GameProvider {
-  // pieceProvider = inject(PieceProvider);
-
-  // lichessData = signal<LichessMoves | null>(null);
+  static readonly whiteKeys = Array.from('RNBQKP');
 
   private loader: GLTFLoader;
 
@@ -18,43 +17,27 @@ export class GameProvider {
     this.loader = new GLTFLoader();
   }
 
-  initGamePieces(jsonData: LichessMoves) {
-    let activeFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-
-    if (jsonData) {
-      jsonData.moves.forEach(d => {
-        if (FenParser.isFen(d.fen)) {
-          activeFen = d.fen;
-        }
-      });
-    }
-
-    this.store.updatePos(true);
-
+  initGamePieces(lichessMoves: LichessMoves) {
     const gamePiecesMap = new Map<string, Group>();
 
-    const whiteKeys = Array.from('RNBQKP');
+    const lastMoveFen = GameProvider.findLastMoveFen(lichessMoves.moves);
 
-    let fenParsed = new FenParser(activeFen);
-
-    if (!fenParsed) {
-      if (jsonData) {
-        const fen = jsonData.moves?.pop()?.fen ?? jsonData.moves?.pop()?.initialFen;
-        if (fen) {
-          fenParsed = new FenParser(fen);
-        }
-      }
+    if (!lastMoveFen) {
+      return;
     }
 
-    fenParsed?.ranks.forEach((rank: string, index: number) => {
-      const rankIndex = 8 - index;
-      Array.from(rank).forEach(async (pieceStr: string, index: number) => {
+    const fenParsed = new FenParser(lastMoveFen);
+
+    fenParsed.ranks.forEach((rank: string, index: number) => {
+      const rankIndex = Store.boardSize - index;
+      Array.from(rank).forEach((pieceStr: string, index: number) => {
         if (pieceStr !== '-' && pieceStr in PiecesEnum) {
           const coord = `${letters[index]}${rankIndex}`;
 
-          const color = whiteKeys.includes(pieceStr) ? 'white' : 'black';
-          // const piece = await this.getOnePieceGltf(pieceStr as PieceKey, color);
-          const piece = await this.getOnePiece(pieceStr as PieceKey, color);
+          const color = GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black';
+
+          const piece = this.getOnePiece(pieceStr as PieceKey, color);
+
           gamePiecesMap.set(coord, piece);
         }
       });
@@ -182,5 +165,16 @@ export class GameProvider {
         error => reject(error), // Error: reject with the error
       );
     });
+  }
+
+  private static findLastMoveFen(moves: LichessStreamData[]): FEN | null {
+    for (let i = moves.length - 1; i >= 0; i--) {
+      const move = moves[i];
+      if (FenParser.isFen(move.fen ?? move.initialFen)) {
+        return move.fen;
+      }
+    }
+
+    return null;
   }
 }

@@ -7,10 +7,6 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Store } from '../provider/store.ts';
 
 export class BoardService {
-  // updatePos = signal<boolean>(false);
-
-  constructor(private store: Store) {}
-
   public light(gui: GUI): Group {
     const lightGroup = new THREE.Group();
 
@@ -136,12 +132,6 @@ export class BoardService {
     // Create the chessboard
     const chessboardGroup = new THREE.Group();
 
-    const boardSize = 8;
-    const squareSize = 1;
-    const squareHeight = 0.1;
-
-    const piecesPositions = new Map<string, Vector3>();
-
     const themes = {
       blue: {
         light: 0xbfcfdd,
@@ -161,9 +151,9 @@ export class BoardService {
       },
     };
 
-    for (let i = 0; i < boardSize; i++) {
-      for (let j = 0; j < boardSize; j++) {
-        const coord = letters[i] + (boardSize - j);
+    for (let i = 0; i < Store.boardSize; i++) {
+      for (let j = 0; j < Store.boardSize; j++) {
+        const coord = letters[i] + (Store.boardSize - j);
 
         const caseGroup = new THREE.Group();
         caseGroup.name = coord;
@@ -181,7 +171,7 @@ export class BoardService {
           // bevelSegments: 5
         });
 
-        const squareGeometry = new THREE.BoxGeometry(squareSize, squareHeight, squareSize);
+        const squareGeometry = new THREE.BoxGeometry(Store.squareSize, Store.squareHeight, Store.squareSize);
         const squareMaterial = new THREE.MeshPhongMaterial({
           color: (i + j) % 2 === 0 ? themes.blue.light : themes.blue.dark,
         });
@@ -190,11 +180,14 @@ export class BoardService {
         });
         const textMesh = new THREE.Mesh(geometry, textMaterial);
         const square = new THREE.Mesh(squareGeometry, squareMaterial);
-        square.position.set(i - boardSize / 2 + 0.5, squareHeight / 2, j - boardSize / 2 + 0.5);
+        const squarePosition = new Vector3(
+          i - Store.boardSize / 2 + 0.5,
+          Store.squareHeight / 2,
+          j - Store.boardSize / 2 + 0.5,
+        );
+        square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
         square.castShadow = true;
         square.receiveShadow = true;
-
-        piecesPositions.set(coord, square.position);
 
         textMesh.position.set(0.25, 0, -0.25);
         textMesh.rotation.x = -Math.PI / 2;
@@ -205,9 +198,6 @@ export class BoardService {
         chessboardGroup.add(caseGroup);
       }
     }
-
-    // this.store.updatepiecesPositions(piecesPositions);
-    this.store.setPiecesPositions(piecesPositions);
 
     chessboardGroup.position.set(0, 0.5, 0);
     chessboardGroup.name = 'chessboard';
