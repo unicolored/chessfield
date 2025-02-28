@@ -62,7 +62,7 @@ class Chessfield {
 
     // Camera
     const camera = new THREE.PerspectiveCamera(44, sizes.width / sizes.height, 0.1, 100);
-    camera.position.set(0, 8.5, 7.5);
+    camera.position.set(0, 9.5, 9.5);
     camera.lookAt(0, 2, 0);
     // camera.updateProjectionMatrix();
 
@@ -81,10 +81,12 @@ class Chessfield {
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI / 2.3;
     controls.target.set(0, -0.7, 0);
+    controls.minDistance = 8; // Set the minimum zoom distance
+    controls.maxDistance = 16; // Set the maximum zoom distance
 
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff); // Gray background
+    scene.background = new THREE.Color(0xecebe8); // Gray background
     scene.add(camera);
 
     /**
@@ -101,8 +103,8 @@ class Chessfield {
       scene.add(chessboardGroup);
     });
 
-    const debugGroup = this.boardService.debug();
-    scene.add(debugGroup);
+    // const debugGroup = this.boardService.debug();
+    // scene.add(debugGroup);
     const lightGroup = this.boardService.light(gui);
     scene.add(lightGroup);
     const decorGroup = this.boardService.decor();

@@ -57,20 +57,17 @@ export class BoardService {
   decor(): Group {
     const decorGroup = new THREE.Group();
 
-    // Add an infinite plane as the floor
-    const planeGeometry = new THREE.PlaneGeometry(12, 12);
-    const planeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    const floor = new THREE.Mesh(planeGeometry, planeMaterial);
-
-    // Rotate the plane to make it horizontal and position it at y = 0
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = 0;
-
-    // Optionally, enable shadows on the plane
-    floor.receiveShadow = true;
-
-    // Add the floor to the decor group
-    decorGroup.add(floor);
+    // // Add an infinite plane as the floor
+    // const planeGeometry = new THREE.PlaneGeometry(12, 12);
+    // const planeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    // const floor = new THREE.Mesh(planeGeometry, planeMaterial);
+    // // Rotate the plane to make it horizontal and position it at y = 0
+    // floor.rotation.x = -Math.PI / 2;
+    // floor.position.y = 0;
+    // // Optionally, enable shadows on the plane
+    // floor.receiveShadow = true;
+    // // Add the floor to the decor group
+    // decorGroup.add(floor);
 
     // Create a box geometry and material
     const player1Geometry = new THREE.BoxGeometry(2, 0.25, 0.25);
