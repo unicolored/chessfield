@@ -96,16 +96,14 @@ export class GameProvider {
         const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.name);
 
         if (geometry) {
-          geometry.scale(0.45, 0.45, 0.45);
-
           const mesh =
             value.count > 1
               ? new THREE.InstancedMesh(
-                  pieceGeometriesMap.get(value.name),
+                    geometry,
                   GameProvider.pieceMaterials[value.color],
                   value.count,
                 )
-              : new THREE.Mesh(pieceGeometriesMap.get(value.name), GameProvider.pieceMaterials[value.color]);
+              : new THREE.Mesh(geometry, GameProvider.pieceMaterials[value.color]);
 
           mesh.castShadow = true;
           mesh.receiveShadow = true;
@@ -137,7 +135,8 @@ export class GameProvider {
         (gltf: GLTF) => {
           if (gltf.scene.children[0]) {
             const mesh = gltf.scene.children[0] as Mesh;
-            // mesh.scale.set(cm(1), cm(1), cm(1));
+            mesh.geometry.scale(0.2, 0.2, 0.2);
+
             mesh.position.set(0, 0, 0);
             piecesGeometriesGltfMap.set(pieceName, mesh.geometry);
           } else {
