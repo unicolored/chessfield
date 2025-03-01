@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BufferGeometry, Group } from 'three';
+import { BufferGeometry, LoadingManager, Mesh } from 'three';
 import FenParser from '@chess-fu/fen-parser';
 import { PieceProvider } from './piece.provider';
 import { LichessMoves, LichessStreamData } from '../interface/lichess.interface.ts';
@@ -16,7 +16,7 @@ import {
 } from '../interface/board.interface.ts';
 import { Store } from './store.ts';
 import { Color, FEN } from 'chessground/types';
-import { objKey } from '../helper.ts';
+import { cm, objKey } from '../helper.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
@@ -35,10 +35,8 @@ export class GameProvider {
     }),
   };
 
-  private loader: GLTFLoader;
-
   constructor(private store: Store) {
-    this.loader = new GLTFLoader();
+    // this.loader = new GLTFLoader();
   }
 
   initGamePieces(lichessMoves: LichessMoves) {
@@ -52,16 +50,9 @@ export class GameProvider {
       return;
     }
 
-    const pieceGeometriesMap = new Map<PiecesEnum, BufferGeometry>();
-    pieceGeometriesMap.set(PiecesEnum.k, new THREE.BoxGeometry(0.5, 1.33, 0.5, 4).translate(0, 0.5, 0));
-    pieceGeometriesMap.set(PiecesEnum.q, new THREE.CylinderGeometry(0.2, 0.2, 1.2, 4).translate(0, 0.5, 0));
-    pieceGeometriesMap.set(PiecesEnum.b, new THREE.CylinderGeometry(0.1, 0.33, 1, 4).translate(0, 0.5, 0));
-    pieceGeometriesMap.set(PiecesEnum.n, new THREE.CylinderGeometry(0.33, 0.1, 1, 4).translate(0, 0.5, 0));
-    pieceGeometriesMap.set(
-      PiecesEnum.r,
-      new THREE.CylinderGeometry(0.33, 0.33, 0.85, 12).translate(0, 0.5, 0),
-    );
-    pieceGeometriesMap.set(PiecesEnum.p, new THREE.SphereGeometry(0.2, 4, 4).translate(0, 0.5, 0));
+    const useGltf = true;
+    const pieceGeometriesMap = useGltf ? this.store.getPiecesGeometriesGltfMap() : this.getGeometries(true);
+    console.log(pieceGeometriesMap);
 
     const fenParsed = new FenParser(lastMoveFen);
 
@@ -105,7 +96,7 @@ export class GameProvider {
         const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.name);
 
         if (geometry) {
-          geometry.scale(0.1, 0.1, 0.1);
+          geometry.scale(0.45, 0.45, 0.45);
 
           const mesh =
             value.count > 1
@@ -129,48 +120,56 @@ export class GameProvider {
     this.store.updategamePieces(boardPieces);
   }
 
-  public async getOnePieceGltf(pieceKey: PieceKey, color: 'white' | 'black' = 'white'): Promise<Group> {
-    const pieceGroup = new THREE.Group();
-    console.log(color);
-
-    const piece = PieceProvider.getPiece(pieceKey);
-
-    console.log(pieceKey);
+  public loadGltfGeometries(loadingManager: LoadingManager): void {
     const piecesUrl = new Map();
-    piecesUrl.set(PiecesEnum.p, './../../../assets/pawn.glb');
-    piecesUrl.set(PiecesEnum.q, './../../../assets/queen.glb');
-    piecesUrl.set(PiecesEnum.k, './../../../assets/king.glb');
-    piecesUrl.set(PiecesEnum.n, './../../../assets/knight.glb');
-    piecesUrl.set(PiecesEnum.b, './../../../assets/bishop.glb');
-    piecesUrl.set(PiecesEnum.r, './../../../assets/rook.glb');
+    piecesUrl.set(PiecesEnum.p, './../../assets/models/pawn.glb');
+    piecesUrl.set(PiecesEnum.q, './../../assets/models/queen.glb');
+    piecesUrl.set(PiecesEnum.k, './../../assets/models/king.glb');
+    piecesUrl.set(PiecesEnum.n, './../../assets/models/knight.glb');
+    piecesUrl.set(PiecesEnum.b, './../../assets/models/bishop.glb');
+    piecesUrl.set(PiecesEnum.r, './../../assets/models/rook.glb');
 
-    if (piecesUrl.has(piece)) {
-      const group = await this.loadGLTF(piecesUrl.get(piece));
-
-      // Position the cylinder above the chessboard
-      group.scale.set(10, 10, 10);
-      group.position.set(0, 0.6 + 0.5, 0);
-      group.castShadow = true;
-      group.receiveShadow = true;
-
-      pieceGroup.name = piece;
-
-      pieceGroup.add(group);
-    }
-
-    return pieceGroup;
-  }
-
-  private loadGLTF(url: string): Promise<Group> {
-    return new Promise((resolve, reject) => {
-      this.loader.load(
+    const piecesGeometriesGltfMap = new Map<PiecesEnum, BufferGeometry>();
+    piecesUrl.forEach((url: string, pieceName: PiecesEnum) => {
+      // const mesh = await this.loadGLTF(piecesUrl.get(piece));
+      new GLTFLoader(loadingManager).load(
         url,
-        (gltf: GLTF) => resolve(gltf.scene), // Success: resolve with the loaded gltf
+        (gltf: GLTF) => {
+          if (gltf.scene.children[0]) {
+            const mesh = gltf.scene.children[0] as Mesh;
+            // mesh.scale.set(cm(1), cm(1), cm(1));
+            mesh.position.set(0, 0, 0);
+            piecesGeometriesGltfMap.set(pieceName, mesh.geometry);
+          } else {
+            console.error('No children found');
+          }
+        }, // Success: resolve with the loaded gltf
         undefined, // Progress: optional, omitted here
-        error => reject(error), // Error: reject with the error
+        error => error, // Error: reject with the error
       );
     });
+
+    this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
   }
+
+  // private loadGLTF(url: string): Promise<Mesh> {
+  //   console.log(url)
+  //   return new Promise((resolve, reject) => {
+  //     this.loader.load(
+  //       url,
+  //       (gltf: GLTF) => {
+  //         console.log(gltf.scene.children[0])
+  //         if (gltf.scene.children[0]) {
+  //           resolve(gltf.scene.children[0] as Mesh);
+  //         } else {
+  //           reject('No children found')
+  //         }
+  //       }, // Success: resolve with the loaded gltf
+  //       undefined, // Progress: optional, omitted here
+  //       error => reject(error), // Error: reject with the error
+  //     );
+  //   });
+  // }
 
   private static findLastMoveFen(moves: LichessStreamData[]): FEN | null {
     for (let i = moves.length - 1; i >= 0; i--) {
@@ -194,5 +193,25 @@ export class GameProvider {
       map.set(oK, { count: count + 1, color, name: pieceName });
     });
     return map;
+  }
+
+  private getGeometries(useGltf = false): Map<PiecesEnum, BufferGeometry> {
+    const pieceGeometriesMap = new Map<PiecesEnum, BufferGeometry>();
+
+    const kingGeometry = new THREE.BoxGeometry(0.5, 1.33, 0.5, 4).translate(0, 0.5, 0);
+    const queenGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 4).translate(0, 0.5, 0);
+    const bishopGeometry = new THREE.CylinderGeometry(0.1, 0.33, 1, 4).translate(0, 0.5, 0);
+    const knightGeometry = new THREE.CylinderGeometry(0.33, 0.1, 1, 4).translate(0, 0.5, 0);
+    const rookGeometry = new THREE.CylinderGeometry(0.33, 0.33, 0.85, 12).translate(0, 0.5, 0);
+    const pawnGeometry = new THREE.SphereGeometry(0.2, 4, 4).translate(0, 0.5, 0);
+
+    pieceGeometriesMap.set(PiecesEnum.k, kingGeometry);
+    pieceGeometriesMap.set(PiecesEnum.q, queenGeometry);
+    pieceGeometriesMap.set(PiecesEnum.b, bishopGeometry);
+    pieceGeometriesMap.set(PiecesEnum.n, knightGeometry);
+    pieceGeometriesMap.set(PiecesEnum.r, rookGeometry);
+    pieceGeometriesMap.set(PiecesEnum.p, pawnGeometry);
+
+    return pieceGeometriesMap;
   }
 }

@@ -1,7 +1,13 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Vector3 } from 'three';
+import { BufferGeometry, Vector3 } from 'three';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import { BoardPiece, ColorPieceNameObjectMap, letters, Theme } from '../interface/board.interface.ts';
+import {
+  BoardPiece,
+  ColorPieceNameObjectMap,
+  letters,
+  PiecesEnum,
+  Theme,
+} from '../interface/board.interface.ts';
 import { FEN } from 'chessground/types';
 import { initial } from 'chessground/fen';
 import FenParser from '@chess-fu/fen-parser';
@@ -30,6 +36,16 @@ export class Store {
 
   private piecesPositions!: Map<string, Vector3>;
   private boardPiecesObjectsMap: ColorPieceNameObjectMap = new Map();
+
+  // private loader: GLTFLoader;
+  private piecesGeometriesGltfMap: Map<PiecesEnum, BufferGeometry> = new Map();
+  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<PiecesEnum, BufferGeometry>) {
+    this.piecesGeometriesGltfMap = piecesGeometriesGltfMap;
+  }
+
+  getPiecesGeometriesGltfMap() {
+    return this.piecesGeometriesGltfMap;
+  }
 
   constructor(private readonly config?: ChessfieldConfig) {}
 
