@@ -1,4 +1,4 @@
-import { Group, Material, Mesh } from 'three';
+import { Group, InstancedMesh, Material, Mesh } from 'three';
 import { Color } from 'chessground/types';
 
 export type COORD = string;
@@ -54,7 +54,7 @@ export interface Theme {
 
 export type CoordPieceNameMap = Map<COORD, PiecesEnum>;
 export type PieceNameObjectMap = Map<PiecesEnum, Mesh | Group>;
-export type ColorPieceNameObjectMap = Map<string, Mesh | Group>;
+export type ColorPieceNameObjectMap = Map<string, Mesh | InstancedMesh | Group>;
 export type CoordPieceObjectMap = Map<COORD, Mesh | Group>;
 
 export interface BoardPiece {

@@ -78,42 +78,42 @@ export class GameProvider {
           // const pieceGroup = this.getOnePiece(pieceGeometries[pieceKey], pieceMaterials[color]);
 
           // const pieceGroup = new THREE.Group();
-          const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(name);
+          // const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(name);
+          //
+          // if (geometry) {
+          // geometry.scale(0.1, 0.1, 0.1);
+          //
+          // mesh.castShadow = true;
+          // mesh.receiveShadow = true;
+          // mesh.name = `${coord}-${color}-${name}`;
+          // const material = GameProvider.pieceMaterials[color];
 
-          if (geometry) {
-            geometry.scale(0.1, 0.1, 0.1);
+          // const mesh = new THREE.Mesh(geometry, material);
 
-            const material = GameProvider.pieceMaterials[color];
+          // Position the cylinder above the chessboard
+          // mesh.position.set(0, cm(0.6 + 0.5), 0);
+          // allPieces[color][pieceKey].setMatrixAt()
 
-            const mesh = new THREE.Mesh(geometry, material);
+          // pieceGroup.add(mesh);
 
-            // Position the cylinder above the chessboard
-            // mesh.position.set(0, cm(0.6 + 0.5), 0);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            mesh.name = `${coord}-${color}-${name}`;
-            // allPieces[color][pieceKey].setMatrixAt()
+          // pieceGroup.name = `${pieceKey}-${color}-${coord}`;
+          // console.log(pieceGroup.name)
 
-            // pieceGroup.add(mesh);
+          // gamePiecesMap.set(coord, mesh);
 
-            // pieceGroup.name = `${pieceKey}-${color}-${coord}`;
-            // console.log(pieceGroup.name)
-
-            // gamePiecesMap.set(coord, mesh);
-
-            if (color === 'white') {
-              whitePiecesListMap.set(coord, name);
-            } else if (color === 'black') {
-              blackPiecesListMap.set(coord, name);
-            }
-
-            boardPieces.push({
-              coord,
-              name,
-              color,
-              objectKey: objKey(color, name),
-            });
+          if (color === 'white') {
+            whitePiecesListMap.set(coord, name);
+          } else if (color === 'black') {
+            blackPiecesListMap.set(coord, name);
           }
+
+          boardPieces.push({
+            coord,
+            name,
+            color,
+            objectKey: objKey(color, name),
+          });
+          // }
         }
       });
     });
@@ -125,22 +125,28 @@ export class GameProvider {
     const boardPiecesObjectsMap: ColorPieceNameObjectMap = new Map();
     mergedMap.forEach((value, key: string) => {
       if (value.count > 0) {
-        // instancedMesh
-        const object =
-          value.count > 1
-            ? new THREE.InstancedMesh(
-                pieceGeometriesMap.get(value.name),
-                GameProvider.pieceMaterials[value.color],
-                value.count,
-              )
-            : new THREE.Mesh(pieceGeometriesMap.get(value.name), GameProvider.pieceMaterials[value.color]);
+        const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.name);
 
-        boardPiecesObjectsMap.set(key, object);
+        if (geometry) {
+          geometry.scale(0.1, 0.1, 0.1);
+
+          const mesh =
+            value.count > 1
+              ? new THREE.InstancedMesh(
+                  pieceGeometriesMap.get(value.name),
+                  GameProvider.pieceMaterials[value.color],
+                  value.count,
+                )
+              : new THREE.Mesh(pieceGeometriesMap.get(value.name), GameProvider.pieceMaterials[value.color]);
+
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.name = `${key}-${value.color}-${value.name}`;
+
+          boardPiecesObjectsMap.set(key, mesh);
+        }
       }
     });
-
-    console.log(boardPieces);
-    console.log(boardPiecesObjectsMap);
 
     // const allPieces = {
     //     white: {

@@ -8,7 +8,7 @@ import { BoardService } from './service/board.service.ts';
 import { LichessMoves } from './interface/lichess.interface.ts';
 import { FEN } from 'chessground/types';
 import * as THREE from 'three';
-import { Group, Vector3 } from 'three';
+import { Group, InstancedMesh, Mesh, Scene, Vector3 } from 'three';
 import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -124,12 +124,11 @@ class Chessfield {
       scene.remove(mygroup);
       this.gameProvider.initGamePieces(moves);
 
-      this.updateGamePositions().then(pG => {
-        scene.remove(mygroup);
+      const pG = this.updateGamePositions(scene);
+      scene.remove(mygroup);
 
-        mygroup = pG;
-        scene.add(mygroup);
-      });
+      mygroup = pG;
+      scene.add(mygroup);
     });
 
     /**
@@ -176,11 +175,12 @@ class Chessfield {
     tick();
   }
 
-  async updateGamePositions(): Promise<Group> {
+  updateGamePositions(scene: Scene): Group {
     const piecesGroupe = new THREE.Group();
     piecesGroupe.name = 'pieces';
 
     const piecesPositions: Map<string, Vector3> = this.store.getPiecesPositions();
+    console.log(piecesPositions);
     const piecesObjects: ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
     this.store.gamePiecesSubject$
@@ -189,17 +189,29 @@ class Chessfield {
           list.forEach((boardPiece: BoardPiece) => {
             const pos = piecesPositions.get(boardPiece.coord);
             if (pos) {
-              const object = piecesObjects.get(boardPiece.objectKey);
-              if (object) {
-                object.position.copy(pos);
-                object.position.y = 0;
-                piecesGroupe.add(object);
+              const mesh = piecesObjects.get(boardPiece.objectKey) as Mesh as InstancedMesh;
+              piecesGroupe.add(mesh);
+
+              if (mesh) {
+                if (mesh.count) {
+                  console.log('🟢 isInstanceMesh', mesh.count, boardPiece.coord, boardPiece.objectKey);
+                  console.log(mesh);
+                  // .. instancedMesh
+                  const matrix = new THREE.Matrix4();
+                  mesh.setMatrixAt(0, matrix);
+                  mesh.position.copy(pos);
+                } else {
+                  console.log('🛑 NOT isInstanceMesh', boardPiece.coord, boardPiece.objectKey);
+                  mesh.position.copy(pos);
+                }
               }
             }
           });
         }),
       )
       .subscribe();
+
+    // scene.add(piecesGroupe);
 
     return piecesGroupe;
   }
