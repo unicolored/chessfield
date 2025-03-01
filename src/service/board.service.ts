@@ -12,7 +12,7 @@ export class BoardService {
     const lightGroup = new THREE.Group();
 
     const directLight = new THREE.DirectionalLight(0xffffff, 1);
-    directLight.castShadow = true;
+    directLight.castShadow = false;
     directLight.position.set(1, 2, 1);
     lightGroup.add(directLight); // Add the target to the scene
     gui.add(directLight, 'intensity', 0, 200);
@@ -156,7 +156,7 @@ export class BoardService {
 
         square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
         square.castShadow = false;
-        square.receiveShadow = true;
+        square.receiveShadow = false;
 
         // TEXT
         const textMesh = this.makeCoordText(font, coord, { rankInt, colInt }, theme);
