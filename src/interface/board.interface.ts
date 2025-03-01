@@ -1,3 +1,12 @@
+import { Group, Material, Mesh } from 'three';
+import { Color } from 'chessground/types';
+
+export type COORD = string;
+
+export type ColorMaterial = {
+  [key in Color]: Material;
+};
+
 export type PieceKey = keyof typeof PiecesEnum;
 
 export enum PiecesEnum {
@@ -37,3 +46,20 @@ export const createEl = (tagName: string, className?: string): HTMLElement => {
   if (className) el.className = className;
   return el;
 };
+
+export interface Theme {
+  light: string | number;
+  dark: string | number;
+}
+
+export type CoordPieceNameMap = Map<COORD, PiecesEnum>;
+export type PieceNameObjectMap = Map<PiecesEnum, Mesh | Group>;
+export type ColorPieceNameObjectMap = Map<string, Mesh | Group>;
+export type CoordPieceObjectMap = Map<COORD, Mesh | Group>;
+
+export interface BoardPiece {
+  coord: COORD;
+  color: Color;
+  name: PiecesEnum;
+  objectKey: string;
+}
