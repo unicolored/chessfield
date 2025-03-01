@@ -16,7 +16,7 @@ import {
 } from '../interface/board.interface.ts';
 import { Store } from './store.ts';
 import { Color, FEN } from 'chessground/types';
-import { cm, objKey } from '../helper.ts';
+import { objKey } from '../helper.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
@@ -51,7 +51,7 @@ export class GameProvider {
     }
 
     const useGltf = true;
-    const pieceGeometriesMap = useGltf ? this.store.getPiecesGeometriesGltfMap() : this.getGeometries(true);
+    const pieceGeometriesMap = useGltf ? this.store.getPiecesGeometriesGltfMap() : this.getGeometries();
     console.log(pieceGeometriesMap);
 
     const fenParsed = new FenParser(lastMoveFen);
@@ -195,7 +195,7 @@ export class GameProvider {
     return map;
   }
 
-  private getGeometries(useGltf = false): Map<PiecesEnum, BufferGeometry> {
+  private getGeometries(): Map<PiecesEnum, BufferGeometry> {
     const pieceGeometriesMap = new Map<PiecesEnum, BufferGeometry>();
 
     const kingGeometry = new THREE.BoxGeometry(0.5, 1.33, 0.5, 4).translate(0, 0.5, 0);
