@@ -197,7 +197,6 @@ class Chessfield {
     this.store.gamePiecesSubject$
       .pipe(
         tap((list: BoardPiece[]) => {
-          console.log(list)
           const matrixes: Map<string, { mesh: InstancedMesh; pos: Vector3 }[]> = new Map();
 
           list.forEach((boardPiece: BoardPiece) => {

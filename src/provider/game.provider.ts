@@ -52,7 +52,6 @@ export class GameProvider {
 
     const useGltf = true;
     const pieceGeometriesMap = useGltf ? this.store.getPiecesGeometriesGltfMap() : this.getGeometries();
-    console.log(pieceGeometriesMap);
 
     const fenParsed = new FenParser(lastMoveFen);
 
