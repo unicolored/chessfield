@@ -93,6 +93,10 @@ class Chessfield {
     scene.background = new THREE.Color(0xecebe8); // Gray background
     scene.add(camera);
 
+    const loadingManager = new THREE.LoadingManager();
+
+    this.gameProvider.loadGltfGeometries(loadingManager);
+
     /**
      * DEBUG UI
      */
@@ -122,17 +126,22 @@ class Chessfield {
 
     this.cfElement.appendChild(renderer.domElement);
 
-    this.store.movesSubject$.subscribe((moves: LichessMoves) => {
-      scene.remove(mygroup);
-      this.gameProvider.initGamePieces(moves);
+    loadingManager.onLoad = () => {
+      console.log('✅ loading done!');
+      // console.log(this.store.getPiecesGeometriesGltfMap())
 
-      const pG = this.updateGamePositions();
-      scene.remove(pG);
-      scene.remove(mygroup);
+      this.store.movesSubject$.subscribe((moves: LichessMoves) => {
+        scene.remove(mygroup);
+        this.gameProvider.initGamePieces(moves);
 
-      mygroup = pG;
-      scene.add(mygroup);
-    });
+        const pG = this.updateGamePositions();
+        scene.remove(pG);
+        scene.remove(mygroup);
+
+        mygroup = pG;
+        scene.add(mygroup);
+      });
+    };
 
     /**
      * Animate
@@ -183,7 +192,6 @@ class Chessfield {
     piecesGroupe.name = 'pieces';
 
     const piecesPositions: Map<string, Vector3> = this.store.getPiecesPositions();
-    console.log(piecesPositions);
     const piecesObjects: ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
     this.store.gamePiecesSubject$
@@ -210,8 +218,7 @@ class Chessfield {
             }
           });
 
-          matrixes.forEach((meshes, key) => {
-            console.log(key, meshes.length);
+          matrixes.forEach(meshes => {
             let index = 0;
             for (const { mesh, pos } of meshes) {
               if (mesh && pos) {

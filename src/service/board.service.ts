@@ -11,7 +11,7 @@ export class BoardService {
   public lights(gui: GUI): Group {
     const lightGroup = new THREE.Group();
 
-    const directLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directLight = new THREE.DirectionalLight(0xffffff, 3);
     directLight.castShadow = false;
     directLight.position.set(1, 2, 1);
     lightGroup.add(directLight); // Add the target to the scene
@@ -48,7 +48,7 @@ export class BoardService {
     // lightGroup.add(coneLight);
     // lightGroup.add(coneLightHelper);
 
-    const light = new THREE.AmbientLight(0x404040, 33); // soft white light
+    const light = new THREE.AmbientLight(0x404040, 18); // soft white light
     gui.add(light, 'intensity', 0, 100);
     lightGroup.add(light);
 
