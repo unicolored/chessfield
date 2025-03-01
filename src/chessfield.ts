@@ -13,6 +13,8 @@ import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
+import { cm } from './helper.ts';
+import { BoardPiece, ColorPieceNameObjectMap } from './interface/board.interface.ts';
 
 class Chessfield {
   private store: Store;
@@ -61,9 +63,9 @@ class Chessfield {
     };
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(44, sizes.width / sizes.height, 0.1, 100);
-    camera.position.set(0, 9.5, 9.5);
-    camera.lookAt(0, 2, 0);
+    const camera = new THREE.PerspectiveCamera(44, sizes.width / sizes.height, cm(0.1), 3);
+    camera.position.set(0, cm(9.5), cm(9.5));
+    camera.lookAt(0, cm(2), 0);
     // camera.updateProjectionMatrix();
 
     // Renderer
@@ -80,9 +82,9 @@ class Chessfield {
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI / 2.3;
-    controls.target.set(0, -0.7, 0);
-    controls.minDistance = 8; // Set the minimum zoom distance
-    controls.maxDistance = 16; // Set the maximum zoom distance
+    controls.target.set(0, cm(-0.7), 0);
+    controls.minDistance = cm(10); // Set the minimum zoom distance
+    controls.maxDistance = cm(20); // Set the maximum zoom distance
 
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
@@ -105,7 +107,7 @@ class Chessfield {
 
     // const debugGroup = this.boardService.debug();
     // scene.add(debugGroup);
-    const lightGroup = this.boardService.light(gui);
+    const lightGroup = this.boardService.lights(gui);
     scene.add(lightGroup);
     const decorGroup = this.boardService.decor();
     scene.add(decorGroup);
@@ -164,12 +166,14 @@ class Chessfield {
 
       // Render
       renderer.render(scene, camera);
+      renderer.shadowMap.autoUpdate = false;
+      renderer.shadowMap.needsUpdate = true;
 
       // Call tick again on the next frame
       document.defaultView?.requestAnimationFrame(tick);
     };
 
-    await tick();
+    tick();
   }
 
   async updateGamePositions(): Promise<Group> {
@@ -177,16 +181,20 @@ class Chessfield {
     piecesGroupe.name = 'pieces';
 
     const piecesPositions: Map<string, Vector3> = this.store.getPiecesPositions();
+    const piecesObjects: ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
     this.store.gamePiecesSubject$
       .pipe(
-        tap((map: Map<string, Group>) => {
-          map.forEach((piece: Group, coord: string) => {
-            const pos = piecesPositions.get(coord);
+        tap((list: BoardPiece[]) => {
+          list.forEach((boardPiece: BoardPiece) => {
+            const pos = piecesPositions.get(boardPiece.coord);
             if (pos) {
-              piece.position.copy(pos);
-              piece.position.y = 0;
-              piecesGroupe.add(piece);
+              const object = piecesObjects.get(boardPiece.objectKey);
+              if (object) {
+                object.position.copy(pos);
+                object.position.y = 0;
+                piecesGroupe.add(object);
+              }
             }
           });
         }),
