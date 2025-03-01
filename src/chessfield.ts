@@ -8,7 +8,7 @@ import { BoardService } from './service/board.service.ts';
 import { LichessMoves } from './interface/lichess.interface.ts';
 import { FEN } from 'chessground/types';
 import * as THREE from 'three';
-import { Group, InstancedMesh, Mesh, Scene, Vector3 } from 'three';
+import { Group, InstancedMesh, Mesh, Vector3 } from 'three';
 import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -71,11 +71,13 @@ class Chessfield {
     // Renderer
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
-      antialias: true,
+      // powerPreference: 'high-performance',
+      antialias: window.devicePixelRatio < 2,
     });
     renderer.setSize(sizes.width, sizes.height);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = false;
+    // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
     // Controls
     const controls = new OrbitControls(camera, canvas);
@@ -124,7 +126,8 @@ class Chessfield {
       scene.remove(mygroup);
       this.gameProvider.initGamePieces(moves);
 
-      const pG = this.updateGamePositions(scene);
+      const pG = this.updateGamePositions();
+      scene.remove(pG);
       scene.remove(mygroup);
 
       mygroup = pG;
@@ -175,7 +178,7 @@ class Chessfield {
     tick();
   }
 
-  updateGamePositions(scene: Scene): Group {
+  updateGamePositions(): Group {
     const piecesGroupe = new THREE.Group();
     piecesGroupe.name = 'pieces';
 
@@ -186,24 +189,37 @@ class Chessfield {
     this.store.gamePiecesSubject$
       .pipe(
         tap((list: BoardPiece[]) => {
+          const matrixes: Map<string, { mesh: InstancedMesh; pos: Vector3 }[]> = new Map();
+
           list.forEach((boardPiece: BoardPiece) => {
             const pos = piecesPositions.get(boardPiece.coord);
             if (pos) {
               const mesh = piecesObjects.get(boardPiece.objectKey) as Mesh as InstancedMesh;
-              piecesGroupe.add(mesh);
 
               if (mesh) {
+                piecesGroupe.add(mesh);
                 if (mesh.count) {
-                  console.log('🟢 isInstanceMesh', mesh.count, boardPiece.coord, boardPiece.objectKey);
-                  console.log(mesh);
                   // .. instancedMesh
-                  const matrix = new THREE.Matrix4();
-                  mesh.setMatrixAt(0, matrix);
-                  mesh.position.copy(pos);
+                  const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
+                  updateMatrix.push({ mesh, pos });
+                  matrixes.set(boardPiece.objectKey, updateMatrix);
                 } else {
-                  console.log('🛑 NOT isInstanceMesh', boardPiece.coord, boardPiece.objectKey);
                   mesh.position.copy(pos);
                 }
+              }
+            }
+          });
+
+          matrixes.forEach((meshes, key) => {
+            console.log(key, meshes.length);
+            let index = 0;
+            for (const { mesh, pos } of meshes) {
+              if (mesh && pos) {
+                const matrix = new THREE.Matrix4();
+                matrix.setPosition(pos);
+                mesh.setMatrixAt(index, matrix);
+
+                index++;
               }
             }
           });
@@ -211,29 +227,8 @@ class Chessfield {
       )
       .subscribe();
 
-    // scene.add(piecesGroupe);
-
     return piecesGroupe;
   }
-
-  // async updateGamePositions(): Promise<Group> {
-  //     const piecesGroupe = new THREE.Group();
-  //     piecesGroupe.name = 'pieces';
-  //
-  //     this.store.getPiecesPositions().forEach((value: any, key: any) => {
-  //         // const piece = this.gameProvider.gamePiecesSignalComputed(key);
-  //         this.store.gamePiecesSubject$.subscribe(map => {
-  //             const piece = map.get(key);
-  //             if (piece) {
-  //                 piece.position.copy(value);
-  //                 piece.position.y = 0;
-  //                 piecesGroupe.add(piece);
-  //             }
-  //         });
-  //     });
-  //
-  //     return piecesGroupe;
-  // }
 }
 
 export { Chessfield };
