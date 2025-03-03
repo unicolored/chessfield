@@ -21,16 +21,16 @@ export class Store {
   static readonly initialFen = `${initial} w KQkq - 0 1`;
   static readonly themes: { [key: string]: Theme } = {
     blue: {
-      light: 0xbfcfdd,
-      dark: 0x9dabb6,
+      light: '#bfcfdd',
+      dark: '#9dabb6',
     },
     brown: {
-      light: 0xf0d9b5,
-      dark: 0xc6b295,
+      light: '#f0d9b5',
+      dark: '#0xc6b295',
     },
     bw: {
-      light: 0xdddddd,
-      dark: 0x222222,
+      light: '#dddddd',
+      dark: '#222222',
     },
   };
 
@@ -60,12 +60,13 @@ export class Store {
 
   private fenSubject = new BehaviorSubject<FEN>(Store.initialFen);
   fenSubject$: Observable<FEN> = this.fenSubject.asObservable();
-  setFen = (fen: FEN | null | undefined) => {
+  setFen = (fen: FEN | null | undefined, lastMove?: string | null) => {
     if (fen && FenParser.isFen(fen)) {
       const lichessMoves: LichessMoves = {
         moves: [
           {
             fen: fen,
+            lm: lastMove,
           },
         ],
       };

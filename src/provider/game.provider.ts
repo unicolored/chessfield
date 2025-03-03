@@ -15,7 +15,7 @@ import {
   PiecesEnum,
 } from '../interface/board.interface.ts';
 import { Store } from './store.ts';
-import { Color, FEN } from 'chessground/types';
+import { Color } from 'chessground/types';
 import { objKey } from '../helper.ts';
 
 export class GameProvider {
@@ -39,15 +39,21 @@ export class GameProvider {
     // this.loader = new GLTFLoader();
   }
 
-  initGamePieces(lichessMoves: LichessMoves) {
+  initGamePieces(lichessMoves: LichessMoves): string | null | undefined {
     // const gamePiecesMap: GamePieces = new Map();
     const whitePiecesListMap: CoordPieceNameMap = new Map();
     const blackPiecesListMap: CoordPieceNameMap = new Map();
 
-    const lastMoveFen = GameProvider.findLastMoveFen(lichessMoves.moves);
+    const lastMove = GameProvider.findLastMove(lichessMoves.moves);
+
+    if (!lastMove) {
+      return null;
+    }
+
+    const lastMoveFen = lastMove.fen ?? lastMove.initialFen;
 
     if (!lastMoveFen) {
-      return;
+      return null;
     }
 
     const useGltf = true;
@@ -97,11 +103,7 @@ export class GameProvider {
         if (geometry) {
           const mesh =
             value.count > 1
-              ? new THREE.InstancedMesh(
-                    geometry,
-                  GameProvider.pieceMaterials[value.color],
-                  value.count,
-                )
+              ? new THREE.InstancedMesh(geometry, GameProvider.pieceMaterials[value.color], value.count)
               : new THREE.Mesh(geometry, GameProvider.pieceMaterials[value.color]);
 
           mesh.castShadow = true;
@@ -115,6 +117,8 @@ export class GameProvider {
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
     this.store.updategamePieces(boardPieces);
+
+    return lastMove.lm;
   }
 
   public loadGltfGeometries(loadingManager: LoadingManager): void {
@@ -169,11 +173,11 @@ export class GameProvider {
   //   });
   // }
 
-  private static findLastMoveFen(moves: LichessStreamData[]): FEN | null {
+  private static findLastMove(moves: LichessStreamData[]): LichessStreamData | null {
     for (let i = moves.length - 1; i >= 0; i--) {
       const move = moves[i];
       if (FenParser.isFen(move.fen ?? move.initialFen)) {
-        return move.fen;
+        return move;
       }
     }
 
