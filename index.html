@@ -29,7 +29,9 @@
     <script type="module">
       import { Chessfield } from './src/chessfield.ts';
 
-      new Chessfield(document.getElementById('board-1'), {});
+      const board1 = new Chessfield(document.getElementById('board-1'), {});
+      board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', 'e2e4');
+
       new Chessfield(document.getElementById('board-2'), {
         fen: 'r2q2k1/1p6/p2p4/2pN1rp1/N1Pb2Q1/8/PP1B4/R6K b - - 2 25',
       });
@@ -64,7 +66,8 @@
                 try {
                   const json = JSON.parse(line);
                   const fen = json.d.fen;
-                  chessfieldTv.setFen(fen);
+                  const lastMove = json.d.lm;
+                  chessfieldTv.setFen(fen, lastMove);
                 } catch (e) {
                   console.error(`JSON Parse Error: ${e}`);
                 }
@@ -86,14 +89,14 @@
       basic board, default config
       <div class="chessfield" id="board-1"></div>
     </div>
-        <div>
-          board with a fen
-          <div class="chessfield" id="board-2"></div>
-        </div>
-        <div>
-          board with a fen updated
-          <div class="chessfield" id="board-3"></div>
-        </div>
+    <div>
+      board with a fen
+      <div class="chessfield" id="board-2"></div>
+    </div>
+    <div>
+      board with a fen updated
+      <div class="chessfield" id="board-3"></div>
+    </div>
 
     <script type="module" src="/src/chessfield.ts"></script>
   </body>

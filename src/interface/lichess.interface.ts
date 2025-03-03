@@ -20,7 +20,7 @@ export interface LichessStreamData {
   players?: Players;
   wc?: number;
   bc?: number;
-  lm?: string;
+  lm?: string | null;
 }
 
 export interface Players {

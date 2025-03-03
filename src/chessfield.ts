@@ -13,7 +13,7 @@ import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
-import { cm } from './helper.ts';
+import { cm, lmToCoordinates } from './helper.ts';
 import { BoardPiece, ColorPieceNameObjectMap } from './interface/board.interface.ts';
 
 class Chessfield {
@@ -40,8 +40,8 @@ class Chessfield {
     this.store.setFen(this.config?.fen ?? Store.initialFen);
   }
 
-  setFen(fen: FEN | null | undefined) {
-    this.store.setFen(fen);
+  setFen(fen: FEN | null | undefined, lastMove: string | null | undefined) {
+    this.store.setFen(fen, lastMove);
   }
 
   toggleView(): void {
@@ -132,11 +132,28 @@ class Chessfield {
 
       this.store.movesSubject$.subscribe((moves: LichessMoves) => {
         scene.remove(mygroup);
-        this.gameProvider.initGamePieces(moves);
+        const lastMove = this.gameProvider.initGamePieces(moves);
 
         const pG = this.updateGamePositions();
         scene.remove(pG);
         scene.remove(mygroup);
+
+        const chessboard = this.boardService.createChessboard();
+        if (chessboard) {
+          scene.add(chessboard);
+
+          chessboard.rotation.x = -Math.PI / 2;
+          chessboard.position.y = 0.0005;
+
+          const theme = 'blue';
+          chessboard.setSquareColors(`${Store.themes[theme].light}`, `${Store.themes[theme].dark}`); // Tan and brown
+          const lastMoveToCoordinates = lmToCoordinates(lastMove);
+          if (lastMoveToCoordinates && lastMoveToCoordinates.length > 1) {
+            chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+            chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+          }
+          chessboard.setHighlightColor('#B1CC82'); // Red highlight
+        }
 
         mygroup = pG;
         scene.add(mygroup);

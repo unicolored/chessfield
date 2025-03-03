@@ -63,3 +63,21 @@ export interface BoardPiece {
   name: PiecesEnum;
   objectKey: string;
 }
+
+declare module 'three' {
+  interface Mesh {
+    setSquareColors?: (light: string, dark: string) => void;
+    highlightSquareStart?: (x: number, y: number) => void;
+    highlightSquareEnd?: (x: number, y: number) => void;
+    highlightSquareSelected?: (x: number, y: number) => void;
+    setHighlightColor?: (hex: string) => void;
+  }
+}
+
+export interface ExtendedMesh extends Mesh {
+  setSquareColors: (light: string, dark: string) => void;
+  highlightSquareStart: (x: number, y: number) => void;
+  highlightSquareEnd: (x: number, y: number) => void;
+  highlightSquareSelected: (x: number, y: number) => void;
+  setHighlightColor: (hex: string) => void;
+}
