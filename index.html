@@ -19,6 +19,7 @@
       .chessfield {
         width: 500px;
         height: 500px;
+        border: 1px solid white;
       }
 
       cf-board {
@@ -29,14 +30,21 @@
     <script type="module">
       import { Chessfield } from './src/chessfield.ts';
 
-      const board1 = new Chessfield(document.getElementById('board-1'), {});
+      const board1 = new Chessfield(document.getElementById('board-1'), {
+        orientation: 'white',
+        view: 'top',
+      });
       board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', 'e2e4');
 
       new Chessfield(document.getElementById('board-2'), {
         fen: 'r2q2k1/1p6/p2p4/2pN1rp1/N1Pb2Q1/8/PP1B4/R6K b - - 2 25',
+        view: 'white',
       });
 
-      const chessfieldTv = new Chessfield(document.getElementById('board-3'));
+      const chessfieldTv = new Chessfield(document.getElementById('board-3'), {
+        orientation: 'black',
+        view: 'right',
+      });
 
       fetch('https://lichess.org/api/tv/feed')
         .then(response => {

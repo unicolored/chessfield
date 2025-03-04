@@ -140,19 +140,25 @@ export class BoardService {
         caseGroup.userData['coord'] = coord;
 
         // SQUARE
-        const squareGeometry = new THREE.BoxGeometry(Store.squareSize, Store.squareHeight, Store.squareSize);
+        const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
         squareGeometry.scale(0.25, 0.25, 0.25);
         const theme = Store.themes['blue'];
-        const squareMaterial = new THREE.MeshPhongMaterial({
-          color: (rankInt + colInt) % 2 === 0 ? theme.light : theme.dark,
+        const squareMaterial = new THREE.MeshBasicMaterial({
+          // color: (rankInt + colInt) % 2 === 0 ? theme.light : theme.dark,
+          color: 0xff0000,
+          wireframe: true,
+          transparent: true,
+          opacity: 0
         });
 
         const square = new THREE.Mesh(squareGeometry, squareMaterial);
         const squarePosition = new Vector3(
           cm(rankInt - Store.boardSize / 2 + 0.5),
-          cm(Store.squareHeight / 2),
+          cm(0.055),
           cm(colInt - Store.boardSize / 2 + 0.5),
         );
+        // square.rotation.z = Math.PI / 2;
+        square.rotation.x = -Math.PI / 2;
 
         square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
         square.castShadow = false;
@@ -160,6 +166,7 @@ export class BoardService {
 
         // TEXT
         const textMesh = this.makeCoordText(font, coord, { rankInt, colInt }, theme);
+        // textMesh.rotation.x = - Math.PI * 3;
 
         // ADD
         square.add(textMesh);
@@ -186,7 +193,7 @@ export class BoardService {
     const textGeometry = new TextGeometry(text, {
       font: font,
       size: cm(0.1),
-      depth: cm(0.075),
+      depth: cm(0.01),
       // curveSegments: 12,
       // bevelEnabled: true,
       // bevelThickness: 10,
@@ -196,8 +203,8 @@ export class BoardService {
     });
     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-    textMesh.position.set(cm(0.25), 0, cm(-0.25));
-    textMesh.rotation.x = -Math.PI / 2;
+    textMesh.position.set(cm(0.25), cm(0.25), cm(0.005));
+    // textMesh.rotation.x = Math.PI * 60;
 
     return textMesh;
   }
