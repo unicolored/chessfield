@@ -15,6 +15,7 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
 import { cm, lmToCoordinates } from './helper.ts';
 import { BoardPiece, ColorPieceNameObjectMap } from './interface/board.interface.ts';
+import * as cf from './resource/chessfield.types';
 
 class Chessfield {
   private store: Store;
@@ -64,7 +65,22 @@ class Chessfield {
 
     // Camera
     const camera = new THREE.PerspectiveCamera(44, sizes.width / sizes.height, cm(0.1), 3);
-    camera.position.set(0, cm(9.5), cm(9.5));
+
+    const cameraPositionsMap = new Map<cf.View, Vector3>();
+    cameraPositionsMap.set('white', new Vector3(0, cm(9.5), cm(9.5)));
+    cameraPositionsMap.set('black', new Vector3(0, cm(9.5), cm(-9.5)));
+    cameraPositionsMap.set('right', new Vector3(cm(9.5), cm(9.5), 0));
+    cameraPositionsMap.set('left', new Vector3(cm(-9.5), cm(9.5), 0));
+
+    const orientation = this.config?.orientation ?? 'white';
+    const viewOrientation = orientation === 'white' ? 0 : -0.01;
+    cameraPositionsMap.set('top', new Vector3(0, cm(12), cm(viewOrientation)));
+
+    const viewPosition =
+      cameraPositionsMap.get(this.config?.view ?? 'white') ?? new Vector3(0, cm(9.5), cm(9.5));
+
+    camera.position.set(viewPosition.x, viewPosition.y, viewPosition.z);
+
     camera.lookAt(0, cm(2), 0);
     // camera.updateProjectionMatrix();
 
