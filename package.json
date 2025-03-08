@@ -7,12 +7,12 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/chessfield.umd.cjs",
-  "module": "./dist/chessfield.js",
+  "main": "./dist/chessfield.umd.js",
+  "module": "./dist/chessfield.es.js",
   "exports": {
     ".": {
-      "import": "./dist/chessfield.js",
-      "require": "./dist/chessfield.umd.cjs"
+      "import": "./dist/chessfield.es.js",
+      "require": "./dist/chessfield.umd.js"
     },
     "./style.css": "./dist/chessfield.css"
   },
