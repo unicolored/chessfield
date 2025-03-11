@@ -17,6 +17,12 @@ import {
 import { Store } from './store.ts';
 import { Color } from 'chessground/types';
 import { objKey } from '../helper.ts';
+import bishopModel from '../assets/models/bishop.glb?url';
+import kingModel from '../assets/models/king.glb?url';
+import knightModel from '../assets/models/knight.glb?url';
+import pawnModel from '../assets/models/pawn.glb?url';
+import queenModel from '../assets/models/queen.glb?url';
+import rookModel from '../assets/models/rook.glb?url';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
@@ -123,12 +129,12 @@ export class GameProvider {
 
   public loadGltfGeometries(loadingManager: LoadingManager): void {
     const piecesUrl = new Map();
-    piecesUrl.set(PiecesEnum.p, './../../assets/models/pawn.glb');
-    piecesUrl.set(PiecesEnum.q, './../../assets/models/queen.glb');
-    piecesUrl.set(PiecesEnum.k, './../../assets/models/king.glb');
-    piecesUrl.set(PiecesEnum.n, './../../assets/models/knight.glb');
-    piecesUrl.set(PiecesEnum.b, './../../assets/models/bishop.glb');
-    piecesUrl.set(PiecesEnum.r, './../../assets/models/rook.glb');
+    piecesUrl.set(PiecesEnum.p, pawnModel);
+    piecesUrl.set(PiecesEnum.q, queenModel);
+    piecesUrl.set(PiecesEnum.k, kingModel);
+    piecesUrl.set(PiecesEnum.n, knightModel);
+    piecesUrl.set(PiecesEnum.b, bishopModel);
+    piecesUrl.set(PiecesEnum.r, rookModel);
 
     const piecesGeometriesGltfMap = new Map<PiecesEnum, BufferGeometry>();
     piecesUrl.forEach((url: string, pieceName: PiecesEnum) => {
