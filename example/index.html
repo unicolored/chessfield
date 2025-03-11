@@ -1,14 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <title>Chessfield Demo</title>
-    <style>
-        body { margin: 0; }
-        #chess-container { width: 100vw; height: 100vh; }
-    </style>
-</head>
-<body>
-<div id="chess-container"></div>
-<script type="module" src="./main.js"></script>
-</body>
+  <head>
+    <title>Chessfield CDN</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.css" />
+  </head>
+  <body>
+    <h1>Chessfield</h1>
+    <div id="myChessContainer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.umd.js"></script>
+    <script>
+      const container = document.getElementById('myChessContainer');
+      const chessfield = new Chessfield(container, { orientation: 'black' });
+      chessfield.render();
+    </script>
+  </body>
 </html>
