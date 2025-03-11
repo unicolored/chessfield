@@ -51,20 +51,22 @@ export class Chessfield {
   }
 
   async start() {
-    if (!this.cfElement || !(this.cfElement instanceof HTMLElement)) {
+    const chessfieldElement = this.cfElement;
+
+    if (!chessfieldElement || !(chessfieldElement instanceof HTMLElement)) {
       throw new Error('Container not found');
     }
 
-    console.log(this.cfElement);
-    this.cfElement.classList.add('cf-chessfield-container');
+    console.log(chessfieldElement);
+    chessfieldElement.classList.add('cf-chessfield-container');
 
     const canvas = document.createElement('canvas') as HTMLCanvasElement;
 
     // const gui: GUI = new GUI();
 
     const sizes = {
-      width: this.cfElement.clientWidth, // 500
-      height: this.cfElement.clientHeight, // 500
+      width: chessfieldElement.clientWidth, // 500
+      height: chessfieldElement.clientHeight, // 500
     };
 
     // Camera
@@ -98,6 +100,26 @@ export class Chessfield {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = false;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+
+// Handle window resize
+    function onWindowResize() {
+      if(chessfieldElement) {
+      const sizes = {
+        width: chessfieldElement.clientWidth, // 500
+        height: chessfieldElement.clientHeight, // 500
+      };
+
+      // Update camera aspect ratio
+      camera.aspect = sizes.width / sizes.height;
+      camera.updateProjectionMatrix();
+
+      // Update renderer size
+      renderer.setSize(sizes.width, sizes.height);
+      }
+    }
+
+// Add resize event listener
+    window.addEventListener('resize', onWindowResize);
 
     // Controls
     const controls = new OrbitControls(camera, canvas);
@@ -144,10 +166,9 @@ export class Chessfield {
 
     // this.store.updatePos(true)
 
-    this.cfElement.appendChild(renderer.domElement);
+    chessfieldElement.appendChild(renderer.domElement);
 
     loadingManager.onLoad = () => {
-      console.log('✅ loading done!');
       // console.log(this.store.getPiecesGeometriesGltfMap())
 
       this.store.movesSubject$.subscribe((moves: LichessMoves) => {
