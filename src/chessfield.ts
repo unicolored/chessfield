@@ -1,4 +1,4 @@
-import './style.css';
+import './chessfield.css';
 
 import { ChessfieldConfig } from './resource/chessfield.config.ts';
 import { ChessfieldState } from './resource/chessfield.state.ts';
@@ -16,8 +16,9 @@ import { tap } from 'rxjs';
 import { cm, lmToCoordinates } from './helper.ts';
 import { BoardPiece, ColorPieceNameObjectMap } from './interface/board.interface.ts';
 import * as cf from './resource/chessfield.types';
+import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
 
-class Chessfield {
+export class Chessfield {
   private store: Store;
   private gameProvider!: GameProvider;
   private boardService: BoardService;
@@ -54,6 +55,8 @@ class Chessfield {
       throw new Error('Container not found');
     }
 
+    this.cfElement.classList.add('cf-chessfield-container');
+
     const canvas = document.createElement('canvas') as HTMLCanvasElement;
 
     const gui: GUI = new GUI();
@@ -64,20 +67,20 @@ class Chessfield {
     };
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(44, sizes.width / sizes.height, cm(0.1), 3);
+    const camera = new THREE.PerspectiveCamera(33, sizes.width / sizes.height, cm(0.1), 3);
 
     const cameraPositionsMap = new Map<cf.View, Vector3>();
-    cameraPositionsMap.set('white', new Vector3(0, cm(9.5), cm(9.5)));
-    cameraPositionsMap.set('black', new Vector3(0, cm(9.5), cm(-9.5)));
-    cameraPositionsMap.set('right', new Vector3(cm(9.5), cm(9.5), 0));
-    cameraPositionsMap.set('left', new Vector3(cm(-9.5), cm(9.5), 0));
+    cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
+    cameraPositionsMap.set('black', new Vector3(0, cm(12), cm(-12)));
+    cameraPositionsMap.set('right', new Vector3(cm(12), cm(12), 0));
+    cameraPositionsMap.set('left', new Vector3(cm(-12), cm(12), 0));
 
     const orientation = this.config?.orientation ?? 'white';
-    const viewOrientation = orientation === 'white' ? 0 : -0.01;
-    cameraPositionsMap.set('top', new Vector3(0, cm(12), cm(viewOrientation)));
+    const viewOrientation = orientation === 'white' ? 0.01 : -0.01;
+    cameraPositionsMap.set('top', new Vector3(0, cm(16), cm(viewOrientation)));
 
     const viewPosition =
-      cameraPositionsMap.get(this.config?.view ?? 'white') ?? new Vector3(0, cm(9.5), cm(9.5));
+      cameraPositionsMap.get(this.config?.view ?? 'white') ?? new Vector3(0, cm(12), cm(12));
 
     camera.position.set(viewPosition.x, viewPosition.y, viewPosition.z);
 
@@ -122,7 +125,7 @@ class Chessfield {
 
     gui.add(camera, 'fov', 1, 180, 1).onChange(updateCamera);
 
-    new FontLoader().load('assets/helvetiker_regular.typeface.json', async (font: any) => {
+    new FontLoader().load(helvetikerFont, async (font: any) => {
       const chessboardGroup = this.boardService.chessBoard(font);
       scene.add(chessboardGroup);
     });
@@ -270,5 +273,3 @@ class Chessfield {
     return piecesGroupe;
   }
 }
-
-export { Chessfield };
