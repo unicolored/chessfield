@@ -1,6 +1,5 @@
 import { Group, Mesh, Vector3 } from 'three';
 import * as THREE from 'three';
-import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { ExtendedMesh, letters, Theme } from '../interface/board.interface.ts';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
@@ -8,14 +7,14 @@ import { Store } from '../provider/store.ts';
 import { cm, hexToRgb } from '../helper.ts';
 
 export class BoardService {
-  public lights(gui: GUI): Group {
+  public lights(): Group {
     const lightGroup = new THREE.Group();
 
     const directLight = new THREE.DirectionalLight(0xffffff, 3);
     directLight.castShadow = false;
     directLight.position.set(1, 2, 1);
     lightGroup.add(directLight); // Add the target to the scene
-    gui.add(directLight, 'intensity', 0, 200);
+    // gui.add(directLight, 'intensity', 0, 200);
 
     // Add cone light with shadow map
     // const coneLight = new THREE.SpotLight(0xffffff, 100);
@@ -49,7 +48,7 @@ export class BoardService {
     // lightGroup.add(coneLightHelper);
 
     const light = new THREE.AmbientLight(0x404040, 18); // soft white light
-    gui.add(light, 'intensity', 0, 100);
+    // gui.add(light, 'intensity', 0, 100);
     lightGroup.add(light);
 
     return lightGroup;

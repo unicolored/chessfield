@@ -9,7 +9,7 @@ import { LichessMoves } from './interface/lichess.interface.ts';
 import { FEN } from 'chessground/types';
 import * as THREE from 'three';
 import { Group, InstancedMesh, Mesh, Vector3 } from 'three';
-import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
+// import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
@@ -51,15 +51,16 @@ export class Chessfield {
   }
 
   async start() {
-    if (!this.cfElement) {
+    if (!this.cfElement || !(this.cfElement instanceof HTMLElement)) {
       throw new Error('Container not found');
     }
 
+    console.log(this.cfElement);
     this.cfElement.classList.add('cf-chessfield-container');
 
     const canvas = document.createElement('canvas') as HTMLCanvasElement;
 
-    const gui: GUI = new GUI();
+    // const gui: GUI = new GUI();
 
     const sizes = {
       width: this.cfElement.clientWidth, // 500
@@ -119,11 +120,11 @@ export class Chessfield {
     /**
      * DEBUG UI
      */
-    const updateCamera = () => {
-      camera.updateProjectionMatrix();
-    };
+    // const updateCamera = () => {
+    //   camera.updateProjectionMatrix();
+    // };
 
-    gui.add(camera, 'fov', 1, 180, 1).onChange(updateCamera);
+    // gui.add(camera, 'fov', 1, 180, 1).onChange(updateCamera);
 
     new FontLoader().load(helvetikerFont, async (font: any) => {
       const chessboardGroup = this.boardService.chessBoard(font);
@@ -132,7 +133,7 @@ export class Chessfield {
 
     // const debugGroup = this.boardService.debug();
     // scene.add(debugGroup);
-    const lightGroup = this.boardService.lights(gui);
+    const lightGroup = this.boardService.lights();
     scene.add(lightGroup);
     const decorGroup = this.boardService.decor();
     scene.add(decorGroup);
