@@ -148,7 +148,7 @@ export class BoardService {
           color: 0xff0000,
           wireframe: true,
           transparent: true,
-          opacity: 0
+          opacity: 0,
         });
 
         const square = new THREE.Mesh(squareGeometry, squareMaterial);
