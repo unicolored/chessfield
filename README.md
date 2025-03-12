@@ -1,9 +1,8 @@
 # Chessfield
 
-![Chessfield views](/screenshot/views.jpg)
+![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
 
-_Chessfield_ is a free/libre open source chess UI..
-It targets modern browsers, as well as mobile development using Cordova.
+_Chessfield_ is a free/libre open source chess 3d board.
 
 ## License
 
@@ -17,14 +16,17 @@ Please read more about GPL for JavaScript on [greendrake.info](https://greendrak
 
 ## Demos
 
-- [Chess 3D TV](https://chessfield.gilles.dev/tv)
+- [Chessfield Live](https://chessfield.unicolo.red/live)
 
 ## Features
 
-Chessfield is designed to be a chess viewer, compatible with Chessground configuration.
+Chessfield is designed to be a chess viewer.
 
+- Common configuration options with [Chessground](https://github.com/lichess-org/chessground)
 - Well typed with TypeScript
 - WebGL powered by Three.js
+- Zoom and rotate around the board to see games in a any angle
+- Display FEN and highlight squares of the last move 
 
 ## Installation
 
@@ -67,3 +69,7 @@ To build the standalone:
 ```sh
 pnpm run dist
 ```
+
+## Chess set
+
+Wooden chess set by [Ali Qolami](https://www.blenderkit.com/asset-gallery?query=order:-score+author_id:1118431)
