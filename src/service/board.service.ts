@@ -185,7 +185,7 @@ export class BoardService {
     font: Font,
     text: string,
     pos: { rankInt: number; colInt: number },
-    theme: cf.Theme,
+    theme: cf.ThemeColors,
   ): Mesh {
     const textMaterial = new THREE.MeshPhongMaterial({
       color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,

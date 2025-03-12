@@ -26,7 +26,7 @@ Chessfield is designed to be a chess viewer.
 - Well typed with TypeScript
 - WebGL powered by Three.js
 - Zoom and rotate around the board to see games in a any angle
-- Display FEN and highlight squares of the last move 
+- Display FEN and highlight squares of the last move
 
 ## Installation
 
