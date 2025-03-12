@@ -46,7 +46,7 @@ export interface Theme {
 }
 
 export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
-export type ColorPieceNameObjectMap = Map<PieceColorRole, Mesh | InstancedMesh | Group>;
+export type ColorPieceNameObjectMap = Map<PieceColorRole, Mesh | InstancedMesh | Group | undefined>;
 
 export interface BoardPiece extends cg.Piece {
   coord: cg.Key | null;

@@ -11,7 +11,7 @@ export interface HeadlessState {
   lastMove?: cg.Key[]; // squares part of the last move ["c3"; "c4"]
   // selected?: cg.Key; // square currently selected "a1"
   // coordinates: boolean; // include coords attributes
-  // coordinatesOnSquares: boolean; // include coords attributes on every square
+  coordinatesOnSquares: boolean; // include coords attributes on every square
 }
 
 export interface ChessfieldState extends HeadlessState {
@@ -25,5 +25,6 @@ export function defaults(): HeadlessState {
     camera: 'white',
     angle: 'right',
     turnColor: 'white',
+    coordinatesOnSquares: false,
   };
 }
