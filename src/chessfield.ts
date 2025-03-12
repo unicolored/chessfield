@@ -14,9 +14,9 @@ import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
 import { cm, lmToCoordinates } from './helper.ts';
 import * as cf from './resource/chessfield.types';
+import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
-import { Move } from './resource/chessfield.types';
 
 export class Chessfield implements ChessfieldApi {
   private store: Store;
@@ -46,16 +46,10 @@ export class Chessfield implements ChessfieldApi {
   }
 
   setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
-    if (!this.canvas) {
-      return;
-    }
     this.store.setFen(fen, lastMove);
   }
 
   toggleView(): void {
-    if (!this.canvas) {
-      return;
-    }
     throw new Error('Method not implemented.');
   }
 
@@ -66,7 +60,6 @@ export class Chessfield implements ChessfieldApi {
       throw new Error('Container not found');
     }
 
-    console.log(chessfieldElement);
     chessfieldElement.classList.add('cf-chessfield-container');
 
     this.canvas = document.createElement('canvas') as HTMLCanvasElement;
@@ -150,9 +143,12 @@ export class Chessfield implements ChessfieldApi {
     this.gameProvider.loadGltfGeometries(loadingManager);
 
     let helvetiker: Font | null = null;
-    new FontLoader(loadingManager).load(helvetikerFont, async (font: any) => {
-      helvetiker = font;
-    });
+    if (this.config?.coordinatesOnSquares) {
+      new FontLoader(loadingManager).load(helvetikerFont, async (font: any) => {
+        helvetiker = font;
+      });
+    }
+
     /**
      * DEBUG UI
      */
@@ -182,14 +178,14 @@ export class Chessfield implements ChessfieldApi {
 
     chessfieldElement.appendChild(renderer.domElement);
 
-    function logObjectCount(scene: THREE.Scene) {
-      const count = scene.children.length;
-      console.log(`Current object count: ${count}`);
-
-      // scene.children.forEach((child, index) => {
-      //   console.log(`Object ${index}:`, child);
-      // });
-    }
+    // function logObjectCount(scene: THREE.Scene) {
+    //   const count = scene.children.length;
+    //   console.log(`Current object count: ${count}`);
+    //
+    //   // scene.children.forEach((child, index) => {
+    //   //   console.log(`Object ${index}:`, child);
+    //   // });
+    // }
 
     loadingManager.onLoad = () => {
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
@@ -201,29 +197,23 @@ export class Chessfield implements ChessfieldApi {
 
       let piecesGroup: THREE.Group;
 
-      this.store.movesSubject$
-        .pipe(
-          tap(() => scene.remove(piecesGroup)),
-          tap(moves => {
-            this.foundLastMove = GameProvider.findLastMove(moves.moves);
-            if (this.foundLastMove && this.foundLastMove.lastMove) {
-              this.gameProvider.initGamePieces(this.foundLastMove);
+      this.store.movesSubject$.pipe(tap(() => scene.remove(piecesGroup))).subscribe((moves: Moves) => {
+        this.foundLastMove = GameProvider.findLastMove(moves.moves);
+        if (this.foundLastMove) {
+          this.gameProvider.initGamePieces(this.foundLastMove);
 
-              const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
-              if (lastMoveToCoordinates && lastMoveToCoordinates.length > 1) {
-                console.log(lastMoveToCoordinates);
-                chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-                chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
-              }
-            }
-          }),
-        )
-        .subscribe(() => {
-          piecesGroup = this.updateGamePositions();
-          scene.add(piecesGroup);
+          const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
+          if (lastMoveToCoordinates.length > 1) {
+            chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+            chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+          }
+        }
 
-          logObjectCount(scene);
-        });
+        piecesGroup = this.updateGamePositions();
+        scene.add(piecesGroup);
+
+        // logObjectCount(scene);
+      });
     };
 
     /**
@@ -266,14 +256,15 @@ export class Chessfield implements ChessfieldApi {
             if (boardPiece.coord && boardPiece.objectKey) {
               const pos = squaresVector3.get(boardPiece.coord);
               if (pos) {
-                const mesh = piecesObjects.get(boardPiece.objectKey) as Mesh as InstancedMesh;
+                const mesh = piecesObjects.get(boardPiece.objectKey);
 
                 if (mesh) {
-                  piecesGroup.add(mesh);
-                  if (mesh.count) {
+                  const instanceMesh = mesh as Mesh as InstancedMesh;
+                  piecesGroup.add(instanceMesh);
+                  if (instanceMesh.count) {
                     // .. instancedMesh
                     const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-                    updateMatrix.push({ mesh, pos });
+                    updateMatrix.push({ mesh: instanceMesh, pos });
                     matrixes.set(boardPiece.objectKey, updateMatrix);
                   } else {
                     mesh.position.copy(pos);
@@ -286,13 +277,11 @@ export class Chessfield implements ChessfieldApi {
           matrixes.forEach(meshes => {
             let index = 0;
             for (const { mesh, pos } of meshes) {
-              if (mesh && pos) {
-                const matrix = new THREE.Matrix4();
-                matrix.setPosition(pos);
-                mesh.setMatrixAt(index, matrix);
+              const matrix = new THREE.Matrix4();
+              matrix.setPosition(pos);
+              mesh.setMatrixAt(index, matrix);
 
-                index++;
-              }
+              index++;
             }
           });
         }),

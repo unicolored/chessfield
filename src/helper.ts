@@ -33,7 +33,7 @@ export function hexToRgb(hex: string | number): [number, number, number] {
  * @doc return x and y positions on the board
  * @param lastMove
  */
-export function lmToCoordinates(lastMove: cg.Key[]): { x: number; y: number }[] {
+export function lmToCoordinates(lastMove: cg.Key[] | undefined): { x: number; y: number }[] {
   if (!lastMove) {
     return [];
   }

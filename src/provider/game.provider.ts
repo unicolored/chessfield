@@ -86,7 +86,7 @@ export class GameProvider {
 
     const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
     mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
-      if (value.count && value.count > 0) {
+      if (value && value.count && value.count > 0) {
         const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
 
         if (geometry) {

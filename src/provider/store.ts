@@ -60,7 +60,6 @@ export class Store {
   // fenSubject$: Observable<cg.FEN> = this.fenSubject.asObservable();
   setFen = (fen: cg.FEN, lastMove?: cg.Key[]) => {
     if (fen && FenParser.isFen(fen)) {
-      console.log('⭐️', fen, lastMove);
       const moves: cf.Moves = {
         moves: [
           {
