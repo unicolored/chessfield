@@ -2,20 +2,8 @@ import * as THREE from 'three';
 import { BufferGeometry, LoadingManager, Mesh } from 'three';
 import FenParser from '@chess-fu/fen-parser';
 import { PieceProvider } from './piece.provider';
-import { LichessMoves, LichessStreamData } from '../interface/lichess.interface.ts';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import {
-  BoardPiece,
-  ColorMaterial,
-  ColorPieceNameObjectMap,
-  COORD,
-  CoordPieceNameMap,
-  letters,
-  PieceKey,
-  PiecesEnum,
-} from '../interface/board.interface.ts';
 import { Store } from './store.ts';
-import { Color } from 'chessground/types';
 import { objKey } from '../helper.ts';
 import bishopModel from '../assets/models/bishop.glb?url';
 import kingModel from '../assets/models/king.glb?url';
@@ -23,10 +11,13 @@ import knightModel from '../assets/models/knight.glb?url';
 import pawnModel from '../assets/models/pawn.glb?url';
 import queenModel from '../assets/models/queen.glb?url';
 import rookModel from '../assets/models/rook.glb?url';
+import * as cg from 'chessground/types';
+import * as cf from '../resource/chessfield.types.ts';
+import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
-  static readonly pieceMaterials: ColorMaterial = {
+  static readonly pieceMaterials: cf.ColorMaterial = {
     white: new THREE.MeshPhongMaterial({
       color: 0xdddddd,
       specular: 0x474747,
@@ -45,52 +36,44 @@ export class GameProvider {
     // this.loader = new GLTFLoader();
   }
 
-  initGamePieces(lichessMoves: LichessMoves): string | null | undefined {
+  initGamePieces(move: cf.Move): void {
     // const gamePiecesMap: GamePieces = new Map();
-    const whitePiecesListMap: CoordPieceNameMap = new Map();
-    const blackPiecesListMap: CoordPieceNameMap = new Map();
+    const whitePiecesListMap: cf.CoordPieceNameMap = new Map();
+    const blackPiecesListMap: cf.CoordPieceNameMap = new Map();
 
-    const lastMove = GameProvider.findLastMove(lichessMoves.moves);
-
-    if (!lastMove) {
-      return null;
-    }
-
-    const lastMoveFen = lastMove.fen ?? lastMove.initialFen;
-
-    if (!lastMoveFen) {
-      return null;
-    }
+    const fen = move.fen;
 
     const useGltf = true;
     const pieceGeometriesMap = useGltf ? this.store.getPiecesGeometriesGltfMap() : this.getGeometries();
 
-    const fenParsed = new FenParser(lastMoveFen);
+    // TODO: Check if i can replace FenParser with the fen reader of chessground
+    const fenParsed = new FenParser(fen);
 
-    const boardPieces: BoardPiece[] = [];
+    const boardPieces: cf.BoardPiece[] = [];
     fenParsed.ranks.forEach((rank: string, index: number) => {
       const rankIndex = Store.boardSize - index;
 
       Array.from(rank).forEach((pieceStr: string, index: number) => {
-        if (pieceStr !== '-' && pieceStr in PiecesEnum) {
-          const coord: COORD = `${letters[index]}${rankIndex}` as COORD; // A1, B2, G5, H8, etc.
+        if (pieceStr !== '-') {
+          const letters = Object.values(cg.files);
+          const coord: cg.Key = `${letters[index]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
 
-          const color: Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as Color;
+          const color: cg.Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as cg.Color;
 
-          const name: PiecesEnum = PieceProvider.getPiece(pieceStr as PieceKey);
+          const role: cg.Role = PieceProvider.getPiece(pieceStr as cf.PieceKey);
           // const pieceGroup = this.getOnePiece(pieceGeometries[pieceKey], pieceMaterials[color]);
 
           if (color === 'white') {
-            whitePiecesListMap.set(coord, name);
+            whitePiecesListMap.set(coord, role);
           } else if (color === 'black') {
-            blackPiecesListMap.set(coord, name);
+            blackPiecesListMap.set(coord, role);
           }
 
           boardPieces.push({
             coord,
-            name,
+            role,
             color,
-            objectKey: objKey(color, name),
+            objectKey: objKey(color, role),
           });
           // }
         }
@@ -101,10 +84,10 @@ export class GameProvider {
     const blackCountsMap = this.countPieces(blackPiecesListMap, 'black');
     const mergedMap = new Map([...whiteCountsMap, ...blackCountsMap]);
 
-    const boardPiecesObjectsMap: ColorPieceNameObjectMap = new Map();
-    mergedMap.forEach((value, key: string) => {
-      if (value.count > 0) {
-        const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.name);
+    const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
+    mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
+      if (value.count && value.count > 0) {
+        const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
 
         if (geometry) {
           const mesh =
@@ -114,7 +97,7 @@ export class GameProvider {
 
           mesh.castShadow = true;
           mesh.receiveShadow = true;
-          mesh.name = `${key}-${value.color}-${value.name}`;
+          mesh.name = `${key}-${value.color}-${value.role}`;
 
           boardPiecesObjectsMap.set(key, mesh);
         }
@@ -123,22 +106,19 @@ export class GameProvider {
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
     this.store.updategamePieces(boardPieces);
-
-    return lastMove.lm;
   }
 
   public loadGltfGeometries(loadingManager: LoadingManager): void {
     const piecesUrl = new Map();
-    piecesUrl.set(PiecesEnum.p, pawnModel);
-    piecesUrl.set(PiecesEnum.q, queenModel);
-    piecesUrl.set(PiecesEnum.k, kingModel);
-    piecesUrl.set(PiecesEnum.n, knightModel);
-    piecesUrl.set(PiecesEnum.b, bishopModel);
-    piecesUrl.set(PiecesEnum.r, rookModel);
+    piecesUrl.set(cf.PiecesEnum.p, pawnModel);
+    piecesUrl.set(cf.PiecesEnum.q, queenModel);
+    piecesUrl.set(cf.PiecesEnum.k, kingModel);
+    piecesUrl.set(cf.PiecesEnum.n, knightModel);
+    piecesUrl.set(cf.PiecesEnum.b, bishopModel);
+    piecesUrl.set(cf.PiecesEnum.r, rookModel);
 
-    const piecesGeometriesGltfMap = new Map<PiecesEnum, BufferGeometry>();
-    piecesUrl.forEach((url: string, pieceName: PiecesEnum) => {
-      // const mesh = await this.loadGLTF(piecesUrl.get(piece));
+    const piecesGeometriesGltfMap = new Map<cf.PiecesEnum, BufferGeometry>();
+    piecesUrl.forEach((url: string, pieceName: cf.PiecesEnum) => {
       new GLTFLoader(loadingManager).load(
         url,
         (gltf: GLTF) => {
@@ -160,29 +140,10 @@ export class GameProvider {
     this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
   }
 
-  // private loadGLTF(url: string): Promise<Mesh> {
-  //   console.log(url)
-  //   return new Promise((resolve, reject) => {
-  //     this.loader.load(
-  //       url,
-  //       (gltf: GLTF) => {
-  //         console.log(gltf.scene.children[0])
-  //         if (gltf.scene.children[0]) {
-  //           resolve(gltf.scene.children[0] as Mesh);
-  //         } else {
-  //           reject('No children found')
-  //         }
-  //       }, // Success: resolve with the loaded gltf
-  //       undefined, // Progress: optional, omitted here
-  //       error => reject(error), // Error: reject with the error
-  //     );
-  //   });
-  // }
-
-  private static findLastMove(moves: LichessStreamData[]): LichessStreamData | null {
+  static findLastMove(moves: cf.Move[]): cf.Move | null {
     for (let i = moves.length - 1; i >= 0; i--) {
       const move = moves[i];
-      if (FenParser.isFen(move.fen ?? move.initialFen)) {
+      if (FenParser.isFen(move.fen)) {
         return move;
       }
     }
@@ -190,21 +151,18 @@ export class GameProvider {
     return null;
   }
 
-  private countPieces(
-    listeMap: CoordPieceNameMap,
-    color: Color,
-  ): Map<string, { count: number; color: Color; name: PiecesEnum }> {
-    const map = new Map<string, { count: number; color: Color; name: PiecesEnum }>();
+  private countPieces(listeMap: cf.CoordPieceNameMap, color: cg.Color): Map<PieceColorRole, BoardPiece> {
+    const map = new Map<PieceColorRole, BoardPiece>();
     listeMap.forEach(pieceName => {
       const oK = objKey(color, pieceName);
       const count = map.get(oK)?.count || 0;
-      map.set(oK, { count: count + 1, color, name: pieceName });
+      map.set(oK, { count: count + 1, color, role: pieceName, coord: null, objectKey: null });
     });
     return map;
   }
 
-  private getGeometries(): Map<PiecesEnum, BufferGeometry> {
-    const pieceGeometriesMap = new Map<PiecesEnum, BufferGeometry>();
+  private getGeometries(): Map<cf.PiecesEnum, BufferGeometry> {
+    const pieceGeometriesMap = new Map<cf.PiecesEnum, BufferGeometry>();
 
     const kingGeometry = new THREE.BoxGeometry(0.5, 1.33, 0.5, 4).translate(0, 0.5, 0);
     const queenGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 4).translate(0, 0.5, 0);
@@ -213,12 +171,12 @@ export class GameProvider {
     const rookGeometry = new THREE.CylinderGeometry(0.33, 0.33, 0.85, 12).translate(0, 0.5, 0);
     const pawnGeometry = new THREE.SphereGeometry(0.2, 4, 4).translate(0, 0.5, 0);
 
-    pieceGeometriesMap.set(PiecesEnum.k, kingGeometry);
-    pieceGeometriesMap.set(PiecesEnum.q, queenGeometry);
-    pieceGeometriesMap.set(PiecesEnum.b, bishopGeometry);
-    pieceGeometriesMap.set(PiecesEnum.n, knightGeometry);
-    pieceGeometriesMap.set(PiecesEnum.r, rookGeometry);
-    pieceGeometriesMap.set(PiecesEnum.p, pawnGeometry);
+    pieceGeometriesMap.set(cf.PiecesEnum.k, kingGeometry);
+    pieceGeometriesMap.set(cf.PiecesEnum.q, queenGeometry);
+    pieceGeometriesMap.set(cf.PiecesEnum.b, bishopGeometry);
+    pieceGeometriesMap.set(cf.PiecesEnum.n, knightGeometry);
+    pieceGeometriesMap.set(cf.PiecesEnum.r, rookGeometry);
+    pieceGeometriesMap.set(cf.PiecesEnum.p, pawnGeometry);
 
     return pieceGeometriesMap;
   }

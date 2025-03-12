@@ -1,11 +1,24 @@
 import { Group, InstancedMesh, Material, Mesh } from 'three';
-import { Color } from 'chessground/types';
+import * as cg from 'chessground/types';
 
-export type COORD = string;
+export type Camera = 'white' | 'right' | 'black' | 'left' | 'top';
+
+export type Angle = 'left' | 'center' | 'right';
+
+export interface Moves {
+  moves: Move[];
+}
+
+export interface Move {
+  fen: cg.FEN;
+  lastMove?: cg.Key[];
+}
 
 export type ColorMaterial = {
-  [key in Color]: Material;
+  [key in cg.Color]: Material;
 };
+
+export type PieceColorRole = 'white-knight' | `${cg.Color}-${cg.Role}`;
 
 export type PieceKey = keyof typeof PiecesEnum;
 
@@ -16,12 +29,6 @@ export enum PiecesEnum {
   n = 'knight',
   b = 'bishop',
   r = 'rook',
-  P = 'pawn',
-  K = 'king',
-  Q = 'queen',
-  N = 'knight',
-  B = 'bishop',
-  R = 'rook',
 }
 
 export const PiecesTypes: Record<PieceKey, PiecesEnum> = {
@@ -31,20 +38,6 @@ export const PiecesTypes: Record<PieceKey, PiecesEnum> = {
   n: PiecesEnum.n,
   b: PiecesEnum.b,
   r: PiecesEnum.r,
-  P: PiecesEnum.p,
-  K: PiecesEnum.k,
-  Q: PiecesEnum.q,
-  N: PiecesEnum.n,
-  B: PiecesEnum.b,
-  R: PiecesEnum.r,
-};
-
-export const letters = Array.from({ length: 8 }, (_, i) => String.fromCharCode(65 + i));
-
-export const createEl = (tagName: string, className?: string): HTMLElement => {
-  const el = document.createElement(tagName);
-  if (className) el.className = className;
-  return el;
 };
 
 export interface Theme {
@@ -52,16 +45,13 @@ export interface Theme {
   dark: string | number;
 }
 
-export type CoordPieceNameMap = Map<COORD, PiecesEnum>;
-export type PieceNameObjectMap = Map<PiecesEnum, Mesh | Group>;
-export type ColorPieceNameObjectMap = Map<string, Mesh | InstancedMesh | Group>;
-export type CoordPieceObjectMap = Map<COORD, Mesh | Group>;
+export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
+export type ColorPieceNameObjectMap = Map<PieceColorRole, Mesh | InstancedMesh | Group>;
 
-export interface BoardPiece {
-  coord: COORD;
-  color: Color;
-  name: PiecesEnum;
-  objectKey: string;
+export interface BoardPiece extends cg.Piece {
+  coord: cg.Key | null;
+  objectKey: PieceColorRole | null;
+  count?: number;
 }
 
 declare module 'three' {

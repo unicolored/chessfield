@@ -1,25 +1,18 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BufferGeometry, Vector3 } from 'three';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import {
-  BoardPiece,
-  ColorPieceNameObjectMap,
-  letters,
-  PiecesEnum,
-  Theme,
-} from '../interface/board.interface.ts';
-import { FEN } from 'chessground/types';
+import * as cg from 'chessground/types';
 import { initial } from 'chessground/fen';
 import FenParser from '@chess-fu/fen-parser';
-import { LichessMoves } from '../interface/lichess.interface.ts';
 import { cm } from '../helper.ts';
+import * as cf from '../resource/chessfield.types.ts';
 
 export class Store {
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
   static readonly initialFen = `${initial} w KQkq - 0 1`;
-  static readonly themes: { [key: string]: Theme } = {
+  static readonly themes: { [key: string]: cf.Theme } = {
     blue: {
       light: '#bfcfdd',
       dark: '#9dabb6',
@@ -35,11 +28,11 @@ export class Store {
   };
 
   private piecesPositions!: Map<string, Vector3>;
-  private boardPiecesObjectsMap: ColorPieceNameObjectMap = new Map();
+  private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
   // private loader: GLTFLoader;
-  private piecesGeometriesGltfMap: Map<PiecesEnum, BufferGeometry> = new Map();
-  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<PiecesEnum, BufferGeometry>) {
+  private piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry> = new Map();
+  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry>) {
     this.piecesGeometriesGltfMap = piecesGeometriesGltfMap;
   }
 
@@ -53,42 +46,48 @@ export class Store {
     return this.config ?? {};
   }
 
-  private movesSubject = new BehaviorSubject<LichessMoves>({
-    moves: [],
+  private movesSubject = new BehaviorSubject<cf.Moves>({
+    moves: [
+      {
+        fen: Store.initialFen,
+        lastMove: [],
+      },
+    ],
   });
-  movesSubject$: Observable<LichessMoves> = this.movesSubject.asObservable();
+  movesSubject$: Observable<cf.Moves> = this.movesSubject.asObservable();
 
-  private fenSubject = new BehaviorSubject<FEN>(Store.initialFen);
-  fenSubject$: Observable<FEN> = this.fenSubject.asObservable();
-  setFen = (fen: FEN | null | undefined, lastMove?: string | null) => {
+  // private fenSubject = new BehaviorSubject<cg.FEN>(Store.initialFen);
+  // fenSubject$: Observable<cg.FEN> = this.fenSubject.asObservable();
+  setFen = (fen: cg.FEN, lastMove?: cg.Key[]) => {
     if (fen && FenParser.isFen(fen)) {
-      const lichessMoves: LichessMoves = {
+      console.log('⭐️', fen, lastMove);
+      const moves: cf.Moves = {
         moves: [
           {
             fen: fen,
-            lm: lastMove,
+            lastMove: lastMove,
           },
         ],
       };
 
-      this.fenSubject.next(fen);
-      this.movesSubject.next(lichessMoves);
+      // this.fenSubject.next(fen);
+      this.movesSubject.next(moves);
     }
   };
 
-  private gamePiecesSubject = new BehaviorSubject<BoardPiece[]>([]);
-  gamePiecesSubject$: Observable<BoardPiece[]> = this.gamePiecesSubject.asObservable();
-  updategamePieces = (list: BoardPiece[]) => {
+  private gamePiecesSubject = new BehaviorSubject<cf.BoardPiece[]>([]);
+  gamePiecesSubject$: Observable<cf.BoardPiece[]> = this.gamePiecesSubject.asObservable();
+  updategamePieces = (list: cf.BoardPiece[]) => {
     this.gamePiecesSubject.next(list);
   };
 
-  getPiecesPositions(): Map<string, Vector3> {
+  getSquaresVector3(): Map<string, Vector3> {
     if (!this.piecesPositions) {
       this.piecesPositions = new Map<string, Vector3>();
 
       for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
         for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-          const coord = letters[rankInt] + (Store.boardSize - colInt);
+          const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
 
           const x = cm(rankInt - Store.boardSize / 2 + 0.5);
           const y = cm(Store.squareHeight / 2);
@@ -102,10 +101,10 @@ export class Store {
     return this.piecesPositions;
   }
 
-  setBoardPiecesObjectsMap(boardPiecesObjectsMap: ColorPieceNameObjectMap) {
+  setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap) {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
   }
-  getBoardPiecesObjectsMap(): ColorPieceNameObjectMap {
+  getBoardPiecesObjectsMap(): cf.ColorPieceNameObjectMap {
     return this.boardPiecesObjectsMap;
   }
 }
