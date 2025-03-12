@@ -20,7 +20,7 @@ Please read more about GPL for JavaScript on [greendrake.info](https://greendrak
 
 ## Features
 
-Chessfield is designed to be a chess viewer.
+Chessfield is designed to be a 3d chess viewer.
 
 - Common configuration options with [Chessground](https://github.com/lichess-org/chessground)
 - Well typed with TypeScript
