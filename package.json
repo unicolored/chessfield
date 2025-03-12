@@ -1,6 +1,6 @@
 {
   "name": "chessfield",
-  "version": "1.2.0.1-beta",
+  "version": "1.2.1",
   "description": "A TypeScript library to render a 3D chessboard",
   "main": "dist/chessfield.umd.js",
   "module": "dist/chessfield.js",
@@ -22,7 +22,8 @@
     "bundle": "vite build",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
     "dev": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs": "mkdocs serve"
   },
   "devDependencies": {
     "@chess-fu/fen-parser": "^1.1.4",
