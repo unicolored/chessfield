@@ -4,9 +4,9 @@ repo_url: https://github.com/unicolored/chessfield
 site_description: A JavaScript library for chessboard generation and manipulation
 site_author: unicolored
 theme:
-  name: material  # Use mkdocs-material theme
+  name: material # Use mkdocs-material theme
   palette:
-    primary: teal  # Customize colors
+    primary: teal # Customize colors
 nav:
   - Home: index.md
   - Installation: installation.md
