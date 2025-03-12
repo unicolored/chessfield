@@ -1,1 +1,25 @@
-{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"]},"docs":[{"location":"","title":"Welcome to Chessfield","text":"<p>Chessfield is a JavaScript library for creating and manipulating chessboards. Whether you're building a chess game or a puzzle, Chessfield simplifies the process.</p>"},{"location":"#quick-start","title":"Quick Start","text":"<p>Install via npm:</p> <pre><code>npm install chessfield\n</code></pre>"},{"location":"installation/","title":"Installation","text":"<p>Install Chessfield using npm:</p> <pre><code>npm install chessfield\n</code></pre> <p>Or use a CDN:</p> <pre><code>&lt;script src=\"https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.umd.js\"&gt;&lt;/script&gt;\n</code></pre>"},{"location":"usage/","title":"Usage","text":"<p>Basic example:</p> <pre><code>const container = document.getElementById('board');\nconst chessfield = new Chessfield(container, { orientation: 'white' });\n</code></pre>"}]}
+{
+  "config": { "lang": ["en"], "separator": "[\\s\\-]+", "pipeline": ["stopWordFilter"] },
+  "docs": [
+    {
+      "location": "",
+      "title": "Welcome to Chessfield",
+      "text": "<p>Chessfield is a JavaScript library for creating and manipulating chessboards. Whether you're building a chess game or a puzzle, Chessfield simplifies the process.</p>"
+    },
+    {
+      "location": "#quick-start",
+      "title": "Quick Start",
+      "text": "<p>Install via npm:</p> <pre><code>npm install chessfield\n</code></pre>"
+    },
+    {
+      "location": "installation/",
+      "title": "Installation",
+      "text": "<p>Install Chessfield using npm:</p> <pre><code>npm install chessfield\n</code></pre> <p>Or use a CDN:</p> <pre><code>&lt;script src=\"https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.umd.js\"&gt;&lt;/script&gt;\n</code></pre>"
+    },
+    {
+      "location": "usage/",
+      "title": "Usage",
+      "text": "<p>Basic example:</p> <pre><code>const container = document.getElementById('board');\nconst chessfield = new Chessfield(container, { orientation: 'white' });\n</code></pre>"
+    }
+  ]
+}
