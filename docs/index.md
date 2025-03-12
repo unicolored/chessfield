@@ -1,4 +1,3 @@
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.2.0/dist/chessfield.css" />
 
 <style>
@@ -61,8 +60,6 @@ const chessfield = new Chessfield(document.getElementById('board'), { orientatio
     <li><strong>Issues & Contributions</strong>: Feel free to report bugs or contribute on <a href="https://github.com/unicolored/chessfield" target="_blank">GitHub</a>!</li>
 </ul>
 
-
-
 <!--<gilles.nx-root></gilles.nx-root>-->
 <script type="module">
     import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield@1.2.0/dist/chessfield.js';
@@ -71,4 +68,3 @@ const chessfield = new Chessfield(document.getElementById('board'), { orientatio
         orientation: 'white',
     });
 </script>
-
