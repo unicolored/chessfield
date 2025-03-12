@@ -1,6 +1,9 @@
 import { Group, InstancedMesh, Material, Mesh } from 'three';
 import * as cg from 'chessground/types';
 
+export type Mode = 'light' | 'dark';
+export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark';
+
 export type Camera = 'white' | 'right' | 'black' | 'left' | 'top';
 
 export type Angle = 'left' | 'center' | 'right';
@@ -40,7 +43,11 @@ export const PiecesTypes: Record<PieceKey, PiecesEnum> = {
   r: PiecesEnum.r,
 };
 
-export interface Theme {
+export type Themes = {
+  [key in Theme]: ThemeColors;
+};
+
+export interface ThemeColors {
   light: string | number;
   dark: string | number;
 }

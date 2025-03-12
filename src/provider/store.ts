@@ -6,20 +6,33 @@ import { initial } from 'chessground/fen';
 import FenParser from '@chess-fu/fen-parser';
 import { cm } from '../helper.ts';
 import * as cf from '../resource/chessfield.types.ts';
+import { Themes } from '../resource/chessfield.types.ts';
 
 export class Store {
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
   static readonly initialFen = `${initial} w KQkq - 0 1`;
-  static readonly themes: { [key: string]: cf.Theme } = {
+  static readonly themes: Themes = {
+    light: {
+      light: '#bfcfdd',
+      dark: '#9dabb6',
+    },
+    dark: {
+      light: '#bfcfdd',
+      dark: '#9dabb6',
+    },
     blue: {
       light: '#bfcfdd',
       dark: '#9dabb6',
     },
     brown: {
       light: '#f0d9b5',
-      dark: '#0xc6b295',
+      dark: '#c6b295',
+    },
+    green: {
+      light: '#dddddd',
+      dark: '#222222',
     },
     bw: {
       light: '#dddddd',

@@ -2,6 +2,8 @@ import * as cg from 'chessground/types';
 import * as cf from './chessfield.types';
 
 export interface ChessfieldConfig {
+  mode?: cf.Mode; //
+  theme?: cf.Theme; //
   fen?: cg.FEN; // chess position in Forsyth notation
   orientation?: cg.Color; // board orientation when 'view' is 'top'.
   camera?: cf.Camera; // camera position around the chessboard.
