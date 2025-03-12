@@ -5,25 +5,27 @@ import { ChessfieldState } from './resource/chessfield.state.ts';
 import { GameProvider } from './provider/game.provider.ts';
 import { Store } from './provider/store.ts';
 import { BoardService } from './service/board.service.ts';
-import { LichessMoves } from './interface/lichess.interface.ts';
-import { FEN } from 'chessground/types';
+import * as cg from 'chessground/types';
 import * as THREE from 'three';
 import { Group, InstancedMesh, Mesh, Vector3 } from 'three';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
 import { cm, lmToCoordinates } from './helper.ts';
-import { BoardPiece, ColorPieceNameObjectMap } from './interface/board.interface.ts';
 import * as cf from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
+import { ChessfieldApi } from './resource/chessfield.api.ts';
+import { Move } from './resource/chessfield.types';
 
-export class Chessfield {
+export class Chessfield implements ChessfieldApi {
   private store: Store;
   private gameProvider!: GameProvider;
   private boardService: BoardService;
 
   state!: ChessfieldState;
+  private canvas!: HTMLCanvasElement;
+  private foundLastMove!: Move | null;
 
   constructor(
     private cfElement: HTMLElement | null,
@@ -37,16 +39,23 @@ export class Chessfield {
     this.boardService = new BoardService();
     this.gameProvider = new GameProvider(this.store);
 
+    // this.store.setFen(this.config?.fen ?? Store.initialFen);
+    // this.setFen(this.config?.fen ?? Store.initialFen);
+    this.setFen(this.config?.fen ?? Store.initialFen);
     this.start();
-
-    this.store.setFen(this.config?.fen ?? Store.initialFen);
   }
 
-  setFen(fen: FEN | null | undefined, lastMove: string | null | undefined) {
+  setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
+    if (!this.canvas) {
+      return;
+    }
     this.store.setFen(fen, lastMove);
   }
 
   toggleView(): void {
+    if (!this.canvas) {
+      return;
+    }
     throw new Error('Method not implemented.');
   }
 
@@ -60,7 +69,7 @@ export class Chessfield {
     console.log(chessfieldElement);
     chessfieldElement.classList.add('cf-chessfield-container');
 
-    const canvas = document.createElement('canvas') as HTMLCanvasElement;
+    this.canvas = document.createElement('canvas') as HTMLCanvasElement;
 
     // const gui: GUI = new GUI();
 
@@ -71,8 +80,9 @@ export class Chessfield {
 
     // Camera
     const camera = new THREE.PerspectiveCamera(33, sizes.width / sizes.height, cm(0.1), 3);
+    camera.name = '🎥 Main Camera';
 
-    const cameraPositionsMap = new Map<cf.View, Vector3>();
+    const cameraPositionsMap = new Map<cf.Camera, Vector3>();
     cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
     cameraPositionsMap.set('black', new Vector3(0, cm(12), cm(-12)));
     cameraPositionsMap.set('right', new Vector3(cm(12), cm(12), 0));
@@ -83,7 +93,7 @@ export class Chessfield {
     cameraPositionsMap.set('top', new Vector3(0, cm(16), cm(viewOrientation)));
 
     const viewPosition =
-      cameraPositionsMap.get(this.config?.view ?? 'white') ?? new Vector3(0, cm(12), cm(12));
+      cameraPositionsMap.get(this.config?.camera ?? 'white') ?? new Vector3(0, cm(12), cm(12));
 
     camera.position.set(viewPosition.x, viewPosition.y, viewPosition.z);
 
@@ -92,7 +102,7 @@ export class Chessfield {
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
+      canvas: this.canvas,
       // powerPreference: 'high-performance',
       antialias: window.devicePixelRatio < 2,
     });
@@ -101,28 +111,28 @@ export class Chessfield {
     renderer.shadowMap.enabled = false;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
-// Handle window resize
+    // Handle window resize
     function onWindowResize() {
-      if(chessfieldElement) {
-      const sizes = {
-        width: chessfieldElement.clientWidth, // 500
-        height: chessfieldElement.clientHeight, // 500
-      };
+      if (chessfieldElement) {
+        const sizes = {
+          width: chessfieldElement.clientWidth, // 500
+          height: chessfieldElement.clientHeight, // 500
+        };
 
-      // Update camera aspect ratio
-      camera.aspect = sizes.width / sizes.height;
-      camera.updateProjectionMatrix();
+        // Update camera aspect ratio
+        camera.aspect = sizes.width / sizes.height;
+        camera.updateProjectionMatrix();
 
-      // Update renderer size
-      renderer.setSize(sizes.width, sizes.height);
+        // Update renderer size
+        renderer.setSize(sizes.width, sizes.height);
       }
     }
 
-// Add resize event listener
+    // Add resize event listener
     window.addEventListener('resize', onWindowResize);
 
     // Controls
-    const controls = new OrbitControls(camera, canvas);
+    const controls = new OrbitControls(camera, this.canvas);
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI / 2.3;
@@ -139,6 +149,10 @@ export class Chessfield {
 
     this.gameProvider.loadGltfGeometries(loadingManager);
 
+    let helvetiker: Font | null = null;
+    new FontLoader(loadingManager).load(helvetikerFont, async (font: any) => {
+      helvetiker = font;
+    });
     /**
      * DEBUG UI
      */
@@ -148,19 +162,19 @@ export class Chessfield {
 
     // gui.add(camera, 'fov', 1, 180, 1).onChange(updateCamera);
 
-    new FontLoader().load(helvetikerFont, async (font: any) => {
-      const chessboardGroup = this.boardService.chessBoard(font);
-      scene.add(chessboardGroup);
-    });
+    const chessboardGroup = new THREE.Group();
+    chessboardGroup.name = '🟣 Chessboard Group';
+    scene.add(chessboardGroup);
 
     // const debugGroup = this.boardService.debug();
     // scene.add(debugGroup);
     const lightGroup = this.boardService.lights();
+    lightGroup.name = '🟡 Lights';
     scene.add(lightGroup);
     const decorGroup = this.boardService.decor();
+    decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
 
-    let mygroup: Group;
     // let pG = await this.updateGamePositions();
     // scene.add(pG)
 
@@ -168,37 +182,48 @@ export class Chessfield {
 
     chessfieldElement.appendChild(renderer.domElement);
 
+    function logObjectCount(scene: THREE.Scene) {
+      const count = scene.children.length;
+      console.log(`Current object count: ${count}`);
+
+      // scene.children.forEach((child, index) => {
+      //   console.log(`Object ${index}:`, child);
+      // });
+    }
+
     loadingManager.onLoad = () => {
-      // console.log(this.store.getPiecesGeometriesGltfMap())
+      // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
+      const chessboard = this.boardService.createChessboard();
+      chessboardGroup.add(chessboard);
 
-      this.store.movesSubject$.subscribe((moves: LichessMoves) => {
-        scene.remove(mygroup);
-        const lastMove = this.gameProvider.initGamePieces(moves);
+      const casesGroup = this.boardService.createCases(helvetiker);
+      chessboardGroup.add(casesGroup);
 
-        const pG = this.updateGamePositions();
-        scene.remove(pG);
-        scene.remove(mygroup);
+      let piecesGroup: THREE.Group;
 
-        const chessboard = this.boardService.createChessboard();
-        if (chessboard) {
-          scene.add(chessboard);
+      this.store.movesSubject$
+        .pipe(
+          tap(() => scene.remove(piecesGroup)),
+          tap(moves => {
+            this.foundLastMove = GameProvider.findLastMove(moves.moves);
+            if (this.foundLastMove && this.foundLastMove.lastMove) {
+              this.gameProvider.initGamePieces(this.foundLastMove);
 
-          chessboard.rotation.x = -Math.PI / 2;
-          chessboard.position.y = 0.0005;
+              const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
+              if (lastMoveToCoordinates && lastMoveToCoordinates.length > 1) {
+                console.log(lastMoveToCoordinates);
+                chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+                chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+              }
+            }
+          }),
+        )
+        .subscribe(() => {
+          piecesGroup = this.updateGamePositions();
+          scene.add(piecesGroup);
 
-          const theme = 'blue';
-          chessboard.setSquareColors(`${Store.themes[theme].light}`, `${Store.themes[theme].dark}`); // Tan and brown
-          const lastMoveToCoordinates = lmToCoordinates(lastMove);
-          if (lastMoveToCoordinates && lastMoveToCoordinates.length > 1) {
-            chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-            chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
-          }
-          chessboard.setHighlightColor('#B1CC82'); // Red highlight
-        }
-
-        mygroup = pG;
-        scene.add(mygroup);
-      });
+          logObjectCount(scene);
+        });
     };
 
     /**
@@ -209,26 +234,6 @@ export class Chessfield {
     const tick = () => {
       // const elapsedTime = clock.getElapsedTime();
       // console.log(elapsedTime)
-
-      // this.updateGamePositions().then(pG => {
-      //     mygroup = pG;
-      //     scene.add(mygroup);
-      // });
-
-      if (mygroup) {
-        // scene.remove(mygroup);
-        // this.updateGamePositions().then(pG => {
-        //     mygroup = pG;
-        //     scene.add(mygroup);
-        // })
-        // this.store.updatePosSubject$.subscribe(async (updatePos) => {
-        //     if (updatePos) {
-        //         pG = await this.updateGamePositions();
-        //         scene.add(pG);
-        //     }
-        //     this.store.updatePos(false)
-        // });
-      }
 
       // Update controls
       controls.update();
@@ -245,32 +250,34 @@ export class Chessfield {
     tick();
   }
 
-  updateGamePositions(): Group {
-    const piecesGroupe = new THREE.Group();
-    piecesGroupe.name = 'pieces';
+  private updateGamePositions(): Group {
+    const piecesGroup = new THREE.Group();
+    piecesGroup.name = '🟢 Pièces Group';
 
-    const piecesPositions: Map<string, Vector3> = this.store.getPiecesPositions();
-    const piecesObjects: ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
+    const squaresVector3: Map<string, Vector3> = this.store.getSquaresVector3();
+    const piecesObjects: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
     this.store.gamePiecesSubject$
       .pipe(
-        tap((list: BoardPiece[]) => {
+        tap((list: cf.BoardPiece[]) => {
           const matrixes: Map<string, { mesh: InstancedMesh; pos: Vector3 }[]> = new Map();
 
-          list.forEach((boardPiece: BoardPiece) => {
-            const pos = piecesPositions.get(boardPiece.coord);
-            if (pos) {
-              const mesh = piecesObjects.get(boardPiece.objectKey) as Mesh as InstancedMesh;
+          list.forEach((boardPiece: cf.BoardPiece) => {
+            if (boardPiece.coord && boardPiece.objectKey) {
+              const pos = squaresVector3.get(boardPiece.coord);
+              if (pos) {
+                const mesh = piecesObjects.get(boardPiece.objectKey) as Mesh as InstancedMesh;
 
-              if (mesh) {
-                piecesGroupe.add(mesh);
-                if (mesh.count) {
-                  // .. instancedMesh
-                  const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-                  updateMatrix.push({ mesh, pos });
-                  matrixes.set(boardPiece.objectKey, updateMatrix);
-                } else {
-                  mesh.position.copy(pos);
+                if (mesh) {
+                  piecesGroup.add(mesh);
+                  if (mesh.count) {
+                    // .. instancedMesh
+                    const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
+                    updateMatrix.push({ mesh, pos });
+                    matrixes.set(boardPiece.objectKey, updateMatrix);
+                  } else {
+                    mesh.position.copy(pos);
+                  }
                 }
               }
             }
@@ -292,6 +299,6 @@ export class Chessfield {
       )
       .subscribe();
 
-    return piecesGroupe;
+    return piecesGroup;
   }
 }

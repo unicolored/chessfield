@@ -1,10 +1,11 @@
 import { Group, Mesh, Vector3 } from 'three';
 import * as THREE from 'three';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { ExtendedMesh, letters, Theme } from '../interface/board.interface.ts';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Store } from '../provider/store.ts';
 import { cm, hexToRgb } from '../helper.ts';
+import * as cg from 'chessground/types';
+import * as cf from '../resource/chessfield.types.ts';
 
 export class BoardService {
   public lights(): Group {
@@ -125,13 +126,14 @@ export class BoardService {
     return debugGroup;
   }
 
-  public chessBoard(font: Font): Group {
+  public createCases(font: Font | null): Group {
     // Create the chessboard
-    const chessboardGroup = new THREE.Group();
+    const casesGroup = new THREE.Group();
+    casesGroup.name = '🔲🔳 Cases';
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-        const coord = letters[rankInt] + (Store.boardSize - colInt);
+        const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
 
         // GROUP
         const caseGroup = new THREE.Group();
@@ -164,27 +166,26 @@ export class BoardService {
         square.receiveShadow = false;
 
         // TEXT
-        const textMesh = this.makeCoordText(font, coord, { rankInt, colInt }, theme);
-        // textMesh.rotation.x = - Math.PI * 3;
+        if (font) {
+          const textMesh = this.makeCoordText(font, coord, { rankInt, colInt }, theme);
+          // textMesh.rotation.x = - Math.PI * 3;
 
-        // ADD
-        square.add(textMesh);
+          // ADD
+          square.add(textMesh);
+        }
         caseGroup.add(square);
-        chessboardGroup.add(caseGroup);
+        casesGroup.add(caseGroup);
       }
     }
 
-    // chessboardGroup.position.set(0, cm(0.5), 0);
-    chessboardGroup.name = 'chessboard';
-
-    return chessboardGroup;
+    return casesGroup;
   }
 
   private makeCoordText(
     font: Font,
     text: string,
     pos: { rankInt: number; colInt: number },
-    theme: Theme,
+    theme: cf.Theme,
   ): Mesh {
     const textMaterial = new THREE.MeshPhongMaterial({
       color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,
@@ -208,7 +209,7 @@ export class BoardService {
     return textMesh;
   }
 
-  createChessboard(): ExtendedMesh {
+  createChessboard(): cf.ExtendedMesh {
     // Updated shader with highlight capability
     const chessboardShader = {
       uniforms: {
@@ -300,6 +301,13 @@ export class BoardService {
       this.material.uniforms['u_highlightColor'].value.set(r, g, b);
     };
 
-    return chessboard as ExtendedMesh;
+    chessboard.rotation.x = -Math.PI / 2;
+    chessboard.position.y = 0.0005;
+
+    const theme = 'blue';
+    chessboard.setHighlightColor('#B1CC82');
+    chessboard.setSquareColors(`${Store.themes[theme].light}`, `${Store.themes[theme].dark}`); // Tan and brown
+
+    return chessboard as cf.ExtendedMesh;
   }
 }

@@ -1,9 +1,9 @@
-import { PieceKey, PiecesEnum, PiecesTypes } from '../interface/board.interface.ts';
+import * as cg from 'chessground/types';
+import * as cf from '../resource/chessfield.types.ts';
 
 export class PieceProvider {
-  static getPiece(pieceId: PieceKey): PiecesEnum {
-    // return PiecesEnum[pieceId];
-    // return PiecesEnum[pieceId] as PiecesEnum;
-    return PiecesTypes[pieceId];
+  static getPiece(pieceId: string): cg.Role {
+    const stdPiece = pieceId.toLowerCase() as cf.PieceKey;
+    return cf.PiecesTypes[stdPiece];
   }
 }

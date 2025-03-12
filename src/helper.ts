@@ -1,11 +1,12 @@
-import { letters, PiecesEnum } from './interface/board.interface.ts';
 import { Color } from 'chessground/types';
+import * as cg from 'chessground/types';
+import { PieceColorRole } from './resource/chessfield.types.ts';
 
 export const cm = (meter: number): number => {
   return meter / 100;
 };
 
-export const objKey = (color: Color, key: PiecesEnum) => `${color}-${key}`;
+export const objKey = (color: Color, key: cg.Role): PieceColorRole => `${color}-${key}`;
 
 // Helper function to convert hex color to RGB (0-1 range), handling "0x" prefix
 export function hexToRgb(hex: string | number): [number, number, number] {
@@ -29,34 +30,25 @@ export function hexToRgb(hex: string | number): [number, number, number] {
 }
 
 /**
- * @doc lastMove input: b7b6, c5b6 or any pair of chess coordinates, return x and y positions on the board
+ * @doc return x and y positions on the board
  * @param lastMove
  */
-export function lmToCoordinates(lastMove: string | null | undefined): { x: number; y: number }[] {
+export function lmToCoordinates(lastMove: cg.Key[]): { x: number; y: number }[] {
   if (!lastMove) {
     return [];
   }
-  const start = lastMove.slice(0, 2);
-  const end = lastMove.slice(2, 4);
 
-  const letterStart = letters.findIndex(v => {
-    const letter = start[0].toUpperCase();
-    return v === letter;
-  });
+  const coords: { x: number; y: number }[] = [];
+  lastMove.forEach(m => {
+    const letterStart = Object.values(cg.files).findIndex(v => {
+      const letter = m[0];
+      return v === letter;
+    });
 
-  const letterEnd = letters.findIndex(v => {
-    const letter = end[0].toUpperCase();
-    return v === letter;
-  });
-
-  const coords = [];
-  coords.push({
-    x: letterStart,
-    y: parseInt(start[1]) - 1,
-  });
-  coords.push({
-    x: letterEnd,
-    y: parseInt(end[1]) - 1,
+    coords.push({
+      x: letterStart,
+      y: parseInt(m[1]) - 1,
+    });
   });
 
   return coords;
