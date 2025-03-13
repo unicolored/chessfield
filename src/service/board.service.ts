@@ -72,7 +72,7 @@ export class BoardService {
     // decorGroup.add(floor);
 
     // Create a box geometry and material
-    const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.15), cm(10));
+    const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
     const frameColor = mode.dark;
     const frameMaterial = new THREE.MeshPhongMaterial({ color: frameColor });
     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
