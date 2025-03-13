@@ -17,11 +17,13 @@ import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
+import { ThemeProvider } from './provider/theme.provider.ts';
 
 export class Chessfield implements ChessfieldApi {
   private store: Store;
   private gameProvider!: GameProvider;
-  private boardService: BoardService;
+  private boardService!: BoardService;
+  private themeProvider!: ThemeProvider;
 
   state!: ChessfieldState;
   private canvas!: HTMLCanvasElement;
@@ -29,19 +31,16 @@ export class Chessfield implements ChessfieldApi {
 
   constructor(
     private cfElement: HTMLElement | null,
-    private config?: ChessfieldConfig,
+    config?: ChessfieldConfig,
   ) {
     // TODO: merge config params with defaults state config
     // const maybeState: ChessfieldState | HeadlessState = defaults();
     // configure(maybeState, this.config || {});
-
     this.store = new Store(config);
-    this.boardService = new BoardService();
-    this.gameProvider = new GameProvider(this.store);
 
     // this.store.setFen(this.config?.fen ?? Store.initialFen);
     // this.setFen(this.config?.fen ?? Store.initialFen);
-    this.setFen(this.config?.fen ?? Store.initialFen);
+    this.setFen(this.store.getConfig().fen ?? Store.initialFen);
     this.start();
   }
 
@@ -49,11 +48,23 @@ export class Chessfield implements ChessfieldApi {
     this.store.setFen(fen, lastMove);
   }
 
+  configUpdate(partialConfig: Partial<ChessfieldConfig>) {
+    const currentConfig = this.store.getConfig();
+    const updatedConfig = { ...currentConfig, ...partialConfig };
+    this.store.setConfig(updatedConfig);
+    this.canvas.remove();
+    this.start();
+  }
+
   toggleView(): void {
     throw new Error('Method not implemented.');
   }
 
   async start() {
+    this.boardService = new BoardService();
+    this.gameProvider = new GameProvider(this.store);
+    this.themeProvider = new ThemeProvider(this.store);
+
     const chessfieldElement = this.cfElement;
 
     if (!chessfieldElement || !(chessfieldElement instanceof HTMLElement)) {
@@ -72,23 +83,50 @@ export class Chessfield implements ChessfieldApi {
     };
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(33, sizes.width / sizes.height, cm(0.1), 3);
-    camera.name = '🎥 Main Camera';
-
+    const camGroup = new THREE.Group();
     const cameraPositionsMap = new Map<cf.Camera, Vector3>();
     cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
-    cameraPositionsMap.set('black', new Vector3(0, cm(12), cm(-12)));
-    cameraPositionsMap.set('right', new Vector3(cm(12), cm(12), 0));
-    cameraPositionsMap.set('left', new Vector3(cm(-12), cm(12), 0));
+    // cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
+    // cameraPositionsMap.set('black', new Vector3(0, cm(12), cm(-12)));
+    // cameraPositionsMap.set('right', new Vector3(cm(12), cm(12), 0));
+    // cameraPositionsMap.set('left', new Vector3(cm(-12), cm(12), 0));
 
-    const orientation = this.config?.orientation ?? 'white';
+    const cameraGroupRotationMap = new Map<string, Vector3>();
+    const qcd = Math.PI / 4;
+    cameraGroupRotationMap.set('white', new Vector3(0, qcd, 0));
+    cameraGroupRotationMap.set('white-left', new Vector3(0, -qcd - 0.05, 0));
+    cameraGroupRotationMap.set('white-right', new Vector3(0, qcd + 0.05, 0));
+    cameraGroupRotationMap.set('black', new Vector3(0, qcd * 4, 0));
+    cameraGroupRotationMap.set('black-left', new Vector3(0, qcd * 3, 0));
+    cameraGroupRotationMap.set('black-right', new Vector3(0, qcd * 5, 0));
+    cameraGroupRotationMap.set('right', new Vector3(0, qcd * 2, 0));
+    cameraGroupRotationMap.set('left', new Vector3(0, qcd * 6, 0));
+
+    const orientation = this.store.getConfig().orientation ?? 'white';
     const viewOrientation = orientation === 'white' ? 0.01 : -0.01;
     cameraPositionsMap.set('top', new Vector3(0, cm(16), cm(viewOrientation)));
 
     const viewPosition =
-      cameraPositionsMap.get(this.config?.camera ?? 'white') ?? new Vector3(0, cm(12), cm(12));
+      cameraPositionsMap.get(this.store.getConfig().camera ?? 'white') ?? new Vector3(0, cm(12), cm(12));
+
+    let angle = '';
+    if (this.store.getConfig().camera === 'white' || this.store.getConfig().camera === 'black') {
+      const configAngle = this.store.getConfig().angle;
+      if (configAngle === 'left' || configAngle === 'right') {
+        angle = this.store.getConfig().angle ? '-' + this.store.getConfig().angle : '';
+      }
+    }
+    const cameraAngle = `${this.store.getConfig().camera}${angle}`;
+    const viewRotation = cameraGroupRotationMap.get(cameraAngle) ?? new Vector3(0, cm(12), cm(12));
+
+    const camera = new THREE.PerspectiveCamera(33, sizes.width / sizes.height, cm(0.1), 3);
+    camera.name = '🎥 Main Camera';
+
+    camGroup.add(camera);
+    // scene.add(camera);
 
     camera.position.set(viewPosition.x, viewPosition.y, viewPosition.z);
+    camGroup.rotation.set(viewRotation.x, viewRotation.y, viewRotation.z);
 
     camera.lookAt(0, cm(2), 0);
     // camera.updateProjectionMatrix();
@@ -135,15 +173,17 @@ export class Chessfield implements ChessfieldApi {
 
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xecebe8); // Gray background
-    scene.add(camera);
+    const backgroundColor = this.themeProvider.getBackgroundColor();
+    scene.background = new THREE.Color(backgroundColor); // Gray background
+
+    scene.add(camGroup);
 
     const loadingManager = new THREE.LoadingManager();
 
     this.gameProvider.loadGltfGeometries(loadingManager);
 
     let helvetiker: Font | null = null;
-    if (this.config?.coordinatesOnSquares) {
+    if (this.store.getConfig().coordinatesOnSquares) {
       new FontLoader(loadingManager).load(helvetikerFont, async (font: any) => {
         helvetiker = font;
       });
@@ -167,7 +207,7 @@ export class Chessfield implements ChessfieldApi {
     const lightGroup = this.boardService.lights();
     lightGroup.name = '🟡 Lights';
     scene.add(lightGroup);
-    const decorGroup = this.boardService.decor();
+    const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
 
@@ -190,6 +230,9 @@ export class Chessfield implements ChessfieldApi {
     loadingManager.onLoad = () => {
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
       const chessboard = this.boardService.createChessboard();
+      const themeColors = this.themeProvider.getThemeColors();
+      chessboard.setHighlightColor(themeColors.highlight);
+      chessboard.setSquareColors(themeColors.light, themeColors.dark);
       chessboardGroup.add(chessboard);
 
       const casesGroup = this.boardService.createCases(helvetiker);
@@ -224,6 +267,7 @@ export class Chessfield implements ChessfieldApi {
     const tick = () => {
       // const elapsedTime = clock.getElapsedTime();
       // console.log(elapsedTime)
+      // camGroup.rotation.y += 0.001;
 
       // Update controls
       controls.update();

@@ -6,6 +6,7 @@ import { Store } from '../provider/store.ts';
 import { cm, hexToRgb } from '../helper.ts';
 import * as cg from 'chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
+import { ThemeColors } from '../resource/chessfield.types.ts';
 
 export class BoardService {
   public lights(): Group {
@@ -55,7 +56,7 @@ export class BoardService {
     return lightGroup;
   }
 
-  public decor(): Group {
+  public decor(mode: ThemeColors): Group {
     const decorGroup = new THREE.Group();
 
     // // Add an infinite plane as the floor
@@ -71,8 +72,18 @@ export class BoardService {
     // decorGroup.add(floor);
 
     // Create a box geometry and material
+    const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
+    const frameColor = mode.dark;
+    const frameMaterial = new THREE.MeshPhongMaterial({ color: frameColor });
+    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    // Position the box in the scene
+    frame.position.set(0, cm(-0.1), cm(0));
+    // Add the box to the scene
+    decorGroup.add(frame);
+
+    // Create a box geometry and material
     const player1Geometry = new THREE.BoxGeometry(cm(2), cm(0.25), cm(0.25));
-    const player1Material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    const player1Material = new THREE.MeshPhongMaterial({ color: Store.themes.light.dark });
     const player1 = new THREE.Mesh(player1Geometry, player1Material);
     // Position the box in the scene
     player1.position.set(0, cm(0.125), cm(4.5));
@@ -81,7 +92,7 @@ export class BoardService {
 
     // Create a box geometry and material
     const player2Geometry = new THREE.BoxGeometry(cm(2), cm(0.25), cm(0.25));
-    const player2Material = new THREE.MeshPhongMaterial({ color: 0x000000 });
+    const player2Material = new THREE.MeshPhongMaterial({ color: Store.themes.dark.dark });
     const player2 = new THREE.Mesh(player2Geometry, player2Material);
     // Position the box in the scene
     player2.position.set(0, cm(0.125), cm(-4.5));
@@ -296,17 +307,13 @@ export class BoardService {
       this.material.uniforms['u_highlightPosEnd'].value.set(x, y);
     };
 
-    chessboard.setHighlightColor = function (hex: string) {
+    chessboard.setHighlightColor = function (hex: string | number) {
       const [r, g, b] = hexToRgb(hex);
       this.material.uniforms['u_highlightColor'].value.set(r, g, b);
     };
 
     chessboard.rotation.x = -Math.PI / 2;
     chessboard.position.y = 0.0005;
-
-    const theme = 'blue';
-    chessboard.setHighlightColor('#B1CC82');
-    chessboard.setSquareColors(`${Store.themes[theme].light}`, `${Store.themes[theme].dark}`); // Tan and brown
 
     return chessboard as cf.ExtendedMesh;
   }

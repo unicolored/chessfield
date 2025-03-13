@@ -49,9 +49,7 @@
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off" />
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off" />
     <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      <a href="#welcome-to-chessfield" class="md-skip"> Skip to content </a>
-    </div>
+    <div data-md-component="skip"></div>
     <div data-md-component="announce"></div>
 
     <header class="md-header md-header--shadow" data-md-component="header">
@@ -215,29 +213,9 @@
                     <li class="md-nav__item md-nav__item--active">
                       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc" />
 
-                      <label class="md-nav__link md-nav__link--active" for="__toc">
-                        <span class="md-ellipsis"> Home </span>
-
-                        <span class="md-nav__icon md-icon"></span>
-                      </label>
-
                       <a href="." class="md-nav__link md-nav__link--active">
                         <span class="md-ellipsis"> Home </span>
                       </a>
-
-                      <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-                        <label class="md-nav__title" for="__toc">
-                          <span class="md-nav__icon md-icon"></span>
-                          Table of contents
-                        </label>
-                        <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-                          <li class="md-nav__item">
-                            <a href="#quick-start" class="md-nav__link">
-                              <span class="md-ellipsis"> Quick Start </span>
-                            </a>
-                          </li>
-                        </ul>
-                      </nav>
                     </li>
 
                     <li class="md-nav__item">
@@ -260,34 +238,101 @@
           <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
             <div class="md-sidebar__scrollwrap">
               <div class="md-sidebar__inner">
-                <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-                  <label class="md-nav__title" for="__toc">
-                    <span class="md-nav__icon md-icon"></span>
-                    Table of contents
-                  </label>
-                  <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-                    <li class="md-nav__item">
-                      <a href="#quick-start" class="md-nav__link">
-                        <span class="md-ellipsis"> Quick Start </span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
+                <nav class="md-nav md-nav--secondary" aria-label="Table of contents"></nav>
               </div>
             </div>
           </div>
 
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
-              <h1 id="welcome-to-chessfield">Welcome to Chessfield</h1>
               <p>
-                Chessfield is a JavaScript library for creating and manipulating chessboards. Whether you're
-                building a chess game or a puzzle, Chessfield simplifies the process.
+                <link
+                  rel="stylesheet"
+                  href="https://cdn.jsdelivr.net/npm/chessfield@1.2.0/dist/chessfield.css"
+                />
               </p>
-              <h2 id="quick-start">Quick Start</h2>
-              <p>Install via npm:</p>
-              <pre><code class="language-bash">npm install chessfield
-</code></pre>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  line-height: 1.6;
+                }
+                .flex {
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  margin: 20px 0;
+                }
+                .chessfield {
+                  width: 100%;
+                  max-width: 500px; /* Constrain width for better display */
+                  height: 333px;
+                  margin: 0 auto;
+                  border: 1px solid #ddd; /* Optional: subtle border */
+                }
+              </style>
+
+              <h1>Chessfield: Interactive 3D Chessboards</h1>
+              <p>
+                Chessfield is a lightweight TypeScript library that lets you render interactive 3D chessboards
+                in the browser. Built with <a href="https://threejs.org/" target="_blank">Three.js</a>, it’s
+                easy to integrate into any web project, whether you’re using it via CDN, Node.js, or a
+                framework like Angular.
+              </p>
+
+              <h2>Demo</h2>
+              <p>Below is a live demo of Chessfield in action:</p>
+              <div class="flex">
+                <div class="chessfield" id="board1"></div>
+              </div>
+
+              <h2>Features</h2>
+              <ul>
+                <li><strong>3D Rendering</strong>: Uses Three.js for smooth, modern 3D visuals.</li>
+                <li><strong>Customizable</strong>: Adjust size, theme, and orientation.</li>
+                <li><strong>Lightweight</strong>: Minimal dependencies, optimized for performance.</li>
+                <li><strong>Flexible</strong>: Works via CDN, npm, or as a module.</li>
+              </ul>
+
+              <h2>Get Started</h2>
+              <p>You can add Chessfield to your project in a few ways:</p>
+
+              <h3>Via CDN</h3>
+              <pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.css"&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.umd.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    const container = document.getElementById('board');
+    const chessfield = new Chessfield(container, { orientation: 'white' });
+&lt;/script&gt;</code></pre>
+
+              <h3>Via npm</h3>
+              <pre><code>npm install chessfield</code></pre>
+              <pre><code>import { Chessfield } from 'chessfield';
+const chessfield = new Chessfield(document.getElementById('board'), { orientation: 'white' });</code></pre>
+
+              <h2>Links</h2>
+              <ul>
+                <li>
+                  <strong>npm Package</strong>:
+                  <a href="https://www.npmjs.com/package/chessfield" target="_blank">chessfield on npm</a>
+                </li>
+                <li>
+                  <strong>GitHub Repository</strong>:
+                  <a href="https://github.com/unicolored/chessfield" target="_blank">unicolored/chessfield</a>
+                </li>
+                <li>
+                  <strong>Issues & Contributions</strong>: Feel free to report bugs or contribute on
+                  <a href="https://github.com/unicolored/chessfield" target="_blank">GitHub</a>!
+                </li>
+              </ul>
+
+              <!--<gilles.nx-root></gilles.nx-root>-->
+              <script type="module">
+                import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield@1.2.0/dist/chessfield.js';
+                const boardContainer = document.getElementById('board1');
+                var board1 = new Chessfield(boardContainer, {
+                  orientation: 'white',
+                });
+              </script>
             </article>
           </div>
 
