@@ -28,12 +28,31 @@
       const board1 = new Chessfield(document.getElementById('board-1'), {
         orientation: 'white',
         camera: 'white-r',
-        theme: 'brown',
-        mode: 'dark',
+        theme: 'green',
       });
       board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
 
       const board2 = new Chessfield(document.getElementById('board-2'), {
+        orientation: 'white',
+        camera: 'white-r',
+        theme: 'brown',
+        mode: 'dark',
+      });
+      board2.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+
+      const toggleMode = document.querySelector('.js-mode-toggle');
+
+      if (toggleMode) {
+        toggleMode.addEventListener('click', () => {
+          const randomMode = Math.random() > 0.5 ? 'light' : 'dark';
+          const randomTheme = Math.random() > 0.5 ? 'brown' : 'blue';
+          console.log('random mode', randomMode);
+          board2.configUpdate({ mode: randomMode });
+          board2.configUpdate({ theme: randomTheme });
+        });
+      }
+
+      const board3 = new Chessfield(document.getElementById('board-3'), {
         orientation: 'black',
         camera: 'right',
         theme: 'green',
@@ -63,11 +82,11 @@
         },
       ];
 
-      const toggle = document.querySelector('.js-tv-random');
+      const fenRandom = document.querySelector('.js-tv-random');
 
-      if (toggle) {
+      if (fenRandom) {
         let previousId = -1;
-        toggle.addEventListener('click', () => {
+        fenRandom.addEventListener('click', () => {
           let id;
           do {
             id = Math.floor(Math.random() * randomFens.length);
@@ -76,7 +95,7 @@
           previousId = id;
 
           const { fen, lastMove } = randomFens[id];
-          board2.setFen(fen, lastMove);
+          board3.setFen(fen, lastMove);
         });
       }
     </script>
@@ -87,8 +106,12 @@
       <div class="chessfield" id="board-1"></div>
     </div>
     <div>
-      board with a fen (<button class="js-tv-random">random fen</button>)
+      board with custom theme mode (<button class="js-mode-toggle">toggle</button>)
       <div class="chessfield" id="board-2"></div>
+    </div>
+    <div>
+      board with a fen (<button class="js-tv-random">random fen</button>)
+      <div class="chessfield" id="board-3"></div>
     </div>
 
     <script type="module" src="/src/chessfield.ts"></script>
