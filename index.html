@@ -34,7 +34,8 @@
 
       const board2 = new Chessfield(document.getElementById('board-2'), {
         orientation: 'white',
-        camera: 'white-r',
+        camera: 'black',
+        angle: 'left',
         theme: 'brown',
         mode: 'dark',
       });
@@ -46,9 +47,15 @@
         toggleMode.addEventListener('click', () => {
           const randomMode = Math.random() > 0.5 ? 'light' : 'dark';
           const randomTheme = Math.random() > 0.5 ? 'brown' : 'blue';
-          console.log('random mode', randomMode);
-          board2.configUpdate({ mode: randomMode });
-          board2.configUpdate({ theme: randomTheme });
+          const randomCamera = Math.random() > 0.5 ? 'white' : 'black';
+          const randomAngle = Math.random() > 0.5 ? 'left' : 'right';
+          console.log('random camera', randomCamera);
+          board2.configUpdate({
+            mode: randomMode,
+            theme: randomTheme,
+            camera: randomCamera,
+            angle: randomAngle,
+          });
         });
       }
 
