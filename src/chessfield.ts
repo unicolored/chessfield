@@ -50,10 +50,8 @@ export class Chessfield implements ChessfieldApi {
 
   configUpdate(partialConfig: Partial<ChessfieldConfig>) {
     const currentConfig = this.store.getConfig();
-    console.log(currentConfig);
     const updatedConfig = { ...currentConfig, ...partialConfig };
     this.store.setConfig(updatedConfig);
-    console.log(updatedConfig);
     this.canvas.remove();
     this.start();
   }
@@ -119,9 +117,7 @@ export class Chessfield implements ChessfieldApi {
       }
     }
     const cameraAngle = `${this.store.getConfig().camera}${angle}`;
-    console.log('cameraAngle', cameraAngle);
     const viewRotation = cameraGroupRotationMap.get(cameraAngle) ?? new Vector3(0, cm(12), cm(12));
-    console.log(viewRotation);
 
     const camera = new THREE.PerspectiveCamera(33, sizes.width / sizes.height, cm(0.1), 3);
     camera.name = '🎥 Main Camera';
@@ -178,7 +174,6 @@ export class Chessfield implements ChessfieldApi {
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
     const backgroundColor = this.themeProvider.getBackgroundColor();
-    console.log('background color', backgroundColor);
     scene.background = new THREE.Color(backgroundColor); // Gray background
 
     scene.add(camGroup);
