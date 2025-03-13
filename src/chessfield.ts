@@ -93,7 +93,7 @@ export class Chessfield implements ChessfieldApi {
 
     const cameraGroupRotationMap = new Map<string, Vector3>();
     const qcd = Math.PI / 4;
-    cameraGroupRotationMap.set('white', new Vector3(0, qcd, 0));
+    cameraGroupRotationMap.set('white', new Vector3(0, 0, 0));
     cameraGroupRotationMap.set('white-left', new Vector3(0, -qcd - 0.05, 0));
     cameraGroupRotationMap.set('white-right', new Vector3(0, qcd + 0.05, 0));
     cameraGroupRotationMap.set('black', new Vector3(0, qcd * 4, 0));
