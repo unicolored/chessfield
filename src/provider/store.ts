@@ -15,28 +15,40 @@ export class Store {
   static readonly initialFen = `${initial} w KQkq - 0 1`;
   static readonly themes: Themes = {
     light: {
-      light: '#bfcfdd',
-      dark: '#9dabb6',
+      light: '#f5f5f3',
+      dark: '#eeebe8',
+      highlight: '',
+      selected: '',
     },
     dark: {
-      light: '#bfcfdd',
-      dark: '#9dabb6',
+      light: '#2a2622',
+      dark: '#161512',
+      highlight: '',
+      selected: '',
     },
     blue: {
       light: '#bfcfdd',
       dark: '#9dabb6',
+      highlight: '#B1CC82',
+      selected: '',
     },
     brown: {
-      light: '#f0d9b5',
-      dark: '#c6b295',
+      light: '#efd9b5',
+      dark: '#b58862',
+      highlight: '#cdd16a',
+      selected: '',
     },
     green: {
-      light: '#dddddd',
-      dark: '#222222',
+      light: '#feffdd',
+      dark: '#87a664',
+      highlight: '#96d6d3',
+      selected: '',
     },
     bw: {
-      light: '#dddddd',
-      dark: '#222222',
+      light: '#e6e8e5',
+      dark: '#505251',
+      highlight: '#bdce82',
+      selected: '',
     },
   };
 
@@ -53,10 +65,14 @@ export class Store {
     return this.piecesGeometriesGltfMap;
   }
 
-  constructor(private readonly config?: ChessfieldConfig) {}
+  constructor(private config?: ChessfieldConfig) {}
 
   getConfig(): ChessfieldConfig {
     return this.config ?? {};
+  }
+
+  setConfig(config: ChessfieldConfig): void {
+    this.config = config;
   }
 
   private movesSubject = new BehaviorSubject<cf.Moves>({

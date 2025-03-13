@@ -17,11 +17,13 @@ import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
+import { ThemeProvider } from './provider/theme.provider.ts';
 
 export class Chessfield implements ChessfieldApi {
   private store: Store;
   private gameProvider!: GameProvider;
-  private boardService: BoardService;
+  private boardService!: BoardService;
+  private themeProvider!: ThemeProvider;
 
   state!: ChessfieldState;
   private canvas!: HTMLCanvasElement;
@@ -34,10 +36,7 @@ export class Chessfield implements ChessfieldApi {
     // TODO: merge config params with defaults state config
     // const maybeState: ChessfieldState | HeadlessState = defaults();
     // configure(maybeState, this.config || {});
-
     this.store = new Store(config);
-    this.boardService = new BoardService();
-    this.gameProvider = new GameProvider(this.store);
 
     // this.store.setFen(this.config?.fen ?? Store.initialFen);
     // this.setFen(this.config?.fen ?? Store.initialFen);
@@ -46,7 +45,19 @@ export class Chessfield implements ChessfieldApi {
   }
 
   setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
-    this.store.setFen(fen, lastMove);
+    if (this.store) {
+      this.store.setFen(fen, lastMove);
+    }
+  }
+
+  configUpdate(partialConfig: Partial<ChessfieldConfig>) {
+    const currentConfig = this.store.getConfig();
+    console.log(currentConfig);
+    const updatedConfig = { ...currentConfig, ...partialConfig };
+    this.store.setConfig(updatedConfig);
+    console.log(updatedConfig);
+    this.canvas.remove();
+    this.start();
   }
 
   toggleView(): void {
@@ -54,6 +65,10 @@ export class Chessfield implements ChessfieldApi {
   }
 
   async start() {
+    this.boardService = new BoardService();
+    this.gameProvider = new GameProvider(this.store);
+    this.themeProvider = new ThemeProvider(this.store);
+
     const chessfieldElement = this.cfElement;
 
     if (!chessfieldElement || !(chessfieldElement instanceof HTMLElement)) {
@@ -135,7 +150,9 @@ export class Chessfield implements ChessfieldApi {
 
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xecebe8); // Gray background
+    const backgroundColor = this.themeProvider.getBackgroundColor();
+    console.log('background color', backgroundColor);
+    scene.background = new THREE.Color(backgroundColor); // Gray background
     scene.add(camera);
 
     const loadingManager = new THREE.LoadingManager();
@@ -167,7 +184,7 @@ export class Chessfield implements ChessfieldApi {
     const lightGroup = this.boardService.lights();
     lightGroup.name = '🟡 Lights';
     scene.add(lightGroup);
-    const decorGroup = this.boardService.decor();
+    const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
 
@@ -190,6 +207,9 @@ export class Chessfield implements ChessfieldApi {
     loadingManager.onLoad = () => {
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
       const chessboard = this.boardService.createChessboard();
+      const themeColors = this.themeProvider.getThemeColors();
+      chessboard.setHighlightColor(themeColors.highlight);
+      chessboard.setSquareColors(themeColors.light, themeColors.dark);
       chessboardGroup.add(chessboard);
 
       const casesGroup = this.boardService.createCases(helvetiker);
