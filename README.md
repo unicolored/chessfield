@@ -1,8 +1,10 @@
 # Chessfield
 
+> **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
+
 ![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
 
-_Chessfield_ is a free/libre open source chess 3d board.
+_Chessfield_ is a free/libre open source chess 3D board.
 
 ## License
 
@@ -16,13 +18,14 @@ Please read more about GPL for JavaScript on [greendrake.info](https://greendrak
 
 ## Demos
 
-- [Chessfield Live](https://chessfield.unicolo.red/live)
+- 🍿 [Chessfield.Live](https://github.com/unicolored/chessfield.live)
 
 ## Features
 
 Chessfield is designed to be a 3d chess viewer.
 
 - Common configuration options with [Chessground](https://github.com/lichess-org/chessground)
+- Royalty free wooden chess set by 3D Artist: [Ali Qolami](https://www.blenderkit.com/asset-gallery?query=order:-score+author_id:1118431)
 - Well typed with TypeScript
 - WebGL powered by Three.js
 - Zoom and rotate around the board to see games in a any angle
@@ -49,6 +52,7 @@ const field = Chessfield(document.body, config);
 - [Default config values](https://github.com/unicolored/chessfield/tree/main/src/resource/chessfield.state.ts)
 - [API type signatures](https://github.com/unicolored/chessfield/tree/main/src/resource/chessfield.api.ts)
 - [Simple standalone example](https://github.com/unicolored/chessfield/tree/main/demo.html)
+- [Read more](https://unicolo.red/chessfield/)
 
 ## Development
 
@@ -70,6 +74,3 @@ To build the standalone:
 pnpm run dist
 ```
 
-## Chess set
-
-Wooden chess set by [Ali Qolami](https://www.blenderkit.com/asset-gallery?query=order:-score+author_id:1118431)
