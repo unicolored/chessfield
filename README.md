@@ -1,5 +1,10 @@
 # Chessfield
 
+  <a href="https://www.npmjs.com/@angular/core">
+    <img src="https://img.shields.io/npm/v/chessfield
+" />
+  </a>
+
 > **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
 
 ![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
