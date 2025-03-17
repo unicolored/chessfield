@@ -1,6 +1,6 @@
 # Chessfield
 
-  <a href="https://www.npmjs.com/@angular/core">
+  <a href="https://www.npmjs.com/chessfield">
     <img src="https://img.shields.io/npm/v/chessfield
 " />
   </a>
@@ -23,7 +23,7 @@ Please read more about GPL for JavaScript on [greendrake.info](https://greendrak
 
 ## Demos
 
-- 🍿 [Chessfield.Live](https://github.com/unicolored/chessfield.live)
+- 🍿 [ChessPop.Live](https://github.com/unicolored/chesspop.live)
 
 ## Features
 
