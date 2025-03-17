@@ -21,8 +21,8 @@ export class Store {
       selected: '',
     },
     dark: {
-      light: '#2a2622',
-      dark: '#161512',
+      light: '#1D232A',
+      dark: '#13171c',
       highlight: '',
       selected: '',
     },
