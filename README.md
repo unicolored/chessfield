@@ -1,9 +1,8 @@
 # Chessfield
 
-  <a href="https://www.npmjs.com/chessfield">
-    <img src="https://img.shields.io/npm/v/chessfield
-" />
-  </a>
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/unicolored/chessfield/publish.yml)](https://github.com/unicolored/chessfield/actions)
+[![npm](https://img.shields.io/npm/v/chessfield?color=blue)](https://www.npmjs.com/package/chessfield)
+[![npm](https://img.shields.io/npm/dm/chessfield)](https://www.npmjs.com/package/chessfield)
 
 > **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
 

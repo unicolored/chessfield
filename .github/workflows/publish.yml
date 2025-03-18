@@ -1,4 +1,4 @@
-name: Publish npm Package
+name: Publish
 
 # Trigger the workflow when a PR is merged into the main branch
 on:
