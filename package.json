@@ -18,7 +18,7 @@
     "compile": "tsc --sourceMap --declaration",
     "lint": "eslint src/*.ts",
     "format": "prettier --write .",
-    "check-format": "prettier --check .",
+    "check": "prettier --check .",
     "bundle": "vite build",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
     "dev": "vite",
