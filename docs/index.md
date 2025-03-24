@@ -41,7 +41,7 @@
 <p>You can add Chessfield to your project in a few ways:</p>
 
 <h3>Via CDN</h3>
-<pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.css"&gt;
+<pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.css"&gt;
 &lt;script src="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.umd.js"&gt;&lt;/script&gt;
 &lt;script&gt;
     const container = document.getElementById('board');
@@ -62,7 +62,7 @@ const chessfield = new Chessfield(document.getElementById('board'), { orientatio
 
 <!--<gilles.nx-root></gilles.nx-root>-->
 <script type="module">
-    import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield@1.2.0/dist/chessfield.js';
+    import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.js';
     const boardContainer = document.getElementById('board1');
     var board1 = new Chessfield(boardContainer, {
         orientation: 'white',
