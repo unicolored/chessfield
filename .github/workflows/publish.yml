@@ -17,10 +17,10 @@ jobs:
           run_install: false
 
       # Checkout the repository
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#        with:
-#          fetch-depth: 0 # Ensures full history is available for version bumping
+      #      - name: Checkout code
+      #        uses: actions/checkout@v4
+      #        with:
+      #          fetch-depth: 0 # Ensures full history is available for version bumping
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -33,16 +33,16 @@ jobs:
         run: pnpm install
 
       # Automatically bump version and create a git tag
-#      - name: Bump version
-#        run: |
-#          git config user.name "GitHub Actions Bot"
-#          git config user.email "<>"
-#          npm version patch -m "chore(release): publish v%s [skip ci]"
+      #      - name: Bump version
+      #        run: |
+      #          git config user.name "GitHub Actions Bot"
+      #          git config user.email "<>"
+      #          npm version patch -m "chore(release): publish v%s [skip ci]"
 
       # Push the version bump and tag to GitHub
-#      - name: Push changes
-#        run: |
-#          git push origin main --follow-tags
+      #      - name: Push changes
+      #        run: |
+      #          git push origin main --follow-tags
 
       # Publish to npm
       - name: Publish to npm
