@@ -1,6 +1,6 @@
 {
   "name": "chessfield",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "A TypeScript+ThreeJS library to render a 3D chessboard",
   "main": "dist/chessfield.umd.js",
   "module": "dist/chessfield.js",
@@ -54,6 +54,8 @@
   "files": [
     "dist/*"
   ],
-  "repository": "https://github.com/unicolored/chessfield",
+  "repository": {
+    "url": "git+https://github.com/unicolored/chessfield"
+  },
   "packageManager": "pnpm@10.6.1"
 }
