@@ -83,7 +83,7 @@ export class BoardService {
 
     // Create a box geometry and material
     const player1Geometry = new THREE.BoxGeometry(cm(2), cm(0.25), cm(0.25));
-    const player1Material = new THREE.MeshPhongMaterial({ color: Store.themes.light.dark });
+    const player1Material = new THREE.MeshPhongMaterial({ color: Store.themes['light'].dark });
     const player1 = new THREE.Mesh(player1Geometry, player1Material);
     // Position the box in the scene
     player1.position.set(0, cm(0.125), cm(4.5));
@@ -92,7 +92,7 @@ export class BoardService {
 
     // Create a box geometry and material
     const player2Geometry = new THREE.BoxGeometry(cm(2), cm(0.25), cm(0.25));
-    const player2Material = new THREE.MeshPhongMaterial({ color: Store.themes.dark.dark });
+    const player2Material = new THREE.MeshPhongMaterial({ color: Store.themes['dark'].dark });
     const player2 = new THREE.Mesh(player2Geometry, player2Material);
     // Position the box in the scene
     player2.position.set(0, cm(0.125), cm(-4.5));

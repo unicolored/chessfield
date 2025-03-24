@@ -1,9 +1,5 @@
 # Chessfield
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/unicolored/chessfield/publish.yml)](https://github.com/unicolored/chessfield/actions)
-[![npm](https://img.shields.io/npm/v/chessfield?color=blue)](https://www.npmjs.com/package/chessfield)
-[![npm](https://img.shields.io/npm/dm/chessfield)](https://www.npmjs.com/package/chessfield)
-
 > **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
 
 ![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
@@ -22,7 +18,7 @@ Please read more about GPL for JavaScript on [greendrake.info](https://greendrak
 
 ## Demos
 
-- 🍿 [ChessPop.Live](https://github.com/unicolored/chesspop.live)
+- 🍿 [Chessfield.Live](https://github.com/unicolored/chessfield.live)
 
 ## Features
 
@@ -46,8 +42,26 @@ npm install --save chessfield
 ```js
 import { Chessfield } from 'chessfield';
 
-const config = {};
+
+// Add and use a custom theme
+const config = {
+  plugins: {
+    themes: {
+      mytheme: {
+        light: "#e3dbc9",
+        dark: "#cb4444",
+        highlight: "#c99a39",
+        selected: "orange",
+      },
+    },
+  },
+  theme: "mytheme",
+  camera: "white",
+  angle: "right",
+};
+
 const field = Chessfield(document.body, config);
+
 ```
 
 ## Documentation
@@ -77,4 +91,3 @@ To build the standalone:
 ```sh
 pnpm run dist
 ```
-

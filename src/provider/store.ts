@@ -13,7 +13,7 @@ export class Store {
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
   static readonly initialFen = `${initial} w KQkq - 0 1`;
-  static readonly themes: Themes = {
+  static themes: Themes = {
     light: {
       light: '#f5f5f3',
       dark: '#eeebe8',
@@ -21,8 +21,8 @@ export class Store {
       selected: '',
     },
     dark: {
-      light: '#1D232A',
-      dark: '#13171c',
+      light: '#2a2622',
+      dark: '#161512',
       highlight: '',
       selected: '',
     },
@@ -57,6 +57,7 @@ export class Store {
 
   // private loader: GLTFLoader;
   private piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry> = new Map();
+
   setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry>) {
     this.piecesGeometriesGltfMap = piecesGeometriesGltfMap;
   }
@@ -65,7 +66,13 @@ export class Store {
     return this.piecesGeometriesGltfMap;
   }
 
-  constructor(private config?: ChessfieldConfig) {}
+  constructor(private config?: ChessfieldConfig) {
+    if (config) {
+      if (config.plugins) {
+        Store.themes = { ...Store.themes, ...config.plugins.themes };
+      }
+    }
+  }
 
   getConfig(): ChessfieldConfig {
     return this.config ?? {};
@@ -132,6 +139,7 @@ export class Store {
   setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap) {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
   }
+
   getBoardPiecesObjectsMap(): cf.ColorPieceNameObjectMap {
     return this.boardPiecesObjectsMap;
   }
