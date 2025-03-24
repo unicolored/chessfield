@@ -1,6 +1,6 @@
 {
   "name": "chessfield",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "A TypeScript+ThreeJS library to render a 3D chessboard",
   "main": "dist/chessfield.umd.js",
   "module": "dist/chessfield.js",
