@@ -14,9 +14,5 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript
-      - uses: github/codeql-action/analyze@v3
       - run: sh script/test.sh
       - run: sh script/cibuild.sh
