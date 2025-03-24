@@ -19,11 +19,11 @@ export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
   static readonly pieceMaterials: cf.ColorMaterial = {
     white: new THREE.MeshPhongMaterial({
-      color: Store.themes.bw.light,
+      color: Store.themes['bw'].light,
       flatShading: true,
     }),
     black: new THREE.MeshPhongMaterial({
-      color: Store.themes.bw.dark,
+      color: Store.themes['bw'].dark,
       flatShading: true,
     }),
   };

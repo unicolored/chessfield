@@ -1,5 +1,6 @@
 import * as cg from 'chessground/types';
 import * as cf from './chessfield.types';
+import { Themes } from './chessfield.types';
 
 export interface ChessfieldConfig {
   mode?: cf.Mode; //
@@ -13,4 +14,7 @@ export interface ChessfieldConfig {
   // selected?: cg.Key; // square currently selected "a1"
   // coordinates?: boolean; // include coords attributes
   coordinatesOnSquares?: boolean; // include coords attributes on every square
+  plugins?: {
+    themes?: Themes;
+  };
 }

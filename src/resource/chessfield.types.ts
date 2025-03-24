@@ -2,7 +2,7 @@ import { Group, InstancedMesh, Material, Mesh } from 'three';
 import * as cg from 'chessground/types';
 
 export type Mode = 'light' | 'dark';
-export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark';
+export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark' | string;
 
 export type Camera = 'white' | 'right' | 'black' | 'left' | 'top';
 
