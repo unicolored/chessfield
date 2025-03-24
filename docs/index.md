@@ -42,7 +42,7 @@
 
 <h3>Via CDN</h3>
 <pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.css"&gt;
-&lt;script src="https://cdn.jsdelivr.net/npm/chessfield@1.0.1/dist/chessfield.umd.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.umd.js"&gt;&lt;/script&gt;
 &lt;script&gt;
     const container = document.getElementById('board');
     const chessfield = new Chessfield(container, { orientation: 'white' });
