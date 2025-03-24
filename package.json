@@ -54,6 +54,8 @@
   "files": [
     "dist/*"
   ],
-  "repository": "https://github.com/unicolored/chessfield",
+  "repository": {
+    "url": "git+https://github.com/unicolored/chessfield"
+  },
   "packageManager": "pnpm@10.6.1"
 }
