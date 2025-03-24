@@ -1,10 +1,14 @@
 # Chessfield
 
-> **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
-
 ![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
 
 _Chessfield_ is a free/libre open source chess 3D board.
+
+[![Continuous Integration](https://github.com/unicolored/chessfield/actions/workflows/ci.yml/badge.svg)](https://github.com/unicolored/chessfield/actions/workflows/ci.yml)
+[![Continuous Integration](https://github.com/unicolored/chessfield/actions/workflows/publish.yml/badge.svg)](https://github.com/unicolored/chessfield/actions/workflows/publish.yml)
+[![npm version](https://badge.fury.io/js/chessfield.svg)](https://www.npmjs.com/chessfield)
+
+> **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
 
 ## License
 
