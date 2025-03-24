@@ -1,10 +1,14 @@
 # Chessfield
 
-> **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
-
 ![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
 
 _Chessfield_ is a free/libre open source chess 3D board.
+
+[![Continuous Integration](https://github.com/unicolored/chessfield/actions/workflows/ci.yml/badge.svg)](https://github.com/unicolored/chessfield/actions/workflows/ci.yml)
+[![Continuous Integration](https://github.com/unicolored/chessfield/actions/workflows/publish.yml/badge.svg)](https://github.com/unicolored/chessfield/actions/workflows/publish.yml)
+[![npm version](https://badge.fury.io/js/chessfield.svg)](https://www.npmjs.com/chessfield)
+
+> **This project is made possible** thanks to the work going into https://github.com/lichess-org/chessground.
 
 ## License
 
@@ -42,26 +46,24 @@ npm install --save chessfield
 ```js
 import { Chessfield } from 'chessfield';
 
-
 // Add and use a custom theme
 const config = {
   plugins: {
     themes: {
       mytheme: {
-        light: "#e3dbc9",
-        dark: "#cb4444",
-        highlight: "#c99a39",
-        selected: "orange",
+        light: '#e3dbc9',
+        dark: '#cb4444',
+        highlight: '#c99a39',
+        selected: 'orange',
       },
     },
   },
-  theme: "mytheme",
-  camera: "white",
-  angle: "right",
+  theme: 'mytheme',
+  camera: 'white',
+  angle: 'right',
 };
 
 const field = Chessfield(document.body, config);
-
 ```
 
 ## Documentation

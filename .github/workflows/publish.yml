@@ -2,7 +2,7 @@ name: Publish
 
 # Trigger the workflow when a PR is merged into the main branch
 on:
-  push:
+  pull_request:
     branches:
       - main
 
@@ -10,34 +10,39 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          fetch-depth: 0 # Ensures full history is available for version bumping
+          version: 10
+          run_install: false
 
-      # Set up Node.js environment
-      - name: Setup Node.js
+      # Checkout the repository
+      #      - name: Checkout code
+      #        uses: actions/checkout@v4
+      #        with:
+      #          fetch-depth: 0 # Ensures full history is available for version bumping
+
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org/'
+          node-version: 20
+          cache: 'pnpm'
 
       # Install dependencies
       - name: Install dependencies
         run: pnpm install
 
       # Automatically bump version and create a git tag
-      - name: Bump version
-        run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          npm version patch -m "chore(release): publish v%s [skip ci]"
+      #      - name: Bump version
+      #        run: |
+      #          git config user.name "GitHub Actions Bot"
+      #          git config user.email "<>"
+      #          npm version patch -m "chore(release): publish v%s [skip ci]"
 
       # Push the version bump and tag to GitHub
-      - name: Push changes
-        run: |
-          git push origin main --follow-tags
+      #      - name: Push changes
+      #        run: |
+      #          git push origin main --follow-tags
 
       # Publish to npm
       - name: Publish to npm

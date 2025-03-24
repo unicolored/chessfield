@@ -1,7 +1,6 @@
 name: Continuous Integration
 
-#on: [push, pull_request]
-on: []
+on: [push, pull_request]
 
 jobs:
   build:
@@ -15,10 +14,5 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript
-      - uses: github/codeql-action/analyze@v3
-      - run: pnpm run lint
-      - run: pnpm run check-format
-      #- run: pnpm run dist # dist, compile and bundle are missing -> check chessground project
+      - run: sh script/test.sh
+      - run: sh script/cibuild.sh
