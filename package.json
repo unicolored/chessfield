@@ -1,6 +1,6 @@
 {
   "name": "chessfield",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A TypeScript+ThreeJS library to render a 3D chessboard",
   "main": "dist/chessfield.umd.js",
   "module": "dist/chessfield.js",
@@ -18,7 +18,7 @@
     "compile": "tsc --sourceMap --declaration",
     "lint": "eslint src/*.ts",
     "format": "prettier --write .",
-    "check-format": "prettier --check .",
+    "check": "prettier --check .",
     "bundle": "vite build",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
     "dev": "vite",

@@ -42,26 +42,24 @@ npm install --save chessfield
 ```js
 import { Chessfield } from 'chessfield';
 
-
 // Add and use a custom theme
 const config = {
   plugins: {
     themes: {
       mytheme: {
-        light: "#e3dbc9",
-        dark: "#cb4444",
-        highlight: "#c99a39",
-        selected: "orange",
+        light: '#e3dbc9',
+        dark: '#cb4444',
+        highlight: '#c99a39',
+        selected: 'orange',
       },
     },
   },
-  theme: "mytheme",
-  camera: "white",
-  angle: "right",
+  theme: 'mytheme',
+  camera: 'white',
+  angle: 'right',
 };
 
 const field = Chessfield(document.body, config);
-
 ```
 
 ## Documentation
