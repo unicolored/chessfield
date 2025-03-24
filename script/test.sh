@@ -2,5 +2,5 @@
 
 set -e
 
-pnpm run check
 pnpm run lint
+pnpm run check

@@ -1,9 +1,6 @@
 name: Continuous Integration
 
-on:
-  push:
-    branches:
-      - next
+on: [push, pull_request]
 
 jobs:
   build:
@@ -21,6 +18,5 @@ jobs:
         with:
           languages: javascript
       - uses: github/codeql-action/analyze@v3
-      - run: |
-          sh script/test
-          sh script/cibuild
+      - run: sh script/test.sh
+      - run: sh script/cibuild.sh
