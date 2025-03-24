@@ -3,5 +3,4 @@
 set -e
 
 pnpm run check
-
-echo "✅ Tests completed"
+pnpm run lint
