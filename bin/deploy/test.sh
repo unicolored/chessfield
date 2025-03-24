@@ -2,6 +2,6 @@
 
 set -e
 
-yarn check
+pnpm run check
 
 echo "✅ Tests completed"
