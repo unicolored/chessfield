@@ -5,19 +5,19 @@ import { PieceProvider } from './piece.provider';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Store } from './store.ts';
 import { objKey } from '../helper.ts';
-import bishopModel from '../assets/models/bishop.glb?url';
-import kingModel from '../assets/models/king.glb?url';
-import knightModel from '../assets/models/knight.glb?url';
-import pawnModel from '../assets/models/pawn.glb?url';
-import queenModel from '../assets/models/queen.glb?url';
-import rookModel from '../assets/models/rook.glb?url';
+import bishopModel from '../assets/models/tests/bishop.glb?url';
+import kingModel from '../assets/models/tests/king.glb?url';
+import knightModel from '../assets/models/tests/knight.glb?url';
+import pawnModel from '../assets/models/tests/pawn.glb?url';
+import queenModel from '../assets/models/tests/queen.glb?url';
+import rookModel from '../assets/models/tests/rook.glb?url';
 import * as cg from 'chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
 import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
-  static readonly pieceMaterials: cf.ColorMaterial = {
+  pieceMaterials: cf.ColorMaterial = {
     white: new THREE.MeshPhongMaterial({
       color: Store.themes['bw'].light,
       flatShading: true,
@@ -86,10 +86,12 @@ export class GameProvider {
         const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
 
         if (geometry) {
+          const material = this.pieceMaterials[value.color];
+          console.log(material);
           const mesh =
             value.count > 1
-              ? new THREE.InstancedMesh(geometry, GameProvider.pieceMaterials[value.color], value.count)
-              : new THREE.Mesh(geometry, GameProvider.pieceMaterials[value.color]);
+              ? new THREE.InstancedMesh(geometry, material, value.count)
+              : new THREE.Mesh(geometry, material);
 
           mesh.castShadow = true;
           mesh.receiveShadow = true;
