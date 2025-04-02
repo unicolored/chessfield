@@ -16,11 +16,13 @@ import { cm, lmToCoordinates } from './helper.ts';
 import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
+import bakedTexture from './assets/models/tests/baked.jpg?url';
+import bakedBlackTexture from './assets/models/tests/baked-black.jpg?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
 
 export class Chessfield implements ChessfieldApi {
-  private store: Store;
+  private readonly store: Store;
   private gameProvider!: GameProvider;
   private boardService!: BoardService;
   private themeProvider!: ThemeProvider;
@@ -180,6 +182,42 @@ export class Chessfield implements ChessfieldApi {
 
     const loadingManager = new THREE.LoadingManager();
 
+    const textureLoader = new THREE.TextureLoader(loadingManager);
+
+    // Load the texture and apply it to the material
+    textureLoader.load(
+      bakedTexture,
+      texture => {
+        texture.flipY = false;
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({
+          // color: Store.themes['bw'].light,
+          map: texture,
+        });
+      },
+      undefined,
+      (e: unknown) => {
+        console.error('error', e);
+      },
+    );
+    textureLoader.load(
+      bakedBlackTexture,
+      texture => {
+        texture.flipY = false;
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        this.gameProvider.pieceMaterials.black = new THREE.MeshBasicMaterial({
+          // color: Store.themes['bw'].dark,
+          map: texture,
+        });
+      },
+      undefined,
+      (e: unknown) => {
+        console.error('error', e);
+      },
+    );
+
     this.gameProvider.loadGltfGeometries(loadingManager);
 
     let helvetiker: Font | null = null;
@@ -206,7 +244,7 @@ export class Chessfield implements ChessfieldApi {
     // scene.add(debugGroup);
     const lightGroup = this.boardService.lights();
     lightGroup.name = '🟡 Lights';
-    scene.add(lightGroup);
+    // scene.add(lightGroup);
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
