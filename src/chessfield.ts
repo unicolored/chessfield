@@ -339,11 +339,11 @@ export class Chessfield implements ChessfieldApi {
     };
 
     loadingManager.onLoad = () => {
-      console.log('loaded');
-
-      // Example usage:
-      fadeAlpha(overlayMaterial.uniforms['uAlpha'], 500);
-      progressMaterial.uniforms['uAlpha'] = { value: 0 };
+      setTimeout(() => {
+        // Example usage:
+        fadeAlpha(overlayMaterial.uniforms['uAlpha'], 500);
+        progressMaterial.uniforms['uAlpha'] = { value: 0 };
+      }, 200);
 
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
       const chessboard = this.boardService.createChessboard();
