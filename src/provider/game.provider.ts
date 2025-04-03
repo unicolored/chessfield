@@ -5,12 +5,12 @@ import { PieceProvider } from './piece.provider';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Store } from './store.ts';
 import { objKey } from '../helper.ts';
-import bishopModel from '../assets/models/tests/bishop.glb?url';
-import kingModel from '../assets/models/tests/king.glb?url';
-import knightModel from '../assets/models/tests/knight.glb?url';
-import pawnModel from '../assets/models/tests/pawn.glb?url';
-import queenModel from '../assets/models/tests/queen.glb?url';
-import rookModel from '../assets/models/tests/rook.glb?url';
+import bishopModel from '../assets/models/bishop.glb?url';
+import kingModel from '../assets/models/king.glb?url';
+import knightModel from '../assets/models/knight.glb?url';
+import pawnModel from '../assets/models/pawn.glb?url';
+import queenModel from '../assets/models/queen.glb?url';
+import rookModel from '../assets/models/rook.glb?url';
 import * as cg from 'chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
 import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
@@ -92,8 +92,8 @@ export class GameProvider {
               ? new THREE.InstancedMesh(geometry, material, value.count)
               : new THREE.Mesh(geometry, material);
 
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
           mesh.name = `${key}-${value.color}-${value.role}`;
 
           boardPiecesObjectsMap.set(key, mesh);
