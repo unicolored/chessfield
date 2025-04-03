@@ -21,4 +21,9 @@ export class ThemeProvider {
   getBackgroundColor(): string | number {
     return this.getModeColors().light ?? '#bfcfdd';
   }
+
+  getInvertColor(): string | number {
+    const invertMode = this.mode === 'light' ? 'dark' : 'light';
+    return Store.themes[invertMode].light ?? '#bfcfdd';
+  }
 }
