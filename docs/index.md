@@ -13,8 +13,8 @@
     }
     .chessfield {
         width: 100%;
-        max-width: 500px; /* Constrain width for better display */
-        height: 333px;
+        max-width: 740px; /* Constrain width for better display */
+        height: 740px;
         margin: 0 auto;
         border: 1px solid #ddd; /* Optional: subtle border */
     }
@@ -24,7 +24,7 @@
 <p>Chessfield is a lightweight TypeScript library that lets you render interactive 3D chessboards in the browser. Built with <a href="https://threejs.org/" target="_blank">Three.js</a>, it’s easy to integrate into any web project, whether you’re using it via CDN, Node.js, or a framework like Angular.</p>
 
 <h2>Demo</h2>
-<p>Below is a live demo of Chessfield in action:</p>
+<p>Below is a live demo of Chessfield. Drag the camera around:</p>
 <div class="flex">
     <div class="chessfield" id="board1"></div>
 </div>
@@ -41,17 +41,17 @@
 <p>You can add Chessfield to your project in a few ways:</p>
 
 <h3>Via CDN</h3>
-<pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.css"&gt;
-&lt;script src="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.umd.js"&gt;&lt;/script&gt;
+<pre><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.5.0/dist/chessfield.css"&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/chessfield@1.5.0/dist/chessfield.umd.js"&gt;&lt;/script&gt;
 &lt;script&gt;
     const container = document.getElementById('board');
-    const chessfield = new Chessfield(container, { orientation: 'white' });
+    const chessfield = new Chessfield(container, { camera: 'white', angle: 'right' });
 &lt;/script&gt;</code></pre>
 
 <h3>Via npm</h3>
 <pre><code>npm install chessfield</code></pre>
 <pre><code>import { Chessfield } from 'chessfield';
-const chessfield = new Chessfield(document.getElementById('board'), { orientation: 'white' });</code></pre>
+const chessfield = new Chessfield(document.getElementById('board'), { camera: 'white', angle: 'right' });</code></pre>
 
 <h2>Links</h2>
 <ul>
@@ -65,6 +65,7 @@ const chessfield = new Chessfield(document.getElementById('board'), { orientatio
     import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.js';
     const boardContainer = document.getElementById('board1');
     var board1 = new Chessfield(boardContainer, {
-        orientation: 'white',
+        camera: 'white',
+        angle: 'right'
     });
 </script>
