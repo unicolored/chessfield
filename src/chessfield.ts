@@ -87,7 +87,7 @@ export class Chessfield implements ChessfieldApi {
     // Camera
     const camGroup = new THREE.Group();
     const cameraPositionsMap = new Map<cf.Camera, Vector3>();
-    cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
+    cameraPositionsMap.set('white', new Vector3(0, cm(14), cm(14)));
     // cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
     // cameraPositionsMap.set('black', new Vector3(0, cm(12), cm(-12)));
     // cameraPositionsMap.set('right', new Vector3(cm(12), cm(12), 0));
@@ -312,8 +312,8 @@ export class Chessfield implements ChessfieldApi {
 
       // Render
       renderer.render(scene, camera);
-      renderer.shadowMap.autoUpdate = false;
-      renderer.shadowMap.needsUpdate = true;
+      // renderer.shadowMap.autoUpdate = false;
+      // renderer.shadowMap.needsUpdate = true;
 
       // Call tick again on the next frame
       document.defaultView?.requestAnimationFrame(tick);
@@ -356,11 +356,29 @@ export class Chessfield implements ChessfieldApi {
             }
           });
 
+          const pieceRotations: { [k: string]: number } = {
+            'white-knight-white-knight': -5.5,
+            'black-knight-black-knight': -2.5,
+            'black-bishop-black-bishop': -3,
+          };
+
           matrixes.forEach(meshes => {
             let index = 0;
             for (const { mesh, pos } of meshes) {
               const matrix = new THREE.Matrix4();
               matrix.setPosition(pos);
+
+              // Check if this piece needs rotation
+              const rotationAngle = pieceRotations[mesh.name];
+              if (rotationAngle !== undefined) {
+                // Combine position and rotation in one step
+                matrix.makeRotationY(rotationAngle);
+                matrix.setPosition(pos);
+              } else {
+                // Just set position for pieces without rotation
+                matrix.setPosition(pos);
+              }
+
               mesh.setMatrixAt(index, matrix);
 
               index++;
