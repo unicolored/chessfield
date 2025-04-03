@@ -87,7 +87,6 @@ export class GameProvider {
 
         if (geometry) {
           const material = this.pieceMaterials[value.color];
-          console.log(material);
           const mesh =
             value.count > 1
               ? new THREE.InstancedMesh(geometry, material, value.count)
