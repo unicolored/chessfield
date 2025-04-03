@@ -12,7 +12,7 @@ import { Group, InstancedMesh, Mesh, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
-import { cm, lmToCoordinates } from './helper.ts';
+import { cm, fadeAlpha, hexToRgb, lmToCoordinates } from './helper.ts';
 import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
@@ -176,9 +176,74 @@ export class Chessfield implements ChessfieldApi {
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
     const backgroundColor = this.themeProvider.getBackgroundColor();
+    const invertColor = this.themeProvider.getInvertColor();
     scene.background = new THREE.Color(backgroundColor); // Gray background
 
     scene.add(camGroup);
+
+    /**
+     * Loader Overlay
+     */
+    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+    const overlayMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        uAlpha: { value: 1 },
+        uColor: { value: hexToRgb(backgroundColor) },
+      },
+      vertexShader: `
+        void main()
+        {
+          gl_Position = vec4(position, 1.0);
+        }
+    `,
+      fragmentShader: `
+      uniform float uAlpha;
+      uniform vec3 uColor;
+      
+        void main()
+        {
+          gl_FragColor = vec4(uColor, uAlpha);
+        }
+      `,
+    });
+    const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
+    scene.add(overlay);
+
+    const progressGeometry = new THREE.PlaneGeometry(2, 0.01, 1, 1);
+    const progressMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        uColor: { value: hexToRgb(invertColor) },
+        uPosition: { value: new THREE.Vector3(0, 0, 0) },
+        uTime: { value: -1 },
+        uAlpha: { value: 1 },
+      },
+      vertexShader: `
+        uniform vec3 uPosition;
+        uniform float uTime;
+        
+        void main()
+        {
+            // Add the vertex position to see the actual geometry
+            vec3 animatedPosition = position + uPosition;
+            animatedPosition.x += uTime * 20.0 * 0.1; 
+            
+            gl_Position = vec4(animatedPosition, 1.0);
+        }
+    `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uAlpha;
+        
+        void main()
+        {
+            gl_FragColor = vec4(uColor, uAlpha);
+        }
+    `,
+    });
+    const progress = new THREE.Mesh(progressGeometry, progressMaterial);
+    scene.add(progress);
 
     const loadingManager = new THREE.LoadingManager();
 
@@ -265,7 +330,21 @@ export class Chessfield implements ChessfieldApi {
     //   // });
     // }
 
+    loadingManager.onError = () => {
+      console.log('error');
+    };
+
+    loadingManager.onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
+      progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
+    };
+
     loadingManager.onLoad = () => {
+      console.log('loaded');
+
+      // Example usage:
+      fadeAlpha(overlayMaterial.uniforms['uAlpha'], 500);
+      progressMaterial.uniforms['uAlpha'] = { value: 0 };
+
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
       const chessboard = this.boardService.createChessboard();
       const themeColors = this.themeProvider.getThemeColors();
