@@ -16,8 +16,8 @@ import { cm, lmToCoordinates } from './helper.ts';
 import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
-import bakedTexture from './assets/models/tests/baked.jpg?url';
-import bakedBlackTexture from './assets/models/tests/baked-black.jpg?url';
+import bakedTexture from './assets/models/baked.jpg?url';
+import bakedBlackTexture from './assets/models/baked-black.jpg?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
 
@@ -350,23 +350,28 @@ export class Chessfield implements ChessfieldApi {
                     matrixes.set(boardPiece.objectKey, updateMatrix);
                   } else {
                     mesh.position.copy(pos);
+                    if (mesh.name.startsWith('black')) {
+                      mesh.rotateY(Math.PI);
+                    }
                   }
                 }
               }
             }
           });
 
+          // Pieces Rotations
           const pieceRotations: { [k: string]: number } = {
             'white-knight-white-knight': -5.5,
             'black-knight-black-knight': -2.5,
             'black-bishop-black-bishop': -3,
+            'black-rook-black-rook': -3,
+            'black-pawn-black-pawn': -3,
           };
 
           matrixes.forEach(meshes => {
             let index = 0;
             for (const { mesh, pos } of meshes) {
               const matrix = new THREE.Matrix4();
-              matrix.setPosition(pos);
 
               // Check if this piece needs rotation
               const rotationAngle = pieceRotations[mesh.name];
