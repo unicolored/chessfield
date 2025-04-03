@@ -12,15 +12,17 @@ import { Group, InstancedMesh, Mesh, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { tap } from 'rxjs';
-import { cm, lmToCoordinates } from './helper.ts';
+import { cm, fadeAlpha, hexToRgb, lmToCoordinates } from './helper.ts';
 import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
+import bakedTexture from './assets/models/baked.jpg?url';
+import bakedBlackTexture from './assets/models/baked-black.jpg?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
 
 export class Chessfield implements ChessfieldApi {
-  private store: Store;
+  private readonly store: Store;
   private gameProvider!: GameProvider;
   private boardService!: BoardService;
   private themeProvider!: ThemeProvider;
@@ -85,7 +87,7 @@ export class Chessfield implements ChessfieldApi {
     // Camera
     const camGroup = new THREE.Group();
     const cameraPositionsMap = new Map<cf.Camera, Vector3>();
-    cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
+    cameraPositionsMap.set('white', new Vector3(0, cm(14), cm(14)));
     // cameraPositionsMap.set('white', new Vector3(0, cm(12), cm(12)));
     // cameraPositionsMap.set('black', new Vector3(0, cm(12), cm(-12)));
     // cameraPositionsMap.set('right', new Vector3(cm(12), cm(12), 0));
@@ -174,11 +176,112 @@ export class Chessfield implements ChessfieldApi {
     // Set up the scene, camera, and renderer
     const scene = new THREE.Scene();
     const backgroundColor = this.themeProvider.getBackgroundColor();
+    const invertColor = this.themeProvider.getInvertColor();
     scene.background = new THREE.Color(backgroundColor); // Gray background
 
     scene.add(camGroup);
 
+    /**
+     * Loader Overlay
+     */
+    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+    const overlayMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        uAlpha: { value: 1 },
+        uColor: { value: hexToRgb(backgroundColor) },
+      },
+      vertexShader: `
+        void main()
+        {
+          gl_Position = vec4(position, 1.0);
+        }
+    `,
+      fragmentShader: `
+      uniform float uAlpha;
+      uniform vec3 uColor;
+      
+        void main()
+        {
+          gl_FragColor = vec4(uColor, uAlpha);
+        }
+      `,
+    });
+    const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
+    scene.add(overlay);
+
+    const progressGeometry = new THREE.PlaneGeometry(2, 0.01, 1, 1);
+    const progressMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        uColor: { value: hexToRgb(invertColor) },
+        uPosition: { value: new THREE.Vector3(0, 0, 0) },
+        uTime: { value: -1 },
+        uAlpha: { value: 1 },
+      },
+      vertexShader: `
+        uniform vec3 uPosition;
+        uniform float uTime;
+        
+        void main()
+        {
+            // Add the vertex position to see the actual geometry
+            vec3 animatedPosition = position + uPosition;
+            animatedPosition.x += uTime * 20.0 * 0.1; 
+            
+            gl_Position = vec4(animatedPosition, 1.0);
+        }
+    `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uAlpha;
+        
+        void main()
+        {
+            gl_FragColor = vec4(uColor, uAlpha);
+        }
+    `,
+    });
+    const progress = new THREE.Mesh(progressGeometry, progressMaterial);
+    scene.add(progress);
+
     const loadingManager = new THREE.LoadingManager();
+
+    const textureLoader = new THREE.TextureLoader(loadingManager);
+
+    // Load the texture and apply it to the material
+    textureLoader.load(
+      bakedTexture,
+      texture => {
+        texture.flipY = false;
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({
+          // color: Store.themes['bw'].light,
+          map: texture,
+        });
+      },
+      undefined,
+      (e: unknown) => {
+        console.error('error', e);
+      },
+    );
+    textureLoader.load(
+      bakedBlackTexture,
+      texture => {
+        texture.flipY = false;
+        texture.colorSpace = THREE.SRGBColorSpace;
+
+        this.gameProvider.pieceMaterials.black = new THREE.MeshBasicMaterial({
+          // color: Store.themes['bw'].dark,
+          map: texture,
+        });
+      },
+      undefined,
+      (e: unknown) => {
+        console.error('error', e);
+      },
+    );
 
     this.gameProvider.loadGltfGeometries(loadingManager);
 
@@ -206,7 +309,7 @@ export class Chessfield implements ChessfieldApi {
     // scene.add(debugGroup);
     const lightGroup = this.boardService.lights();
     lightGroup.name = '🟡 Lights';
-    scene.add(lightGroup);
+    // scene.add(lightGroup);
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
@@ -227,7 +330,21 @@ export class Chessfield implements ChessfieldApi {
     //   // });
     // }
 
+    loadingManager.onError = () => {
+      console.log('error');
+    };
+
+    loadingManager.onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
+      progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
+    };
+
     loadingManager.onLoad = () => {
+      setTimeout(() => {
+        // Example usage:
+        fadeAlpha(overlayMaterial.uniforms['uAlpha'], 500);
+        progressMaterial.uniforms['uAlpha'] = { value: 0 };
+      }, 200);
+
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
       const chessboard = this.boardService.createChessboard();
       const themeColors = this.themeProvider.getThemeColors();
@@ -274,8 +391,8 @@ export class Chessfield implements ChessfieldApi {
 
       // Render
       renderer.render(scene, camera);
-      renderer.shadowMap.autoUpdate = false;
-      renderer.shadowMap.needsUpdate = true;
+      // renderer.shadowMap.autoUpdate = false;
+      // renderer.shadowMap.needsUpdate = true;
 
       // Call tick again on the next frame
       document.defaultView?.requestAnimationFrame(tick);
@@ -312,17 +429,40 @@ export class Chessfield implements ChessfieldApi {
                     matrixes.set(boardPiece.objectKey, updateMatrix);
                   } else {
                     mesh.position.copy(pos);
+                    if (mesh.name.startsWith('black')) {
+                      mesh.rotateY(Math.PI);
+                    }
                   }
                 }
               }
             }
           });
 
+          // Pieces Rotations
+          const pieceRotations: { [k: string]: number } = {
+            'white-knight-white-knight': -5.5,
+            'black-knight-black-knight': -2.5,
+            'black-bishop-black-bishop': -3,
+            'black-rook-black-rook': -3,
+            'black-pawn-black-pawn': -3,
+          };
+
           matrixes.forEach(meshes => {
             let index = 0;
             for (const { mesh, pos } of meshes) {
               const matrix = new THREE.Matrix4();
-              matrix.setPosition(pos);
+
+              // Check if this piece needs rotation
+              const rotationAngle = pieceRotations[mesh.name];
+              if (rotationAngle !== undefined) {
+                // Combine position and rotation in one step
+                matrix.makeRotationY(rotationAngle);
+                matrix.setPosition(pos);
+              } else {
+                // Just set position for pieces without rotation
+                matrix.setPosition(pos);
+              }
+
               mesh.setMatrixAt(index, matrix);
 
               index++;

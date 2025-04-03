@@ -17,7 +17,7 @@ import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
-  static readonly pieceMaterials: cf.ColorMaterial = {
+  pieceMaterials: cf.ColorMaterial = {
     white: new THREE.MeshPhongMaterial({
       color: Store.themes['bw'].light,
       flatShading: true,
@@ -86,13 +86,14 @@ export class GameProvider {
         const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
 
         if (geometry) {
+          const material = this.pieceMaterials[value.color];
           const mesh =
             value.count > 1
-              ? new THREE.InstancedMesh(geometry, GameProvider.pieceMaterials[value.color], value.count)
-              : new THREE.Mesh(geometry, GameProvider.pieceMaterials[value.color]);
+              ? new THREE.InstancedMesh(geometry, material, value.count)
+              : new THREE.Mesh(geometry, material);
 
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
+          mesh.castShadow = false;
+          mesh.receiveShadow = false;
           mesh.name = `${key}-${value.color}-${value.role}`;
 
           boardPiecesObjectsMap.set(key, mesh);

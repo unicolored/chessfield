@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chessfield Demo</title>
+
+    <style>
+      body {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      body > div {
+        margin: 10px;
+      }
+
+      .chessfield {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        /*width: 800px;*/
+        height: 740px;
+        aspect-ratio: 1;
+        border: 1px solid white;
+      }
+    </style>
+
+    <script type="module">
+      import { Chessfield } from './src/chessfield.ts';
+
+      const board1 = new Chessfield(document.getElementById('board-1'), {
+        orientation: 'white',
+        camera: 'white',
+        angle: 'right',
+        theme: 'green',
+      });
+      board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+    </script>
+  </head>
+  <body>
+    <div>
+      basic board, default config
+      <div class="chessfield" id="board-1"></div>
+    </div>
+
+    <script type="module" src="/src/chessfield.ts"></script>
+  </body>
+</html>
