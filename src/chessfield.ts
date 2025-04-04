@@ -273,10 +273,7 @@ export class Chessfield implements ChessfieldApi {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({
-          // color: Store.themes['bw'].light,
-          map: texture,
-        });
+        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({ map: texture });
       },
       undefined,
       (e: unknown) => {
@@ -322,9 +319,11 @@ export class Chessfield implements ChessfieldApi {
 
     // const debugGroup = this.boardService.debug();
     // scene.add(debugGroup);
-    const lightGroup = this.boardService.lights();
-    lightGroup.name = '🟡 Lights';
+
+    // const lightGroup = this.boardService.lights();
+    // lightGroup.name = '🟡 Lights';
     // scene.add(lightGroup);
+
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
