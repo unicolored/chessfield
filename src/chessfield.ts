@@ -182,7 +182,7 @@ export class Chessfield implements ChessfieldApi {
     scene.add(camGroup);
 
     /**
-     * Loader Overlay
+     * 0. LOADER overlay
      */
     const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
     const overlayMaterial = new THREE.ShaderMaterial({
@@ -245,8 +245,25 @@ export class Chessfield implements ChessfieldApi {
     const progress = new THREE.Mesh(progressGeometry, progressMaterial);
     scene.add(progress);
 
+    /**
+     * 1. CHESSBOARD shader
+     */
+    const chessboard = this.boardService.createChessboard();
+
+    /**
+     * MANAGER
+     */
     const loadingManager = new THREE.LoadingManager();
 
+    /**
+     * 2. PIECES glb
+     */
+    // this.gameProvider.loadGltfGeometries(loadingManager);
+    this.gameProvider.loadGlbGeometry(loadingManager);
+
+    /**
+     * 3. TEXTURES baked
+     */
     const textureLoader = new THREE.TextureLoader(loadingManager);
 
     // Load the texture and apply it to the material
@@ -256,10 +273,7 @@ export class Chessfield implements ChessfieldApi {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({
-          // color: Store.themes['bw'].light,
-          map: texture,
-        });
+        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({ map: texture });
       },
       undefined,
       (e: unknown) => {
@@ -283,8 +297,6 @@ export class Chessfield implements ChessfieldApi {
       },
     );
 
-    this.gameProvider.loadGltfGeometries(loadingManager);
-
     let helvetiker: Font | null = null;
     if (this.store.getConfig().coordinatesOnSquares) {
       new FontLoader(loadingManager).load(helvetikerFont, async (font: any) => {
@@ -307,9 +319,11 @@ export class Chessfield implements ChessfieldApi {
 
     // const debugGroup = this.boardService.debug();
     // scene.add(debugGroup);
-    const lightGroup = this.boardService.lights();
-    lightGroup.name = '🟡 Lights';
+
+    // const lightGroup = this.boardService.lights();
+    // lightGroup.name = '🟡 Lights';
     // scene.add(lightGroup);
+
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
@@ -346,7 +360,6 @@ export class Chessfield implements ChessfieldApi {
       }, 200);
 
       // FIXME: keep createChessboard() in onLoad() and load shaders from files inside createChessboard()
-      const chessboard = this.boardService.createChessboard();
       const themeColors = this.themeProvider.getThemeColors();
       chessboard.setHighlightColor(themeColors.highlight);
       chessboard.setSquareColors(themeColors.light, themeColors.dark);
