@@ -60,7 +60,7 @@ export type ColorPieceNameObjectMap = Map<PieceColorRole, Mesh | InstancedMesh |
 export interface BoardPiece extends cg.Piece {
   coord: cg.Key | null;
   objectKey: PieceColorRole | null;
-  count?: number;
+  count: number;
 }
 
 declare module 'three' {
