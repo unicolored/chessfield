@@ -16,10 +16,15 @@ import { cm, fadeAlpha, hexToRgb, lmToCoordinates } from './helper.ts';
 import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import helvetikerFont from './assets/fonts/helvetiker_regular.typeface.json?url';
-import bakedTexture from './assets/models/baked.jpg?url';
-import bakedBlackTexture from './assets/models/baked-black.jpg?url';
+import bakedTexture from './assets/models/light-pieces.jpg?url';
+import bakedBlackTexture from './assets/models/dark-pieces.jpg?url';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 
 export class Chessfield implements ChessfieldApi {
   private readonly store: Store;
@@ -141,28 +146,8 @@ export class Chessfield implements ChessfieldApi {
     });
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = false;
+    // renderer.shadowMap.enabled = false;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
-
-    // Handle window resize
-    function onWindowResize() {
-      if (chessfieldElement) {
-        const sizes = {
-          width: chessfieldElement.clientWidth, // 500
-          height: chessfieldElement.clientHeight, // 500
-        };
-
-        // Update camera aspect ratio
-        camera.aspect = sizes.width / sizes.height;
-        camera.updateProjectionMatrix();
-
-        // Update renderer size
-        renderer.setSize(sizes.width, sizes.height);
-      }
-    }
-
-    // Add resize event listener
-    window.addEventListener('resize', onWindowResize);
 
     // Controls
     const controls = new OrbitControls(camera, this.canvas);
@@ -180,6 +165,66 @@ export class Chessfield implements ChessfieldApi {
     scene.background = new THREE.Color(backgroundColor); // Gray background
 
     scene.add(camGroup);
+
+    /** POSTPROCESSING */
+    //
+
+    const renderPass = new RenderPass(scene, camera);
+    renderPass.clearAlpha = 0;
+
+    //
+
+    const fxaaPass = new ShaderPass(FXAAShader);
+
+    const outputPass = new OutputPass();
+
+    const composer1 = new EffectComposer(renderer);
+    composer1.addPass(renderPass);
+    composer1.addPass(outputPass);
+
+    //
+
+    const pixelRatio = renderer.getPixelRatio();
+
+    fxaaPass.material.uniforms['resolution'].value.x = 1 / (chessfieldElement.offsetWidth * pixelRatio);
+    fxaaPass.material.uniforms['resolution'].value.y = 1 / (chessfieldElement.offsetHeight * pixelRatio);
+
+    const composer2 = new EffectComposer(renderer);
+    composer2.addPass(renderPass);
+    composer2.addPass(outputPass);
+
+    // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.
+
+    composer2.addPass(fxaaPass);
+    /** END POSTPROCESSING */
+
+    // Handle window resize
+    function onWindowResize() {
+      if (chessfieldElement) {
+        const sizes = {
+          width: chessfieldElement.clientWidth, // 500
+          height: chessfieldElement.clientHeight, // 500
+        };
+
+        // Update camera aspect ratio
+        camera.aspect = sizes.width / sizes.height;
+        camera.updateProjectionMatrix();
+
+        // Update renderer size
+        renderer.setSize(sizes.width, sizes.height);
+
+        composer1.setSize(chessfieldElement.offsetWidth, chessfieldElement.offsetHeight);
+        composer2.setSize(chessfieldElement.offsetWidth, chessfieldElement.offsetHeight);
+
+        const pixelRatio = renderer.getPixelRatio();
+
+        fxaaPass.material.uniforms['resolution'].value.x = 1 / (chessfieldElement.offsetWidth * pixelRatio);
+        fxaaPass.material.uniforms['resolution'].value.y = 1 / (chessfieldElement.offsetHeight * pixelRatio);
+      }
+    }
+
+    // Add resize event listener
+    window.addEventListener('resize', onWindowResize);
 
     /**
      * 0. LOADER overlay
