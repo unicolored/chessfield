@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { BufferGeometry, Vector3 } from 'three';
+import { BufferGeometry } from 'three';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import * as cg from 'chessground/types';
 import { initial } from 'chessground/fen';
@@ -52,7 +52,6 @@ export class Store {
     },
   };
 
-  private piecesPositions!: Map<string, Vector3>;
   private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
   // private loader: GLTFLoader;
@@ -115,26 +114,6 @@ export class Store {
   updategamePieces = (list: cf.BoardPiece[]) => {
     this.gamePiecesSubject.next(list);
   };
-
-  getSquaresVector3(): Map<string, Vector3> {
-    if (!this.piecesPositions) {
-      this.piecesPositions = new Map<string, Vector3>();
-
-      for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
-        for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-          const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
-
-          const x = cm(rankInt - Store.boardSize / 2 + 0.5);
-          const y = cm(Store.squareHeight / 2);
-          const z = cm(colInt - Store.boardSize / 2 + 0.5);
-
-          this.piecesPositions.set(coord, new Vector3(x, y, z));
-        }
-      }
-    }
-
-    return this.piecesPositions;
-  }
 
   setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap) {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;

@@ -18,7 +18,7 @@ export interface Move {
 }
 
 export type ColorMaterial = {
-  [key in cg.Color]: Material;
+  [key in cg.Color]: Material | null;
 };
 
 export type PieceColorRole = 'white-knight' | `${cg.Color}-${cg.Role}`;
