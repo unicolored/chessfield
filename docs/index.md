@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@1.2.0/dist/chessfield.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.css" />
 
 <style>
     body {
