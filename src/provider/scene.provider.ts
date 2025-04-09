@@ -1,9 +1,9 @@
-import * as THREE from 'three';
+import { Color, Scene } from 'three';
 
 export class SceneProvider {
-  getScene(backgroundColor: string | number): THREE.Scene {
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(backgroundColor);
+  getScene(backgroundColor: string | number): Scene {
+    const scene = new Scene();
+    scene.background = new Color(backgroundColor);
 
     return scene;
   }

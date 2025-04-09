@@ -9,11 +9,12 @@ export class ControlsProvider {
 
   constructor(private config: ChessfieldConfig) {
     this.zoomMinDistance = this.config.zoomMinDistance ?? 10;
-    this.zoomMaxDistance = this.config.zoomMaxDistance ?? 20;
+    this.zoomMaxDistance = this.config.zoomMaxDistance ?? 25;
   }
 
   getControls(camera: PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
+
     controls.enableDamping = true;
     controls.enablePan = false;
     controls.maxPolarAngle = Math.PI / 2.3;

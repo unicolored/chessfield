@@ -1,13 +1,12 @@
-import * as THREE from 'three';
 import { hexToRgb } from '../helper.ts';
-import { ShaderMaterial } from 'three';
+import { Mesh, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
 
 export class LoaderComponent {
   overlayMaterial: ShaderMaterial;
   progressMaterial: ShaderMaterial;
 
   constructor(overlayColor: string | number, barColor: string | number) {
-    this.overlayMaterial = new THREE.ShaderMaterial({
+    this.overlayMaterial = new ShaderMaterial({
       transparent: true,
       uniforms: {
         uAlpha: { value: 1 },
@@ -30,11 +29,11 @@ export class LoaderComponent {
       `,
     });
 
-    this.progressMaterial = new THREE.ShaderMaterial({
+    this.progressMaterial = new ShaderMaterial({
       transparent: true,
       uniforms: {
         uColor: { value: hexToRgb(barColor) },
-        uPosition: { value: new THREE.Vector3(0, 0, 0) },
+        uPosition: { value: new Vector3(0, 0, 0) },
         uTime: { value: -1 },
         uAlpha: { value: 1 },
       },
@@ -63,15 +62,15 @@ export class LoaderComponent {
     });
   }
 
-  getOverlay(): THREE.Mesh {
-    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+  getOverlay(): Mesh {
+    const overlayGeometry = new PlaneGeometry(2, 2, 1, 1);
 
-    return new THREE.Mesh(overlayGeometry, this.overlayMaterial);
+    return new Mesh(overlayGeometry, this.overlayMaterial);
   }
 
-  getProgressBar(): THREE.Mesh {
-    const progressGeometry = new THREE.PlaneGeometry(2, 0.01, 1, 1);
+  getProgressBar(): Mesh {
+    const progressGeometry = new PlaneGeometry(2, 0.01, 1, 1);
 
-    return new THREE.Mesh(progressGeometry, this.progressMaterial);
+    return new Mesh(progressGeometry, this.progressMaterial);
   }
 }

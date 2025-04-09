@@ -101,24 +101,26 @@ export class Chessfield implements ChessfieldApi {
 
     scene.add(camGroup);
 
-    /** POSTPROCESSING */
+    // Composer
+    let fxaaPass: ShaderPass;
+    const composer = new EffectComposer(renderer);
+
     const renderPass = new RenderPass(scene, camera);
     renderPass.clearAlpha = 0;
 
     const outputPass = new OutputPass();
 
-    const composer = new EffectComposer(renderer);
     composer.addPass(renderPass);
     composer.addPass(outputPass);
 
-    // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.
-    const fxaaPass = new ShaderPass(FXAAShader);
-    fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
-    fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
+    if (RendererProvider.enableAntialias) {
+      // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.
+      fxaaPass = new ShaderPass(FXAAShader);
+      fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
+      fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
 
-    composer.addPass(fxaaPass);
-
-    /** END POSTPROCESSING */
+      composer.addPass(fxaaPass);
+    }
 
     // Handle window resize
     function onWindowResize() {
@@ -134,13 +136,13 @@ export class Chessfield implements ChessfieldApi {
       camera.updateProjectionMatrix();
 
       // Update renderer size
-      // renderer.setSize(sizes.width, sizes.height);
-
       composer.setSize(cfElement.offsetWidth, sizes.width);
       composer.setSize(cfElement.offsetWidth, sizes.height);
 
-      fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
-      fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
+      if (RendererProvider.enableAntialias && fxaaPass) {
+        fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
+        fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
+      }
     }
 
     // Add resize event listener
@@ -153,7 +155,7 @@ export class Chessfield implements ChessfieldApi {
     scene.add(loaderComponent.getOverlay());
     scene.add(loaderComponent.getProgressBar());
 
-    const decorGroup = this.boardService.decor(this.themeProvider.getInvertColor());
+    const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
 
@@ -163,7 +165,7 @@ export class Chessfield implements ChessfieldApi {
     const loadingManagerProvider = new LoadingManagerProvider(this.store.getConfig(), this.gameProvider);
 
     loadingManagerProvider.getLoadingManager().onError = e => {
-      console.log('error', e);
+      console.error('error', e);
     };
 
     loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
@@ -196,13 +198,14 @@ export class Chessfield implements ChessfieldApi {
       scene.add(chessboardGroup);
     };
 
-    /**
-     * Animate
-     */
-    // const clock = new THREE.Clock();
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
-    // Render the scene function
+
+    controls.enabled = this.store.getConfig().controlsEnabled ?? true;
+    controls.update();
+
+    // Animate
+    // const clock = new THREE.Clock();
     const animate = () => {
       // const elapsedTime = clock.getElapsedTime();
       // console.log(elapsedTime)
@@ -212,11 +215,7 @@ export class Chessfield implements ChessfieldApi {
       controls.update();
 
       // Render
-      // renderer.render(scene, camera);
       composer.render();
-
-      // renderer.shadowMap.autoUpdate = false;
-      // renderer.shadowMap.needsUpdate = true;
 
       // Call tick again on the next frame
       document.defaultView?.requestAnimationFrame(animate);
@@ -224,6 +223,7 @@ export class Chessfield implements ChessfieldApi {
 
     cfElement.appendChild(renderer.domElement);
 
+    // Start
     animate();
   }
 
