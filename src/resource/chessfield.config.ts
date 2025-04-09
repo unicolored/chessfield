@@ -17,6 +17,7 @@ export interface ChessfieldConfig {
   plugins?: {
     themes?: Themes;
   };
+  controlsEnabled?: boolean;
   zoomMinDistance?: number;
   zoomMaxDistance?: number;
 }
