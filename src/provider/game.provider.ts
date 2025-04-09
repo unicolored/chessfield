@@ -1,17 +1,10 @@
-import * as THREE from 'three';
-import { BufferGeometry, LoadingManager, Mesh, Object3D } from 'three';
+import { BufferGeometry, InstancedMesh, LoadingManager, Mesh, MeshBasicMaterial, Object3D } from 'three';
 import FenParser from '@chess-fu/fen-parser';
 import { PieceProvider } from './piece.provider';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Store } from './store.ts';
 import { objKey } from '../helper.ts';
-// import bishopModel from '../assets/models/bishop.glb?url';
-// import kingModel from '../assets/models/king.glb?url';
-// import knightModel from '../assets/models/knight.glb?url';
-// import pawnModel from '../assets/models/pawn.glb?url';
-// import queenModel from '../assets/models/queen.glb?url';
-// import rookModel from '../assets/models/rook.glb?url';
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
 import * as cg from 'chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
@@ -19,15 +12,10 @@ import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
+
   pieceMaterials: cf.ColorMaterial = {
-    white: new THREE.MeshPhongMaterial({
-      color: Store.themes['bw'].light,
-      flatShading: true,
-    }),
-    black: new THREE.MeshPhongMaterial({
-      color: Store.themes['bw'].dark,
-      flatShading: true,
-    }),
+    white: null,
+    black: null,
   };
 
   constructor(private store: Store) {}
@@ -84,24 +72,22 @@ export class GameProvider {
     const pieceGeometriesMap = this.store.getPiecesGeometriesGltfMap();
 
     const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
-    mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
-      // if (value && value.count && value.count > 0) {
-      const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
 
-      // if (geometry) {
-      const material = this.pieceMaterials[value.color];
+    const fallbackMaterial = new MeshBasicMaterial({
+      color: 0xff0000,
+    });
+
+    mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
+      const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
+      const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
       const mesh =
-        value.count > 1
-          ? new THREE.InstancedMesh(geometry, material, value.count)
-          : new THREE.Mesh(geometry, material);
+        value.count > 1 ? new InstancedMesh(geometry, material, value.count) : new Mesh(geometry, material);
 
       mesh.castShadow = false;
       mesh.receiveShadow = false;
       mesh.name = `${key}-${value.color}-${value.role}`;
 
       boardPiecesObjectsMap.set(key, mesh);
-      // }
-      // }
     });
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
