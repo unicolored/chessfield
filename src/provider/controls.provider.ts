@@ -4,16 +4,19 @@ import { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { PerspectiveCamera } from 'three';
 
 export class ControlsProvider {
+  private readonly enabled;
   private readonly zoomMinDistance;
   private readonly zoomMaxDistance;
 
   constructor(private config: ChessfieldConfig) {
+    this.enabled = this.config.controlsEnabled ?? true;
     this.zoomMinDistance = this.config.zoomMinDistance ?? 10;
     this.zoomMaxDistance = this.config.zoomMaxDistance ?? 25;
   }
 
   getControls(camera: PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
+    controls.enabled = this.enabled;
 
     controls.enableDamping = true;
     controls.enablePan = false;
