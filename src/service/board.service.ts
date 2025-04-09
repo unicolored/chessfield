@@ -1,5 +1,14 @@
-import { Group, Mesh, Vector3 } from 'three';
-import * as THREE from 'three';
+import {
+  BoxGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhongMaterial,
+  PlaneGeometry,
+  ShaderMaterial,
+  Vector2,
+  Vector3,
+} from 'three';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Store } from '../provider/store.ts';
@@ -9,137 +18,47 @@ import * as cf from '../resource/chessfield.types.ts';
 import { ThemeColors } from '../resource/chessfield.types.ts';
 
 export class BoardService {
-  public lights(): Group {
-    const lightGroup = new THREE.Group();
-
-    const directLight = new THREE.DirectionalLight(0xffffff, 3);
-    directLight.castShadow = false;
-    directLight.position.set(1, 2, 1);
-    lightGroup.add(directLight); // Add the target to the scene
-    // gui.add(directLight, 'intensity', 0, 200);
-
-    // Add cone light with shadow map
-    // const coneLight = new THREE.SpotLight(0xffffff, 100);
-    // coneLight.position.set(3, 10, 0); // Position above the scene
-    // gui.add(coneLight, 'intensity', 0, 200);
-
-    // Define the target of the light (e.g., center of chessboard)
-    // const target = new THREE.Object3D();
-    // target.position.set(0, 0, 0);
-    // lightGroup.add(target); // Add the target to the scene
-    // coneLight.target = target;
-    //
-    // // Enable shadows
-    // coneLight.castShadow = true;
-    //
-    // // Fine-tune shadow settings for better performance/quality
-    // coneLight.shadow.mapSize.width = 1024; // default
-    // coneLight.shadow.mapSize.height = 1024; // default
-    // coneLight.shadow.camera.near = 0.5; // default
-    // coneLight.shadow.camera.far = 100; // default
-    // coneLight.shadow.focus = 1; // default
-    //
-    // // Adjust the cone angle and penumbra for effect
-    // coneLight.angle = Math.PI / 4; // Narrow cone angle
-    // coneLight.penumbra = 0.1; // Soft edge
-    //
-    // // const coneLightHelper = new THREE.SpotLightHelper(coneLight);
-    //
-    // // Add the light to the scene
-    // lightGroup.add(coneLight);
-    // lightGroup.add(coneLightHelper);
-
-    const light = new THREE.AmbientLight(0x404040, 18); // soft white light
-    // gui.add(light, 'intensity', 0, 100);
-    lightGroup.add(light);
-
-    return lightGroup;
-  }
-
   public decor(mode: ThemeColors): Group {
-    const decorGroup = new THREE.Group();
-
-    // // Add an infinite plane as the floor
-    // const planeGeometry = new THREE.PlaneGeometry(12, 12);
-    // const planeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    // const floor = new THREE.Mesh(planeGeometry, planeMaterial);
-    // // Rotate the plane to make it horizontal and position it at y = 0
-    // floor.rotation.x = -Math.PI / 2;
-    // floor.position.y = 0;
-    // // Optionally, enable shadows on the plane
-    // floor.receiveShadow = true;
-    // // Add the floor to the decor group
-    // decorGroup.add(floor);
+    const decorGroup = new Group();
 
     // Create a box geometry and material
-    const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
+    const frameGeometry = new BoxGeometry(cm(10), cm(0.025), cm(10));
     const frameColor = mode.dark;
-    const frameMaterial = new THREE.MeshBasicMaterial({ color: frameColor });
-    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    const frameMaterial = new MeshBasicMaterial({ color: frameColor });
+    const frame = new Mesh(frameGeometry, frameMaterial);
     // Position the box in the scene
     frame.position.set(0, cm(-0.1), cm(0));
     // Add the box to the scene
     decorGroup.add(frame);
 
+    // const gridHelper = new GridHelper(0.1, 10, gridColor, gridColor);
+    // gridHelper.position.y = cm(0.045);
+    // decorGroup.add(gridHelper);
+
     // Create a box geometry and material
-    const player1Geometry = new THREE.BoxGeometry(cm(2), cm(0.25), cm(0.25));
-    const player1Material = new THREE.MeshBasicMaterial({ color: Store.themes['light'].dark });
-    const player1 = new THREE.Mesh(player1Geometry, player1Material);
+    const playerGeometry = new BoxGeometry(cm(8), cm(0.025), cm(0.025));
+
+    const player1Material = new MeshBasicMaterial({ color: Store.themes['light'].dark });
+    const player1 = new Mesh(playerGeometry, player1Material);
     // Position the box in the scene
-    player1.position.set(0, cm(0.125), cm(4.5));
+    player1.position.set(0, cm(0), cm(4.5));
     // Add the box to the scene
     decorGroup.add(player1);
 
     // Create a box geometry and material
-    const player2Geometry = new THREE.BoxGeometry(cm(2), cm(0.25), cm(0.25));
-    const player2Material = new THREE.MeshBasicMaterial({ color: Store.themes['dark'].dark });
-    const player2 = new THREE.Mesh(player2Geometry, player2Material);
+    const player2Material = new MeshBasicMaterial({ color: Store.themes['dark'].dark });
+    const player2 = new Mesh(playerGeometry, player2Material);
     // Position the box in the scene
-    player2.position.set(0, cm(0.125), cm(-4.5));
+    player2.position.set(0, cm(0), cm(-4.5));
     // Add the box to the scene
     decorGroup.add(player2);
-
-    // // Create a box geometry and material
-    // const shaderRequests = {
-    //   vertex: this.http.get('../../assets/shaders/test/test.vert', { responseType: 'text' }),
-    //   fragment: this.http.get('../../assets/shaders/test/test.frag', { responseType: 'text' }),
-    // };
-    //
-    // // Use forkJoin to wait for all requests to complete
-    // forkJoin(shaderRequests).subscribe(
-    //   (results) => {
-    //     const boxGeometry = new THREE.BoxGeometry(1, 1, 2);
-    //     const boxMaterial = new THREE.RawShaderMaterial({
-    //       vertexShader: results.vertex,
-    //       fragmentShader: results.fragment,
-    //       side: THREE.DoubleSide,
-    //     });
-    //     const box = new THREE.Mesh(boxGeometry, boxMaterial);
-    //     box.castShadow = true;
-    //     // Position the box in the scene
-    //     box.position.set(-4.75, 0.5, 0);
-    //     // Add the box to the scene
-    //     // decorGroup.add(box);
-    //   });
 
     return decorGroup;
   }
 
-  public debug(): Group {
-    const debugGroup = new THREE.Group();
-
-    const size = 10;
-    const divisions = 10;
-
-    const gridHelper = new THREE.GridHelper(size, divisions);
-    debugGroup.add(gridHelper);
-
-    return debugGroup;
-  }
-
   public createCases(font: Font | null): Group {
     // Create the chessboard
-    const casesGroup = new THREE.Group();
+    const casesGroup = new Group();
     casesGroup.name = '🔲🔳 Cases';
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
@@ -147,29 +66,27 @@ export class BoardService {
         const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
 
         // GROUP
-        const caseGroup = new THREE.Group();
+        const caseGroup = new Group();
         caseGroup.name = coord;
         caseGroup.userData['coord'] = coord;
 
         // SQUARE
-        const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
+        const squareGeometry = new PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
         squareGeometry.scale(0.25, 0.25, 0.25);
         const theme = Store.themes['blue'];
-        const squareMaterial = new THREE.MeshBasicMaterial({
-          // color: (rankInt + colInt) % 2 === 0 ? theme.light : theme.dark,
+        const squareMaterial = new MeshBasicMaterial({
           color: 0xff0000,
           wireframe: true,
           transparent: true,
           opacity: 0,
         });
 
-        const square = new THREE.Mesh(squareGeometry, squareMaterial);
+        const square = new Mesh(squareGeometry, squareMaterial);
         const squarePosition = new Vector3(
           cm(rankInt - Store.boardSize / 2 + 0.5),
           cm(0.055),
           cm(colInt - Store.boardSize / 2 + 0.5),
         );
-        // square.rotation.z = Math.PI / 2;
         square.rotation.x = -Math.PI / 2;
 
         square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
@@ -179,7 +96,6 @@ export class BoardService {
         // TEXT
         if (font) {
           const textMesh = this.makeCoordText(font, coord, { rankInt, colInt }, theme);
-          // textMesh.rotation.x = - Math.PI * 3;
 
           // ADD
           square.add(textMesh);
@@ -198,7 +114,7 @@ export class BoardService {
     pos: { rankInt: number; colInt: number },
     theme: cf.ThemeColors,
   ): Mesh {
-    const textMaterial = new THREE.MeshPhongMaterial({
+    const textMaterial = new MeshPhongMaterial({
       color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,
     });
     const textGeometry = new TextGeometry(text, {
@@ -212,7 +128,7 @@ export class BoardService {
       // bevelOffset: 0,
       // bevelSegments: 5
     });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    const textMesh = new Mesh(textGeometry, textMaterial);
 
     textMesh.position.set(cm(0.25), cm(0.25), cm(0.005));
     // textMesh.rotation.x = Math.PI * 60;
@@ -224,15 +140,15 @@ export class BoardService {
     // Updated shader with highlight capability
     const chessboardShader = {
       uniforms: {
-        u_resolution: { value: new THREE.Vector2() },
+        u_resolution: { value: new Vector2() },
         u_squareSize: { value: 0.01 },
-        u_highlightPosStart: { value: new THREE.Vector2(-1, -1) }, // Target square coordinates
-        u_highlightPosEnd: { value: new THREE.Vector2(-1, -1) }, // Target square coordinates
-        u_highlightColor: { value: new THREE.Vector3(1, 1, 0) }, // Highlight color (yellow in this case)
+        u_highlightPosStart: { value: new Vector2(-1, -1) }, // Target square coordinates
+        u_highlightPosEnd: { value: new Vector2(-1, -1) }, // Target square coordinates
+        u_highlightColor: { value: new Vector3(1, 1, 0) }, // Highlight color (yellow in this case)
         // u_squareLightColor: Store.themes['blue'].light,
         // u_squareDarkColor: Store.themes['blue'].dark,
-        u_squareLightColor: { value: new THREE.Vector3(0.9, 0.9, 0.9) }, // Light gray by default
-        u_squareDarkColor: { value: new THREE.Vector3(0.3, 0.3, 0.3) },
+        u_squareLightColor: { value: new Vector3(0.9, 0.9, 0.9) }, // Light gray by default
+        u_squareDarkColor: { value: new Vector3(0.3, 0.3, 0.3) },
       },
 
       vertexShader: `
@@ -279,14 +195,14 @@ export class BoardService {
     `,
     };
 
-    const geometry = new THREE.PlaneGeometry(0.08, 0.08);
-    const material = new THREE.ShaderMaterial({
+    const geometry = new PlaneGeometry(0.08, 0.08);
+    const material = new ShaderMaterial({
       uniforms: chessboardShader.uniforms,
       vertexShader: chessboardShader.vertexShader,
       fragmentShader: chessboardShader.fragmentShader,
     });
 
-    const chessboard = new THREE.Mesh(geometry, material);
+    const chessboard = new Mesh(geometry, material);
 
     material.uniforms['u_resolution'].value.set(0.08, 0.08);
 
@@ -294,7 +210,7 @@ export class BoardService {
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
       const [lightR, lightG, lightB] = hexToRgb(light); // light: 0xbfcfdd,
       const [darkR, darkG, darkB] = hexToRgb(dark); // dark: 0x9dabb6
-      const material = this.material as THREE.ShaderMaterial;
+      const material = this.material as ShaderMaterial;
       material.uniforms['u_squareLightColor'].value.set(lightR, lightG, lightB);
       material.uniforms['u_squareDarkColor'].value.set(darkR, darkG, darkB);
     };

@@ -25,13 +25,28 @@
     <script type="module">
       import { Chessfield } from './src/chessfield.ts';
 
+      let controlsEnabled = false;
       const board1 = new Chessfield(document.getElementById('board-1'), {
         orientation: 'white',
         camera: 'white',
         angle: 'right',
         theme: 'green',
+        fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
+        lastMove: ['e2', 'e4'],
+        zoomMinDistance: 5,
+        zoomMaxDistance: 30,
       });
-      board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+
+      const toggleControls = document.querySelector('.js-mode-toggle-controls');
+
+      if (toggleControls) {
+        toggleControls.addEventListener('click', () => {
+          controlsEnabled = !controlsEnabled;
+          board1.configUpdate({
+            controlsEnabled: controlsEnabled,
+          });
+        });
+      }
 
       const board2 = new Chessfield(document.getElementById('board-2'), {
         orientation: 'white',
@@ -64,6 +79,7 @@
         camera: 'black',
         theme: 'green',
         mode: 'light',
+        controlsEnabled: true,
       });
 
       const randomFens = [
@@ -109,7 +125,7 @@
   </head>
   <body>
     <div>
-      basic board, default config
+      basic board, default config (<button class="js-mode-toggle-controls">toggle controls</button>)
       <div class="chessfield" id="board-1"></div>
     </div>
     <div>
