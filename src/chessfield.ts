@@ -31,11 +31,11 @@ export class Chessfield implements ChessfieldApi {
   private readonly rendererProvider = new RendererProvider();
   private readonly sceneProvider = new SceneProvider();
   private readonly store: Store;
-  private readonly cameraProvider!: CameraProvider;
-  private readonly controlsProvider!: ControlsProvider;
+  private cameraProvider!: CameraProvider;
+  private controlsProvider!: ControlsProvider;
   private readonly gameProvider!: GameProvider;
   private readonly pieceProvider!: PieceProvider;
-  private readonly themeProvider!: ThemeProvider;
+  private themeProvider!: ThemeProvider;
 
   private canvas!: HTMLCanvasElement;
   private foundLastMove!: Move | null;
@@ -45,11 +45,8 @@ export class Chessfield implements ChessfieldApi {
     config?: ChessfieldConfig,
   ) {
     this.store = new Store(config);
-    this.cameraProvider = new CameraProvider(this.store.getConfig());
-    this.controlsProvider = new ControlsProvider(this.store.getConfig());
     this.gameProvider = new GameProvider(this.store);
     this.pieceProvider = new PieceProvider(this.store);
-    this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
 
     const initialFen = this.store.getConfig().fen ?? Store.initialFen;
     const initialLastMove = this.store.getConfig().lastMove ?? [];
@@ -76,6 +73,10 @@ export class Chessfield implements ChessfieldApi {
   async start() {
     const cfElement = this.cfElement;
     cfElement.classList.add('cf-chessfield-container');
+
+    this.cameraProvider = new CameraProvider(this.store.getConfig());
+    this.controlsProvider = new ControlsProvider(this.store.getConfig());
+    this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
 
     const sizes = {
       // width: cfElement.clientWidth, // 500
@@ -201,9 +202,6 @@ export class Chessfield implements ChessfieldApi {
 
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
-
-    controls.enabled = this.store.getConfig().controlsEnabled ?? true;
-    controls.update();
 
     // Animate
     // const clock = new THREE.Clock();
