@@ -1,7 +1,6 @@
 import * as cg from 'chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
 import { Group, InstancedMesh, Matrix4, Mesh, Vector3 } from 'three';
-// import * as THREE from 'three';
 import { tap } from 'rxjs';
 import { cm } from '../helper.ts';
 import { Store } from './store.ts';

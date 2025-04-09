@@ -1,14 +1,13 @@
-import * as THREE from 'three';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { GameProvider } from './game.provider.ts';
-import bakedTexture from '../assets/models/light-pieces.jpg?url';
-import bakedBlackTexture from '../assets/models/dark-pieces.jpg?url';
-import { LoadingManager, TextureLoader } from 'three';
+import bakedTexture from '../assets/models/light-pieces-plastic.jpg?url';
+import bakedBlackTexture from '../assets/models/dark-pieces-plastic.jpg?url';
+import { LoadingManager, MeshBasicMaterial, SRGBColorSpace, TextureLoader } from 'three';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import helvetikerFont from '../assets/fonts/helvetiker_regular.typeface.json?url';
 
 export class LoadingManagerProvider {
-  private readonly loadingManager = new THREE.LoadingManager();
+  private readonly loadingManager = new LoadingManager();
   private textureLoader: TextureLoader;
   font: Font | null = null;
 
@@ -25,7 +24,7 @@ export class LoadingManagerProvider {
     /**
      * 3. TEXTURES baked
      */
-    this.textureLoader = new THREE.TextureLoader(this.loadingManager);
+    this.textureLoader = new TextureLoader(this.loadingManager);
 
     this.loadTextures();
 
@@ -42,9 +41,9 @@ export class LoadingManagerProvider {
       bakedTexture,
       texture => {
         texture.flipY = false;
-        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.colorSpace = SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({ map: texture });
+        this.gameProvider.pieceMaterials.white = new MeshBasicMaterial({ map: texture });
       },
       undefined,
       (e: unknown) => {
@@ -55,9 +54,9 @@ export class LoadingManagerProvider {
       bakedBlackTexture,
       texture => {
         texture.flipY = false;
-        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.colorSpace = SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.black = new THREE.MeshBasicMaterial({
+        this.gameProvider.pieceMaterials.black = new MeshBasicMaterial({
           // color: Store.themes['bw'].dark,
           map: texture,
         });
