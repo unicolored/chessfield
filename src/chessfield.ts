@@ -12,11 +12,11 @@ import * as cf from './resource/chessfield.types';
 import { Move, Moves } from './resource/chessfield.types';
 import { ChessfieldApi } from './resource/chessfield.api.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+// import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+// import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+// import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 // import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+// import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { CameraProvider } from './provider/camera.provider.ts';
 import { ControlsProvider } from './provider/controls.provider.ts';
 import { RendererProvider } from './provider/renderer.provider.ts';
@@ -102,25 +102,25 @@ export class Chessfield implements ChessfieldApi {
     scene.add(camGroup);
 
     // Composer
-    let fxaaPass: ShaderPass;
-    const composer = new EffectComposer(renderer);
-
-    const renderPass = new RenderPass(scene, camera);
-    renderPass.clearAlpha = 0;
-
+    // let fxaaPass: ShaderPass;
+    // const composer = new EffectComposer(renderer);
+    //
+    // const renderPass = new RenderPass(scene, camera);
+    // renderPass.clearAlpha = 0;
+    //
     // const outputPass = new OutputPass();
-
-    composer.addPass(renderPass);
+    //
+    // composer.addPass(renderPass);
     // composer.addPass(outputPass);
-
-    if (RendererProvider.enableAntialias) {
-      // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.
-      fxaaPass = new ShaderPass(FXAAShader);
-      fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
-      fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
-
-      composer.addPass(fxaaPass);
-    }
+    //
+    // if (RendererProvider.enableAntialias) {
+    //   // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.
+    //   fxaaPass = new ShaderPass(FXAAShader);
+    //   fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
+    //   fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
+    //
+    //   composer.addPass(fxaaPass);
+    // }
 
     // Handle window resize
     function onWindowResize() {
@@ -136,13 +136,14 @@ export class Chessfield implements ChessfieldApi {
       camera.updateProjectionMatrix();
 
       // Update renderer size
-      composer.setSize(cfElement.offsetWidth, sizes.width);
-      composer.setSize(cfElement.offsetWidth, sizes.height);
-
-      if (RendererProvider.enableAntialias && fxaaPass) {
-        fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
-        fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
-      }
+      renderer.setSize(sizes.width, sizes.height);
+      // composer.setSize(cfElement.offsetWidth, sizes.width);
+      // composer.setSize(cfElement.offsetWidth, sizes.height);
+      //
+      // if (RendererProvider.enableAntialias && fxaaPass) {
+      //   fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
+      //   fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
+      // }
     }
 
     // Add resize event listener
@@ -215,7 +216,8 @@ export class Chessfield implements ChessfieldApi {
       controls.update();
 
       // Render
-      composer.render();
+      renderer.render(scene, camera);
+      // composer.render();
 
       // Call tick again on the next frame
       document.defaultView?.requestAnimationFrame(animate);
