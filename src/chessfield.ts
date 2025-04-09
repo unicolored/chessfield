@@ -15,7 +15,7 @@ import { ThemeProvider } from './provider/theme.provider.ts';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+// import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { CameraProvider } from './provider/camera.provider.ts';
 import { ControlsProvider } from './provider/controls.provider.ts';
@@ -108,10 +108,10 @@ export class Chessfield implements ChessfieldApi {
     const renderPass = new RenderPass(scene, camera);
     renderPass.clearAlpha = 0;
 
-    const outputPass = new OutputPass();
+    // const outputPass = new OutputPass();
 
     composer.addPass(renderPass);
-    composer.addPass(outputPass);
+    // composer.addPass(outputPass);
 
     if (RendererProvider.enableAntialias) {
       // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.

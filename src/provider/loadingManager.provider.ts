@@ -1,7 +1,7 @@
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { GameProvider } from './game.provider.ts';
-import bakedTexture from '../assets/models/light-pieces-plastic.jpg?url';
-import bakedBlackTexture from '../assets/models/dark-pieces-plastic.jpg?url';
+import bakedTexture from '../assets/models/light-pieces.jpg?url';
+import bakedBlackTexture from '../assets/models/dark-pieces.jpg?url';
 import { LoadingManager, MeshBasicMaterial, SRGBColorSpace, TextureLoader } from 'three';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import helvetikerFont from '../assets/fonts/helvetiker_regular.typeface.json?url';
