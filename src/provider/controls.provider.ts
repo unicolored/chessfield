@@ -20,8 +20,8 @@ export class ControlsProvider {
 
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.maxPolarAngle = Math.PI / 2.3;
-    controls.target.set(0, cm(-0.7), 0);
+    controls.maxPolarAngle = Math.PI / 2.1;
+    controls.target.set(0, 0, 0);
     controls.minDistance = cm(this.zoomMinDistance); // Set the minimum zoom distance
     controls.maxDistance = cm(this.zoomMaxDistance); // Set the maximum zoom distance
 
