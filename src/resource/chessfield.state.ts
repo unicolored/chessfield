@@ -1,5 +1,5 @@
-import * as fen from 'chessground/fen';
-import * as cg from 'chessground/types';
+import * as fen from '@lichess-org/chessground/fen';
+import * as cg from '@lichess-org/chessground/types';
 import * as cf from './chessfield.types';
 
 export interface HeadlessState {

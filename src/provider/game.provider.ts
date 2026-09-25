@@ -6,7 +6,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Store } from './store.ts';
 import { objKey } from '../helper.ts';
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
 import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
 
