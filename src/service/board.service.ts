@@ -4,6 +4,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
+  Object3D,
   PlaneGeometry,
   ShaderMaterial,
   Vector2,
@@ -146,6 +147,8 @@ export class BoardService {
         u_highlightPosEnd: { value: new Vector2(-1, -1) }, // Target square coordinates
         u_highlightPosCursor: { value: new Vector2(-1, -1) },
         u_highlightColor: { value: new Vector3(1, 1, 0) }, // Highlight color (yellow in this case)
+        u_highlightStatusMateColor: { value: new Vector3(1, 1, 0) },
+        u_highlightStatusMate: { value: new Vector3(1, 1, 0) },
         // u_squareLightColor: Store.themes['blue'].light,
         // u_squareDarkColor: Store.themes['blue'].dark,
         u_squareLightColor: { value: new Vector3(0.9, 0.9, 0.9) }, // Light gray by default
@@ -167,7 +170,9 @@ export class BoardService {
         uniform vec2 u_highlightPosStart;
         uniform vec2 u_highlightPosEnd;
         uniform vec2 u_highlightPosCursor;
+        uniform vec2 u_highlightStatusMate;
         uniform vec3 u_highlightColor;
+        uniform vec3 u_highlightStatusMateColor;
         uniform vec3 u_squareLightColor;
         uniform vec3 u_squareDarkColor;
         varying vec2 vUv;
@@ -186,12 +191,14 @@ export class BoardService {
             // Check if current square matches highlight position
             float isHighlightedStart = step(0.0, 0.0 - length(gridPos - u_highlightPosStart));
             float isHighlightedEnd = step(0.0, 0.0 - length(gridPos - u_highlightPosEnd));
+            float isHighlightedStatusMate = step(0.0, 0.0 - length(gridPos - u_highlightStatusMate));
             float isHighlightedCursor = step(0.0, 0.0 - length(gridPos - u_highlightPosCursor));
             
             // Mix base color with highlight color
             vec3 color = baseColor;
             color = mix(color, u_highlightColor, isHighlightedStart * 0.8);
             color = mix(color, u_highlightColor, isHighlightedEnd * 0.8);
+            color = mix(color, u_highlightStatusMateColor, isHighlightedStatusMate * 0.8);
             color = mix(color, u_highlightColor, isHighlightedCursor * 0.8);
             
             gl_FragColor = vec4(color, 1.0);
@@ -232,8 +239,24 @@ export class BoardService {
       this.material.uniforms['u_highlightColor'].value.set(r, g, b);
     };
 
+    chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
+      const [r, g, b] = hexToRgb(hex);
+      this.material.uniforms['u_highlightStatusMateColor'].value.set(r, g, b);
+    };
+
     chessboard.highlightSquareCursor = function (x: number, y: number) {
       this.material.uniforms['u_highlightPosCursor'].value.set(x, y);
+    };
+
+    chessboard.setStatusMate = function (x: number, y: number) {
+      this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
+      this.traverse((child: Object3D) => {
+        console.log('child', child);
+
+        if (child.name === 'haha') {
+          console.log('child found', child);
+        }
+      });
     };
 
     chessboard.rotation.x = -Math.PI / 2;
