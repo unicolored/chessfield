@@ -1,5 +1,5 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { BufferGeometry } from 'three';
+import { BufferGeometry, Group, Mesh, Object3D } from 'three';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import * as cg from '@lichess-org/chessground/types';
 import { initial } from '@lichess-org/chessground/fen';
@@ -9,6 +9,8 @@ import * as cf from '../resource/chessfield.types.ts';
 import { Themes } from '../resource/chessfield.types.ts';
 
 export class Store {
+  chessboard: cf.ExtendedMesh | null = null;
+  casesGroup: Group | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
@@ -121,5 +123,15 @@ export class Store {
 
   getBoardPiecesObjectsMap(): cf.ColorPieceNameObjectMap {
     return this.boardPiecesObjectsMap;
+  }
+
+  getBoardCases(): Mesh[] {
+    const cases: Mesh[] = [];
+
+    this.casesGroup?.traverse((child: Object3D) => {
+      if (child instanceof Mesh) cases.push(child);
+    });
+
+    return cases;
   }
 }
