@@ -1,5 +1,5 @@
 import { Group, InstancedMesh, Material, Mesh } from 'three';
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 
 export type Mode = 'light' | 'dark';
 export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark' | string;

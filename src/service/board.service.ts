@@ -13,7 +13,7 @@ import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Store } from '../provider/store.ts';
 import { cm, hexToRgb } from '../helper.ts';
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
 import { ThemeColors } from '../resource/chessfield.types.ts';
 
