@@ -24,7 +24,7 @@ import { SceneProvider } from './provider/scene.provider.ts';
 import { LoaderComponent } from './component/loader.component.ts';
 import { LoadingManagerProvider } from './provider/loadingManager.provider.ts';
 import { PieceProvider } from './provider/piece.provider.ts';
-import { Group, Scene } from 'three';
+import { Group, Raycaster, Scene, Vector2 } from 'three';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
@@ -52,7 +52,7 @@ export class Chessfield implements ChessfieldApi {
     const initialLastMove = this.store.getConfig().lastMove ?? [];
     this.setFen(initialFen, initialLastMove);
 
-    if (this.cfElement && this.cfElement instanceof HTMLElement) {
+    if (this.cfElement instanceof HTMLElement) {
       this.start().then();
     }
   }
@@ -78,14 +78,22 @@ export class Chessfield implements ChessfieldApi {
     this.controlsProvider = new ControlsProvider(this.store.getConfig());
     this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
 
+    // const gui: GUI = new GUI();
+
+    const rect = cfElement.getBoundingClientRect();
     const sizes = {
-      // width: cfElement.clientWidth, // 500
-      // height: cfElement.clientHeight, // 500
-      width: cfElement.offsetWidth, // 500
-      height: cfElement.offsetHeight, // 500
+      width: rect.width,
+      height: rect.height,
     };
 
-    // const gui: GUI = new GUI();
+    const mouse = new Vector2();
+    cfElement.addEventListener('mousemove', _event => {
+      mouse.x = ((_event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((_event.clientY - rect.top) / rect.height) * 2 + 1;
+    });
+    cfElement.addEventListener('mouseleave', () => {
+      mouse.x = mouse.y = -2; // Outside NDC range (-1 to 1)
+    });
 
     // Camera
     const camera = this.cameraProvider.getCamera(sizes);
@@ -125,11 +133,10 @@ export class Chessfield implements ChessfieldApi {
 
     // Handle window resize
     function onWindowResize() {
+      const rect = cfElement.getBoundingClientRect();
       const sizes = {
-        // width: cfElement.clientWidth, // 500
-        // height: cfElement.clientHeight, // 500
-        width: cfElement.offsetWidth, // 500
-        height: cfElement.offsetHeight, // 500
+        width: rect.width,
+        height: rect.height,
       };
 
       // Update camera aspect ratio
@@ -174,6 +181,7 @@ export class Chessfield implements ChessfieldApi {
       loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
     };
 
+    // let pieces: Object3D<Object3DEventMap>[] | undefined = [];
     loadingManagerProvider.getLoadingManager().onLoad = () => {
       setTimeout(() => {
         // Example usage:
@@ -198,7 +206,12 @@ export class Chessfield implements ChessfieldApi {
       chessboardGroup.add(chessboard);
       chessboardGroup.add(casesGroup);
       scene.add(chessboardGroup);
+
+      this.store.chessboard = chessboard;
+      this.store.casesGroup = casesGroup;
     };
+
+    const raycaster = new Raycaster();
 
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
@@ -208,7 +221,16 @@ export class Chessfield implements ChessfieldApi {
     const animate = () => {
       // const elapsedTime = clock.getElapsedTime();
       // console.log(elapsedTime)
-      // camGroup.rotation.y += 0.001;
+      // camGroup.rotation.y += 0.00033;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(this.store.getBoardCases(), false);
+      for (const intersect of intersects) {
+        if (this.store.chessboard) {
+          const coords = lmToCoordinates(['a1', intersect.object.parent?.userData['coord']]);
+          this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+        }
+      }
 
       // Update controls
       controls.update();
