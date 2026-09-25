@@ -1,49 +1,72 @@
-#! /bin/bash
+#!/bin/bash
+#MISE description="Release a new version"
+#MISE alias="r"
 
 set -e
 
 DEV_BRANCH="next"
 PUB_BRANCH="main"
+VERSION_FILE="version.json"
 
-# Check if current git branch is "develop"
-if [[ $(git rev-parse --abbrev-ref HEAD) != "${DEV_BRANCH}" ]]; then
-  echo "⚠️ You must be on the develop branch to run this script."
+# 1. Check if version.json exists
+if [[ ! -f "$VERSION_FILE" ]]; then
+  echo "⚠️ Error: Version file '${VERSION_FILE}' does not exist."
   exit 1
 fi
 
-# Ensure NEW_VERSION is set, else prompt for it
-CURRENT_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-echo "Current version is ${CURRENT_VERSION}"
+# 2. Check if working directory is clean
+if [[ -n $(git status --porcelain) ]]; then
+  echo "⚠️ Error: Uncommitted changes detected. Please commit or stash them first."
+  exit 1
+fi
+
+# 3. Fetch latest changes from remote
+echo "🔄 Fetching remote branches..."
+git fetch origin
+
+# 3.5 Run tests on pre-production code
+# mise run test
+
+# 4. Switch to develop and pull
+git checkout "${DEV_BRANCH}"
+git pull origin "${DEV_BRANCH}"
+
+# 5. Switch to next, update it, and merge develop into next
+echo "🔀 Preparing '${PUB_BRANCH}' for release..."
+git checkout "${PUB_BRANCH}"
+git pull origin "${PUB_BRANCH}"
+git merge "${DEV_BRANCH}" -m "chore: sync ${DEV_BRANCH} into ${PUB_BRANCH} for release"
+
+# 6. Read and prompt for new version
+CURRENT_VERSION=$(grep version < "$VERSION_FILE" | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+echo "Current version is: ${CURRENT_VERSION}"
 read -p "Enter new version: " NEW_VERSION
 
 if [[ -z "${NEW_VERSION}" ]]; then
-  NEW_VERSION="${CURRENT_VERSION}"
+  echo "❌ Error: Version cannot be empty."
+  exit 1
 fi
 
-echo "🚀 VERSION: ${NEW_VERSION}"
+echo "🚀 Bumping version to ${NEW_VERSION}..."
 
-bash script/test.sh
+# 8. Update version file on next
+sed -i "s/\"version\": \".*\"/\"version\": \"${NEW_VERSION}\"/g" "$VERSION_FILE"
 
-git add --all && git commit -m "Preparing new release ${NEW_VERSION}..." || true
-NEXT_RELEASE="${NEW_VERSION}" # Bump manually (ex. 18.2.0)
-git flow release start "${NEXT_RELEASE}"
-sed -i '' "s/\"version\": \".*\"/\"version\": \"${NEXT_RELEASE}\"/g" package.json
-pnpm install && npx update-browserslist-db@latest
+# 9. Commit the release bump on next
+git add "$VERSION_FILE"
+git commit -m "chore(release): Montée de version ${NEW_VERSION}"
 
-PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-echo "✋ $PACKAGE_VERSION"
+# 10. Tag the release
+GIT_TAG="v${NEW_VERSION}"
+git tag -a "${GIT_TAG}" -m "Release ${GIT_TAG}"
 
-git add --all && git commit -am "Bumped to ${PACKAGE_VERSION}" || true
-GIT_TAG="v${PACKAGE_VERSION}"
-git tag -d "${GIT_TAG}" || true
-GIT_MERGE_AUTOEDIT=no git flow release finish "${PACKAGE_VERSION}" -m "⭐️ Releasing version tag 🏷️ ${GIT_TAG}" -T "${GIT_TAG}"
+# 11. Push next and tags to remote
+echo "📤 Pushing '${PUB_BRANCH}' and tags..."
+git push origin "${PUB_BRANCH}"
+git push origin "${GIT_TAG}"
 
-echo "Pushing ${DEV_BRANCH}."
-git push origin ${DEV_BRANCH}
+# 12. Switch back to develop so you're ready to code again
+git checkout "${DEV_BRANCH}"
 
-echo "Pushing ${PUB_BRANCH}."
-git push origin ${PUB_BRANCH}
-
-echo "Pushing --tags."
-git push origin --tags || true
-
+echo "✅ Release ${GIT_TAG} created on '${PUB_BRANCH}'!"
+echo "➡️  Next step: Create a Merge Request on GitLab from '${PUB_BRANCH}' into 'main'."
