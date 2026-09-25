@@ -1,4 +1,4 @@
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import * as cf from '../resource/chessfield.types.ts';
 import { Group, InstancedMesh, Matrix4, Mesh, Vector3 } from 'three';
 import { tap } from 'rxjs';

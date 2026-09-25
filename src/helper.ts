@@ -1,5 +1,5 @@
-import { Color } from 'chessground/types';
-import * as cg from 'chessground/types';
+import { Color } from '@lichess-org/chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import { PieceColorRole } from './resource/chessfield.types.ts';
 
 export const cm = (meter: number): number => {

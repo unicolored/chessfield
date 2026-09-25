@@ -1,8 +1,8 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 import { BufferGeometry } from 'three';
 import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import * as cg from 'chessground/types';
-import { initial } from 'chessground/fen';
+import * as cg from '@lichess-org/chessground/types';
+import { initial } from '@lichess-org/chessground/fen';
 import FenParser from '@chess-fu/fen-parser';
 import { cm } from '../helper.ts';
 import * as cf from '../resource/chessfield.types.ts';

@@ -4,7 +4,7 @@ import { ChessfieldConfig } from './resource/chessfield.config.ts';
 import { GameProvider } from './provider/game.provider.ts';
 import { Store } from './provider/store.ts';
 import { BoardService } from './service/board.service.ts';
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
 import { fadeAlpha, lmToCoordinates } from './helper.ts';

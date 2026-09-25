@@ -1,4 +1,4 @@
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import { ChessfieldConfig } from './chessfield.config.ts';
 
 export interface ChessfieldApi {

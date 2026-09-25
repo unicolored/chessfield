@@ -1,5 +1,5 @@
 import { HeadlessState } from './chessfield.state.js';
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 
 // export function reset(state: HeadlessState): void {
 //   state.lastMove = undefined;

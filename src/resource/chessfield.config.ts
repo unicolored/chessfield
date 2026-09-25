@@ -1,4 +1,4 @@
-import * as cg from 'chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import * as cf from './chessfield.types';
 import { Themes } from './chessfield.types';
 

@@ -17,6 +17,9 @@ importers:
       '@eslint/js':
         specifier: ^9.23.0
         version: 9.39.5
+      '@lichess-org/chessground':
+        specifier: ^10.2.0
+        version: 10.2.0
       '@types/three':
         specifier: ^0.173.0
         version: 0.173.0
@@ -26,9 +29,6 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^8.29.0
         version: 8.70.1(eslint@9.39.5)(typescript@5.7.3)
-      chessground:
-        specifier: ^9.1.1
-        version: 9.2.1
       eslint:
         specifier: ^9.23.0
         version: 9.39.5
@@ -308,6 +308,10 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lichess-org/chessground@10.2.0':
+    resolution: {integrity: sha512-XScWn76u2A+5uNHUfyf9P1DAImGcVs0WjjkGz3tJPXnzsoNVriRXuxm6hpN02DY5LNk/jkCXKeW0raEOXGxPig==}
+    engines: {node: '>=24', pnpm: '>=12'}
 
   '@microsoft/api-extractor-model@7.33.13':
     resolution: {integrity: sha512-OVL/dDvHstFJMJb2amgI7S9p9wAVMyrt18R2aSBOP9tVAARWiEJAM3wVsgxXymMOvnvKO/np9X7PeJpNZv3eLg==}
@@ -684,10 +688,6 @@ packages:
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
-
-  chessground@9.2.1:
-    resolution: {integrity: sha512-KIdxm0zD69e62XRwdnFB0XUNYSzn5HM3pMazRCwpfruRUowFI8y+1OAK5YSyBff29myeV1/4o5Q8T191+Irbog==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -1423,6 +1423,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  '@lichess-org/chessground@10.2.0': {}
+
   '@microsoft/api-extractor-model@7.33.13':
     dependencies:
       '@microsoft/tsdoc': 0.17.0
@@ -1808,8 +1810,6 @@ snapshots:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
-
-  chessground@9.2.1: {}
 
   color-convert@2.0.1:
     dependencies:
