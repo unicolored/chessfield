@@ -51,6 +51,7 @@ export interface ThemeColors {
   light: string | number;
   dark: string | number;
   highlight: string | number;
+  highlightStatusMate: string | number;
   selected: string | number;
 }
 
@@ -70,7 +71,9 @@ declare module 'three' {
     highlightSquareEnd: (x: number, y: number) => void;
     highlightSquareSelected: (x: number, y: number) => void;
     setHighlightColor: (hex: string | number) => void;
+    setHighlightStatusMateColor: (hex: string | number) => void;
     highlightSquareCursor: (x: number, y: number) => void;
+    setStatusMate: (x: number, y: number) => void;
   }
 }
 

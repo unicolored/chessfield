@@ -196,6 +196,7 @@ export class Chessfield implements ChessfieldApi {
       const chessboard = this.boardService.createChessboard();
       chessboard.setSquareColors(themeColors.light, themeColors.dark);
       chessboard.setHighlightColor(themeColors.highlight);
+      chessboard.setHighlightStatusMateColor(themeColors.highlightStatusMate);
 
       this.updatePieces(scene, chessboard);
 
@@ -263,6 +264,8 @@ export class Chessfield implements ChessfieldApi {
           chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
         }
       }
+
+      chessboard.setStatusMate(4, 7);
 
       piecesGroup = this.pieceProvider.updateGamePositions();
       scene.add(piecesGroup);
