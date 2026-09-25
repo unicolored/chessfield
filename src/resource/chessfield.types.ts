@@ -65,18 +65,21 @@ export interface BoardPiece extends cg.Piece {
 
 declare module 'three' {
   interface Mesh {
-    setSquareColors?: (light: string | number, dark: string | number) => void;
-    highlightSquareStart?: (x: number, y: number) => void;
-    highlightSquareEnd?: (x: number, y: number) => void;
-    highlightSquareSelected?: (x: number, y: number) => void;
-    setHighlightColor?: (hex: string | number) => void;
+    setSquareColors: (light: string | number, dark: string | number) => void;
+    highlightSquareStart: (x: number, y: number) => void;
+    highlightSquareEnd: (x: number, y: number) => void;
+    highlightSquareSelected: (x: number, y: number) => void;
+    setHighlightColor: (hex: string | number) => void;
+    highlightSquareCursor: (x: number, y: number) => void;
   }
 }
 
-export interface ExtendedMesh extends Mesh {
-  setSquareColors: (light: string | number, dark: string | number) => void;
-  highlightSquareStart: (x: number, y: number) => void;
-  highlightSquareEnd: (x: number, y: number) => void;
-  highlightSquareSelected: (x: number, y: number) => void;
-  setHighlightColor: (hex: string | number) => void;
-}
+export type ExtendedMesh = Mesh;
+// export interface ExtendedMesh extends Mesh {
+// setSquareColors: (light: string | number, dark: string | number) => void;
+// highlightSquareStart: (x: number, y: number) => void;
+// highlightSquareEnd: (x: number, y: number) => void;
+// highlightSquareSelected: (x: number, y: number) => void;
+// setHighlightColor: (hex: string | number) => void;
+// highlightSquareCursor: (x: number, y: number) => void;
+// }
