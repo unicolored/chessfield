@@ -29,7 +29,7 @@
     "@chess-fu/fen-parser": "^1.1.4",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.23.0",
-    "@types/three": "^0.173.0",
+    "@types/three": "^0.186.0",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
     "@lichess-org/chessground": "^10.2.0",
@@ -38,7 +38,7 @@
     "prettier": "^3.5.3",
     "rxjs": "^7.8.2",
     "terser": "^5.39.0",
-    "three": "^0.170.0",
+    "three": "^0.186.1",
     "typescript": "~5.7.3",
     "vite": "^6.2.5",
     "vite-plugin-dts": "^4.5.3"
