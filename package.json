@@ -19,10 +19,8 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "check-format": "oxfmt --check",
-    "bundle": "vite build",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
-    "dev": "vite",
-    "preview": "vite preview",
+    "bundle": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.min.js --minify --loader:.jpg=file --loader:.glb=file --public-path=/assets/",
     "docs": "mkdocs serve",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -64,11 +62,6 @@
   ],
   "repository": {
     "url": "git+https://github.com/unicolored/chessfield"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   },
   "packageManager": "pnpm@12.3.4",
   "engines": {
