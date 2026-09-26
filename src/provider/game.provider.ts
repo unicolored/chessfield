@@ -11,7 +11,7 @@ import {
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
+import piecesLiteModel from '../assets/models/pieces.lite.glb';
 import { objKey } from '../helper.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
