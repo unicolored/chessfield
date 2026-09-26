@@ -238,11 +238,20 @@ export class Chessfield implements ChessfieldApi {
       // camGroup.rotation.y += 0.00033;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(this.store.getBoardCases(), false);
-      for (const intersect of intersects) {
-        if (this.store.chessboard) {
-          const coords = lmToCoordinates(['a1', intersect.object.parent?.userData['coord']]);
-          this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+      const intersects = raycaster.intersectObjects(
+        [...this.store.getBoardCases(), ...this.store.getPieces()],
+        false,
+      );
+      if (this.store.chessboard) {
+        this.store.chessboard.highlightSquareCursor(-1, -1);
+        for (const intersect of intersects) {
+          if (intersect.object.parent?.name.includes('Pièces')) {
+            const coords = lmToCoordinates(['a1', intersect.object.userData['coord']]);
+            this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+          } else {
+            const coords = lmToCoordinates(['a1', intersect.object.parent?.userData['coord']]);
+            this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+          }
         }
       }
 
@@ -281,6 +290,7 @@ export class Chessfield implements ChessfieldApi {
       chessboard.setStatusMate(4, 7);
 
       piecesGroup = this.pieceProvider.updateGamePositions();
+      this.store.piecesGroup = piecesGroup;
       scene.add(piecesGroup);
     });
   }

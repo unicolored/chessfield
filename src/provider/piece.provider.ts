@@ -41,9 +41,11 @@ export class PieceProvider {
                   if (instanceMesh.count) {
                     // .. instancedMesh
                     const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
+                    instanceMesh.userData['coord'] = boardPiece.coord;
                     updateMatrix.push({ mesh: instanceMesh, pos });
                     matrixes.set(boardPiece.objectKey, updateMatrix);
                   } else {
+                    // mesh.userData['coord'] = boardPiece.coord;
                     mesh.position.copy(pos);
                     if (mesh.name.startsWith('black')) {
                       mesh.rotateY(Math.PI);
