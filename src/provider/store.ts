@@ -12,6 +12,7 @@ import type { Themes } from '../resource/chessfield.types.ts';
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: Group | null = null;
+  piecesGroup: Group | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
@@ -140,5 +141,15 @@ export class Store {
     });
 
     return cases;
+  }
+
+  getPieces(): Mesh[] {
+    const pieces: Mesh[] = [];
+
+    this.piecesGroup?.traverse((child: Object3D) => {
+      if (child instanceof Mesh) pieces.push(child);
+    });
+
+    return pieces;
   }
 }
