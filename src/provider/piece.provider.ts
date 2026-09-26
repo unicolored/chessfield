@@ -1,8 +1,10 @@
-import * as cg from '@lichess-org/chessground/types';
-import * as cf from '../resource/chessfield.types.ts';
-import { Group, InstancedMesh, Matrix4, Mesh, Vector3 } from 'three';
+import type * as cg from '@lichess-org/chessground/types';
 import { tap } from 'rxjs';
+import { Group, InstancedMesh, Matrix4, type Mesh, Vector3 } from 'three';
+
 import { cm } from '../helper.ts';
+import * as cf from '../resource/chessfield.types.ts';
+
 import { Store } from './store.ts';
 
 export class PieceProvider {

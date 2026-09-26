@@ -1,6 +1,7 @@
 import * as fen from '@lichess-org/chessground/fen';
-import * as cg from '@lichess-org/chessground/types';
-import * as cf from './chessfield.types';
+import type * as cg from '@lichess-org/chessground/types';
+
+import type * as cf from './chessfield.types';
 
 export interface HeadlessState {
   pieces: cg.Pieces;
@@ -8,6 +9,7 @@ export interface HeadlessState {
   camera: cf.Camera; // board view. white | right | black | left
   angle: cf.Angle; // board view. white | right | black | left
   turnColor: cg.Color; // turn to play. white | black
+  check?: cg.Key; // square currently in check "a2"
   lastMove?: cg.Key[]; // squares part of the last move ["c3"; "c4"]
   // selected?: cg.Key; // square currently selected "a1"
   // coordinates: boolean; // include coords attributes

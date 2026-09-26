@@ -12,7 +12,7 @@ export class RendererProvider {
     canvas: HTMLCanvasElement,
   ): WebGLRenderer {
     const renderer = new WebGLRenderer({
-      canvas: canvas,
+      canvas,
       // powerPreference: 'high-performance',
       antialias: RendererProvider.enableAntialias,
     });

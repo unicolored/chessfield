@@ -1,17 +1,12 @@
 import './chessfield.css';
 
-import { ChessfieldConfig } from './resource/chessfield.config.ts';
-import { GameProvider } from './provider/game.provider.ts';
-import { Store } from './provider/store.ts';
-import { BoardService } from './service/board.service.ts';
-import * as cg from '@lichess-org/chessground/types';
+import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
+import { Group, Raycaster, type Scene, Vector2 } from 'three';
+
+import { LoaderComponent } from './component/loader.component.ts';
 import { fadeAlpha, lmToCoordinates } from './helper.ts';
-import * as cf from './resource/chessfield.types';
-import { Move, Moves } from './resource/chessfield.types';
-import { ChessfieldApi } from './resource/chessfield.api.ts';
-import { ThemeProvider } from './provider/theme.provider.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
@@ -19,12 +14,19 @@ import { ThemeProvider } from './provider/theme.provider.ts';
 // import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { CameraProvider } from './provider/camera.provider.ts';
 import { ControlsProvider } from './provider/controls.provider.ts';
-import { RendererProvider } from './provider/renderer.provider.ts';
-import { SceneProvider } from './provider/scene.provider.ts';
-import { LoaderComponent } from './component/loader.component.ts';
+import { GameProvider } from './provider/game.provider.ts';
 import { LoadingManagerProvider } from './provider/loadingManager.provider.ts';
 import { PieceProvider } from './provider/piece.provider.ts';
-import { Group, Raycaster, Scene, Vector2 } from 'three';
+import { RendererProvider } from './provider/renderer.provider.ts';
+import { SceneProvider } from './provider/scene.provider.ts';
+import { Store } from './provider/store.ts';
+import { ThemeProvider } from './provider/theme.provider.ts';
+import { type ChessfieldApi } from './resource/chessfield.api.ts';
+import { type ChessfieldConfig } from './resource/chessfield.config.ts';
+import { type HeadlessState } from './resource/chessfield.state.ts';
+import type * as cf from './resource/chessfield.types';
+import { type Move, type Moves } from './resource/chessfield.types';
+import { BoardService } from './service/board.service.ts';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
@@ -53,7 +55,7 @@ export class Chessfield implements ChessfieldApi {
     this.setFen(initialFen, initialLastMove);
 
     if (this.cfElement instanceof HTMLElement) {
-      this.start().then();
+      this.start();
     }
   }
 
@@ -67,7 +69,18 @@ export class Chessfield implements ChessfieldApi {
     this.store.setConfig(updatedConfig);
 
     this.canvas.remove();
-    this.start().then();
+    this.start();
+  }
+
+  setCheck(state: HeadlessState, color: cg.Color | boolean): void {
+    state.check = undefined;
+    if (color === true) color = state.turnColor;
+    if (color)
+      for (const [k, p] of state.pieces) {
+        if (p.role === 'king' && p.color === color) {
+          state.check = k;
+        }
+      }
   }
 
   async start() {

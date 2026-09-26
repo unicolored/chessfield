@@ -1,22 +1,23 @@
+import * as cg from '@lichess-org/chessground/types';
 import {
   BoxGeometry,
   Group,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
-  Object3D,
+  type Object3D,
   PlaneGeometry,
   ShaderMaterial,
   Vector2,
   Vector3,
 } from 'three';
-import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { Store } from '../provider/store.ts';
+import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
+
 import { cm, hexToRgb } from '../helper.ts';
-import * as cg from '@lichess-org/chessground/types';
-import * as cf from '../resource/chessfield.types.ts';
-import { ThemeColors } from '../resource/chessfield.types.ts';
+import { Store } from '../provider/store.ts';
+import type * as cf from '../resource/chessfield.types.ts';
+import { type ThemeColors } from '../resource/chessfield.types.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): Group {
@@ -76,7 +77,7 @@ export class BoardService {
         squareGeometry.scale(0.25, 0.25, 0.25);
         const theme = Store.themes['blue'];
         const squareMaterial = new MeshBasicMaterial({
-          color: 0xff0000,
+          color: '0xff0000',
           wireframe: true,
           transparent: true,
           opacity: 0,
@@ -119,7 +120,7 @@ export class BoardService {
       color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,
     });
     const textGeometry = new TextGeometry(text, {
-      font: font,
+      font,
       size: cm(0.1),
       depth: cm(0.01),
       // curveSegments: 12,

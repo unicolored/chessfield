@@ -1,5 +1,6 @@
-import { hexToRgb } from '../helper.ts';
 import { Mesh, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
+
+import { hexToRgb } from '../helper.ts';
 
 export class LoaderComponent {
   overlayMaterial: ShaderMaterial;
