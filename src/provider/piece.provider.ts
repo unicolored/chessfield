@@ -1,4 +1,4 @@
-import type * as cg from '@lichess-org/chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import { tap } from 'rxjs';
 import { Group, InstancedMesh, Matrix4, type Mesh, Vector3 } from 'three';
 
