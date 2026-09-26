@@ -1,7 +1,8 @@
+import { MOUSE, type PerspectiveCamera } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
 import { cm } from '../helper.ts';
-import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import { MOUSE, PerspectiveCamera } from 'three';
+import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
 
 export class ControlsProvider {
   private readonly enabled;
@@ -19,8 +20,8 @@ export class ControlsProvider {
     controls.enablePan = false;
     controls.mouseButtons = {
       LEFT: MOUSE.PAN, // pan is disabled
-      MIDDLE: MOUSE.DOLLY,
-      RIGHT: MOUSE.ROTATE,
+      MIDDLE: MOUSE.ROTATE,
+      RIGHT: MOUSE.DOLLY,
     };
     controls.enabled = this.enabled;
 

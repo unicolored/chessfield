@@ -1,6 +1,7 @@
-import { Color } from '@lichess-org/chessground/types';
+import { type Color } from '@lichess-org/chessground/types';
 import * as cg from '@lichess-org/chessground/types';
-import { PieceColorRole } from './resource/chessfield.types.ts';
+
+import { type PieceColorRole } from './resource/chessfield.types.ts';
 
 export const cm = (meter: number): number => {
   return meter / 100;
@@ -22,9 +23,9 @@ export function hexToRgb(hex: string | number): [number, number, number] {
       .join('');
   }
 
-  const r = parseInt(hexValue.slice(0, 2), 16) / 255;
-  const g = parseInt(hexValue.slice(2, 4), 16) / 255;
-  const b = parseInt(hexValue.slice(4, 6), 16) / 255;
+  const r = Number.parseInt(hexValue.slice(0, 2), 16) / 255;
+  const g = Number.parseInt(hexValue.slice(2, 4), 16) / 255;
+  const b = Number.parseInt(hexValue.slice(4, 6), 16) / 255;
 
   return [r, g, b];
 }
@@ -47,14 +48,14 @@ export function lmToCoordinates(lastMove: cg.Key[] | undefined): { x: number; y:
 
     coords.push({
       x: letterStart,
-      y: parseInt(m[1]) - 1,
+      y: Number.parseInt(m[1]) - 1,
     });
   });
 
   return coords;
 }
 
-export function fadeAlpha(uAlpha: { value: number }, duration: number = 1000) {
+export function fadeAlpha(uAlpha: { value: number }, duration = 1000) {
   const startTime = Date.now();
 
   const animate = () => {

@@ -1,7 +1,8 @@
-import * as cf from '../resource/chessfield.types.ts';
 import { Group, PerspectiveCamera, Vector3 } from 'three';
+
 import { cm } from '../helper.ts';
-import { ChessfieldConfig } from '../resource/chessfield.config.ts';
+import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
+import type * as cf from '../resource/chessfield.types.ts';
 
 export class CameraProvider {
   cameraPositionsMap = new Map<cf.Camera, Vector3>();

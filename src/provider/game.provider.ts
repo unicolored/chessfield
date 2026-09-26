@@ -1,14 +1,23 @@
-import { BufferGeometry, InstancedMesh, LoadingManager, Mesh, MeshBasicMaterial, Object3D } from 'three';
 import FenParser from '@chess-fu/fen-parser';
-import { PieceProvider } from './piece.provider';
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
-import { Store } from './store.ts';
-import { objKey } from '../helper.ts';
-import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
 import * as cg from '@lichess-org/chessground/types';
-import * as cf from '../resource/chessfield.types.ts';
-import { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
+import {
+  type BufferGeometry,
+  InstancedMesh,
+  type LoadingManager,
+  Mesh,
+  MeshBasicMaterial,
+  type Object3D,
+} from 'three';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
+import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
+import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
+import { objKey } from '../helper.ts';
+import type * as cf from '../resource/chessfield.types.ts';
+import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
+
+import { PieceProvider } from './piece.provider';
+import { Store } from './store.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
@@ -74,7 +83,7 @@ export class GameProvider {
     const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
     const fallbackMaterial = new MeshBasicMaterial({
-      color: 0xff0000,
+      color: '0xff0000',
     });
 
     mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {

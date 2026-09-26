@@ -1,6 +1,7 @@
-import * as cg from '@lichess-org/chessground/types';
-import * as cf from './chessfield.types';
-import { Themes } from './chessfield.types';
+import type * as cg from '@lichess-org/chessground/types';
+
+import type * as cf from './chessfield.types';
+import { type Themes } from './chessfield.types';
 
 export interface ChessfieldConfig {
   mode?: cf.Mode; //

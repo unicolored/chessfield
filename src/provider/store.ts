@@ -1,12 +1,13 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { BufferGeometry, Group, Mesh, Object3D } from 'three';
-import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import * as cg from '@lichess-org/chessground/types';
-import { initial } from '@lichess-org/chessground/fen';
 import FenParser from '@chess-fu/fen-parser';
+import { initial } from '@lichess-org/chessground/fen';
+import type * as cg from '@lichess-org/chessground/types';
+import { BehaviorSubject, type Observable } from 'rxjs';
+import type { BufferGeometry, Group, Mesh, Object3D } from 'three';
+
 import { cm } from '../helper.ts';
-import * as cf from '../resource/chessfield.types.ts';
-import { Themes } from '../resource/chessfield.types.ts';
+import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
+import type * as cf from '../resource/chessfield.types.ts';
+import type { Themes } from '../resource/chessfield.types.ts';
 
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
@@ -106,8 +107,8 @@ export class Store {
       const moves: cf.Moves = {
         moves: [
           {
-            fen: fen,
-            lastMove: lastMove,
+            fen,
+            lastMove,
           },
         ],
       };
