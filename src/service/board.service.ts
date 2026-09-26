@@ -77,7 +77,7 @@ export class BoardService {
         squareGeometry.scale(0.25, 0.25, 0.25);
         const theme = Store.themes['blue'];
         const squareMaterial = new MeshBasicMaterial({
-          color: '0xff0000',
+          color: 0xff_00_00,
           wireframe: true,
           transparent: true,
           opacity: 0,

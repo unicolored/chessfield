@@ -1,4 +1,4 @@
-import FenParser from '@chess-fu/fen-parser';
+import { FenParser } from '@chess-fu/fen-parser';
 import * as cg from '@lichess-org/chessground/types';
 import {
   type BufferGeometry,
@@ -83,7 +83,7 @@ export class GameProvider {
     const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
     const fallbackMaterial = new MeshBasicMaterial({
-      color: '0xff0000',
+      color: 0xff_00_00,
     });
 
     mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
