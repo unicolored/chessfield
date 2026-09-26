@@ -23,7 +23,7 @@
     </style>
 
     <script type="module">
-      import { Chessfield } from './src/chessfield.ts';
+      import { Chessfield } from './dist/chessfield.js';
 
       let controlsEnabled = true;
       const board1 = new Chessfield(document.getElementById('board-1'), {
@@ -137,6 +137,9 @@
       <div class="chessfield" id="board-3"></div>
     </div>
 
-    <script type="module" src="/src/chessfield.ts"></script>
+    <script>
+      // Connect to esbuild's live reload event stream
+      new EventSource('/esbuild').addEventListener('change', () => location.reload());
+    </script>
   </body>
 </html>
