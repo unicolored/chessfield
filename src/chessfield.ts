@@ -237,17 +237,15 @@ export class Chessfield implements ChessfieldApi {
       // console.log(elapsedTime)
       // camGroup.rotation.y += 0.00033;
 
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(
-        // [...this.store.getPieces(), ...this.store.getBoardCases()],
-        [...this.store.getBoardCases()],
-        false,
-      );
       if (this.store.chessboard) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(
+          [...this.store.getPieces(), ...this.store.getBoardCases()],
+          false,
+        );
         this.store.chessboard.highlightSquareCursor(-1, -1);
         if (intersects.length > 0) {
           const firstIntersect = intersects.shift();
-          // for (const intersect of [firstIntersect]) {
           if (firstIntersect) {
             if (firstIntersect.object.parent?.name.includes('Pièces')) {
               console.log(firstIntersect.object.userData['coord']);
@@ -260,7 +258,6 @@ export class Chessfield implements ChessfieldApi {
               this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
             }
           }
-          // }
         }
       }
 
