@@ -46,19 +46,19 @@ export class ShapesService {
       depthWrite: false,
     });
     this.materials.set(shaderName, shaderMaterial);
-    // const material = new MeshBasicMaterial({
-    //   transparent: false,
-    //   color: 0xff_00_00,
-    //   wireframe: true,
-    //   opacity: 1,
-    //   // depthWrite: false,
-    // });
+    const material = new MeshBasicMaterial({
+      transparent: false,
+      color: 0xff_00_00,
+      wireframe: true,
+      opacity: 1,
+      // depthWrite: false,
+    });
 
-    return shaderMaterial;
+    return material;
   }
 
   private createShapes(shaderName: ShaderName): InstancedMesh {
-    const geometry = new PlaneGeometry(1, 1, 1, 1);
+    const geometry = new PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
     geometry.scale(0.25, 0.25, 0.25);
 
     this.colors = new InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
@@ -81,7 +81,7 @@ export class ShapesService {
 
   private initializeTransforms(mesh: InstancedMesh): void {
     const matrix = new Matrix4();
-    const scaleMatrix = new Matrix4().makeScale(Store.squareSize, Store.squareSize, 1);
+    const scaleMatrix = new Matrix4().makeScale(1, 1, 1);
     const rotMatrix = new Matrix4().makeRotationX(-Math.PI / 2);
     const yPos = 0.001;
 
@@ -101,7 +101,7 @@ export class ShapesService {
   private resetAll(): void {
     for (let i = 0; i < this.instanceCount; i++) {
       this.colors.setXYZ(i, 0, 1, 0);
-      this.visible.setX(i, 0);
+      this.visible.setX(i, 1);
     }
     this.colors.needsUpdate = true;
     this.visible.needsUpdate = true;

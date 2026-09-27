@@ -6,7 +6,7 @@ export const ringShader = {
     u_ringWidth: { value: 0.05 } as Uniform,
     u_outerRadius: { value: 0.35 } as Uniform,
   },
-  
+
   vertexShader: `
     attribute vec3 instanceColor;
     attribute float instanceVisible;
@@ -21,7 +21,7 @@ export const ringShader = {
       gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
     }
   `,
-  
+
   fragmentShader: `
     varying vec3 vColor;
     varying float vVisible;
