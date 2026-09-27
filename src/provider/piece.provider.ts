@@ -1,8 +1,8 @@
 import * as cg from '@lichess-org/chessground/types';
 import { tap } from 'rxjs';
-import { Group, InstancedMesh, Matrix4, type Mesh, Vector3 } from 'three';
+import { Group, InstancedBufferAttribute, InstancedMesh, Matrix4, type Mesh, Vector3 } from 'three';
 
-import { cm } from '../helper.ts';
+import { cm, coordToVector2 } from '../helper.ts';
 import * as cf from '../resource/chessfield.types.ts';
 
 import { Store } from './store.ts';
@@ -64,6 +64,15 @@ export class PieceProvider {
             'black-pawn-black-pawn': -3,
           };
 
+          const coordAttrs = new Map<InstancedMesh, InstancedBufferAttribute>();
+          matrixes.forEach(meshes => {
+            const mesh = meshes[0].mesh;
+            const count = mesh.count;
+            const attr = new InstancedBufferAttribute(new Float32Array(count * 2), 2);
+            mesh.geometry.setAttribute('instanceCoord', attr);
+            coordAttrs.set(mesh, attr);
+          });
+
           matrixes.forEach(meshes => {
             let index = 0;
             for (const { mesh, pos, coord } of meshes) {
@@ -82,9 +91,13 @@ export class PieceProvider {
 
               if (mesh instanceof InstancedMesh) {
                 mesh.setMatrixAt(index, matrix);
-                mesh.userData['coord'] = coord;
-                mesh.userData['pos'] = index;
-                mesh.userData['matrix'] = matrix;
+
+                const coordAttr = coordAttrs.get(mesh);
+                if (coordAttr) {
+                  const vec = coordToVector2(coord);
+                  coordAttr.setXY(index, vec.x, vec.y);
+                }
+
                 index++;
               } else {
                 const meshM = mesh as Mesh;
