@@ -239,19 +239,28 @@ export class Chessfield implements ChessfieldApi {
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(
-        [...this.store.getBoardCases(), ...this.store.getPieces()],
+        // [...this.store.getPieces(), ...this.store.getBoardCases()],
+        [...this.store.getBoardCases()],
         false,
       );
       if (this.store.chessboard) {
         this.store.chessboard.highlightSquareCursor(-1, -1);
-        for (const intersect of intersects) {
-          if (intersect.object.parent?.name.includes('Pièces')) {
-            const coords = lmToCoordinates(['a1', intersect.object.userData['coord']]);
-            this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
-          } else {
-            const coords = lmToCoordinates(['a1', intersect.object.parent?.userData['coord']]);
-            this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+        if (intersects.length > 0) {
+          const firstIntersect = intersects.shift();
+          // for (const intersect of [firstIntersect]) {
+          if (firstIntersect) {
+            if (firstIntersect.object.parent?.name.includes('Pièces')) {
+              console.log(firstIntersect.object.userData['coord']);
+              console.log(firstIntersect.object.userData['pos']);
+              console.log(firstIntersect.object.userData['matrix']);
+              const coords = lmToCoordinates(['a1', firstIntersect.object.userData['coord']]);
+              this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+            } else {
+              const coords = lmToCoordinates(['a1', firstIntersect.object.parent?.userData['coord']]);
+              this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
+            }
           }
+          // }
         }
       }
 
