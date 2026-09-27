@@ -27,7 +27,7 @@ export class PieceProvider {
     this.store.gamePiecesSubject$
       .pipe(
         tap((list: cf.BoardPiece[]) => {
-          const matrixes: Map<string, { mesh: InstancedMesh; pos: Vector3 }[]> = new Map();
+          const matrixes: Map<string, { mesh: InstancedMesh; pos: Vector3; coord: string }[]> = new Map();
 
           list.forEach((boardPiece: cf.BoardPiece) => {
             if (boardPiece.coord && boardPiece.objectKey) {
@@ -41,15 +41,14 @@ export class PieceProvider {
                   if (instanceMesh.count) {
                     // .. instancedMesh
                     const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-                    instanceMesh.userData['coord'] = boardPiece.coord;
-                    updateMatrix.push({ mesh: instanceMesh, pos });
+                    updateMatrix.push({ mesh: instanceMesh, pos, coord: boardPiece.coord });
                     matrixes.set(boardPiece.objectKey, updateMatrix);
-                  } else {
-                    // mesh.userData['coord'] = boardPiece.coord;
-                    mesh.position.copy(pos);
-                    if (mesh.name.startsWith('black')) {
-                      mesh.rotateY(Math.PI);
-                    }
+                    // } else {
+                    //   // mesh.userData['coord'] = boardPiece.coord;
+                    //   mesh.position.copy(pos);
+                    //   if (mesh.name.startsWith('black')) {
+                    //     mesh.rotateY(Math.PI);
+                    //   }
                   }
                 }
               }
@@ -67,7 +66,7 @@ export class PieceProvider {
 
           matrixes.forEach(meshes => {
             let index = 0;
-            for (const { mesh, pos } of meshes) {
+            for (const { mesh, pos, coord } of meshes) {
               const matrix = new Matrix4();
 
               // Check if this piece needs rotation
@@ -83,11 +82,17 @@ export class PieceProvider {
 
               if (mesh instanceof InstancedMesh) {
                 mesh.setMatrixAt(index, matrix);
+                mesh.userData['coord'] = coord;
+                mesh.userData['pos'] = index;
+                mesh.userData['matrix'] = matrix;
                 index++;
               } else {
                 const meshM = mesh as Mesh;
                 // meshM.position.set(pos.x, pos.y, pos.z);
                 matrix.setPosition(pos);
+                meshM.userData['coord'] = coord;
+                meshM.userData['pos'] = pos;
+                meshM.userData['matrix'] = matrix;
                 meshM.applyMatrix4(matrix);
               }
             }
