@@ -87,7 +87,8 @@ export class GameProvider {
     });
 
     mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
-      const geometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
+      const baseGeometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
+      const geometry = baseGeometry ? baseGeometry.clone() : undefined;
       const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
       const mesh =
         value.count > 1 ? new InstancedMesh(geometry, material, value.count) : new Mesh(geometry, material);

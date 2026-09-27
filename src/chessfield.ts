@@ -3,10 +3,10 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
-import { Group, Raycaster, type Scene, Vector2 } from 'three';
+import { Group, type InstancedBufferAttribute, InstancedMesh, Raycaster, type Scene, Vector2 } from 'three';
 
 import { LoaderComponent } from './component/loader.component.ts';
-import { fadeAlpha, lmToCoordinates } from './helper.ts';
+import { fadeAlpha, lmToCoordinates, vector2ToCoord } from './helper.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
@@ -248,13 +248,32 @@ export class Chessfield implements ChessfieldApi {
           const firstIntersect = intersects.shift();
           if (firstIntersect) {
             if (firstIntersect.object.parent?.name.includes('Pièces')) {
-              console.log(firstIntersect.object.userData['coord']);
-              console.log(firstIntersect.object.userData['pos']);
-              console.log(firstIntersect.object.userData['matrix']);
-              const coords = lmToCoordinates(['a1', firstIntersect.object.userData['coord']]);
+              const mesh = firstIntersect.object;
+              const instanceId = firstIntersect.instanceId;
+
+              let coord: string;
+              if (mesh instanceof InstancedMesh && instanceId !== undefined) {
+                const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
+                  | InstancedBufferAttribute
+                  | undefined;
+                if (coordAttr) {
+                  const file = coordAttr.getX(instanceId);
+                  const rank = coordAttr.getY(instanceId);
+                  coord = vector2ToCoord(new Vector2(file, rank));
+                } else {
+                  coord = mesh.userData['coord'] as string;
+                }
+              } else {
+                coord = mesh.userData['coord'] as string;
+              }
+
+              const coords = lmToCoordinates(['a1', coord as cg.Key]);
               this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
             } else {
-              const coords = lmToCoordinates(['a1', firstIntersect.object.parent?.userData['coord']]);
+              const coords = lmToCoordinates([
+                'a1',
+                firstIntersect.object.parent?.userData['coord'] as cg.Key,
+              ]);
               this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
             }
           }

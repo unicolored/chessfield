@@ -1,5 +1,6 @@
 import { type Color } from '@lichess-org/chessground/types';
 import * as cg from '@lichess-org/chessground/types';
+import { Vector2 } from 'three';
 
 import { type PieceColorRole } from './resource/chessfield.types.ts';
 
@@ -71,4 +72,16 @@ export function fadeAlpha(uAlpha: { value: number }, duration = 1000) {
   };
 
   requestAnimationFrame(animate);
+}
+
+export function coordToVector2(coord: string): Vector2 {
+  const file = coord.charCodeAt(0) - 97;
+  const rank = Number.parseInt(coord[1]) - 1;
+  return new Vector2(file, rank);
+}
+
+export function vector2ToCoord(vec: Vector2): string {
+  const file = String.fromCharCode(97 + Math.round(vec.x));
+  const rank = Math.round(vec.y) + 1;
+  return `${file}${rank}`;
 }
