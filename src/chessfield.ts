@@ -27,9 +27,11 @@ import { type HeadlessState } from './resource/chessfield.state.ts';
 import type * as cf from './resource/chessfield.types';
 import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
+import { ShapesService } from './service/shapes.service.ts';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
+  private readonly shapesService = new ShapesService('ring');
   private readonly rendererProvider = new RendererProvider();
   private readonly sceneProvider = new SceneProvider();
   private readonly store: Store;
@@ -215,6 +217,10 @@ export class Chessfield implements ChessfieldApi {
 
       const casesGroup = this.boardService.createCases(loadingManagerProvider.font);
 
+      const shapes = this.shapesService.getMesh();
+      shapes.name = '🟢 Shapes';
+      scene.add(shapes);
+
       const chessboardGroup = new Group();
       chessboardGroup.name = '🟣 Chessboard Group';
       chessboardGroup.add(chessboard);
@@ -223,6 +229,7 @@ export class Chessfield implements ChessfieldApi {
 
       this.store.chessboard = chessboard;
       this.store.casesGroup = casesGroup;
+      this.store.shapes = shapes;
     };
 
     const raycaster = new Raycaster();
@@ -254,8 +261,7 @@ export class Chessfield implements ChessfieldApi {
               let coord: string;
               if (mesh instanceof InstancedMesh && instanceId !== undefined) {
                 const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
-                  | InstancedBufferAttribute
-                  | undefined;
+                  InstancedBufferAttribute | undefined;
                 if (coordAttr) {
                   const file = coordAttr.getX(instanceId);
                   const rank = coordAttr.getY(instanceId);
@@ -318,5 +324,21 @@ export class Chessfield implements ChessfieldApi {
       this.store.piecesGroup = piecesGroup;
       scene.add(piecesGroup);
     });
+  }
+
+  public setShape(rank: number, file: number, color: string): void {
+    this.shapesService.setShapeAt(rank, file, color);
+  }
+
+  public clearShape(rank?: number, file?: number): void {
+    if (rank !== undefined && file !== undefined) {
+      this.shapesService.clearShape(rank * 8 + file);
+    } else {
+      this.shapesService.clearAll();
+    }
+  }
+
+  public getShapesMesh(): InstancedMesh {
+    return this.shapesService.getMesh();
   }
 }

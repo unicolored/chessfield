@@ -2,7 +2,7 @@ import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
 import type * as cg from '@lichess-org/chessground/types';
 import { BehaviorSubject, type Observable } from 'rxjs';
-import { type BufferGeometry, type Group, Mesh, type Object3D } from 'three';
+import { type BufferGeometry, type Group, Mesh, type Object3D, type InstancedMesh } from 'three';
 
 import { cm } from '../helper.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
@@ -13,6 +13,7 @@ export class Store {
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: Group | null = null;
   piecesGroup: Group | null = null;
+  shapes: InstancedMesh | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);

@@ -74,6 +74,10 @@ declare module 'three' {
     setHighlightStatusMateColor: (hex: string | number) => void;
     highlightSquareCursor: (x: number, y: number) => void;
     setStatusMate: (x: number, y: number) => void;
+    setShape: (index: number, colorHex: string, show?: boolean) => void;
+    setShapeAt: (rank: number, file: number, colorHex: string, show?: boolean) => void;
+    clearShape: (index?: number) => void;
+    clearAllShapes: () => void;
   }
 }
 

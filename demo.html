@@ -34,6 +34,19 @@
         angle: 'right',
         theme: 'green',
       });
+
+      // Green ring on d5 (rank 3, file 4)
+      board1.setShape(3, 4, '#00ff00');
+
+      // Red ring on c3 (rank 6, file 2)
+      board1.setShape(6, 2, '#ff0000');
+
+      // Clear specific square
+      board1.clearShape(3, 4);
+
+      // Clear all
+      board1.clearShape();
+
       board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
     </script>
   </head>
