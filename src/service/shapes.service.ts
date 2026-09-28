@@ -35,24 +35,17 @@ export class ShapesService {
 
     const shaderDef = shaderRegistry[shaderName];
     const shaderMaterial = new ShaderMaterial({
-      // const material = new MeshBasicMaterial({
       uniforms: shaderDef.uniforms,
       vertexShader: shaderDef.vertexShader,
       fragmentShader: shaderDef.fragmentShader,
       transparent: true,
-      // color: 0xff_00_00,
       opacity: 1,
       side: DoubleSide,
       depthWrite: false,
     });
+
+    shaderMaterial.needsUpdate = true;
     this.materials.set(shaderName, shaderMaterial);
-    // const material = new MeshBasicMaterial({
-    //   transparent: false,
-    //   color: 0xff_00_00,
-    //   wireframe: true,
-    //   opacity: 1,
-    //   // depthWrite: false,
-    // });
 
     return shaderMaterial;
   }
@@ -101,7 +94,7 @@ export class ShapesService {
   private resetAll(): void {
     for (let i = 0; i < this.instanceCount; i++) {
       this.colors.setXYZ(i, 0, 1, 0);
-      this.visible.setX(i, 1);
+      this.visible.setX(i, 0);
     }
     this.colors.needsUpdate = true;
     this.visible.needsUpdate = true;

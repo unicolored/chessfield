@@ -3,8 +3,8 @@ import { type Uniform } from 'three';
 export const ringShader = {
   name: 'ring',
   uniforms: {
-    u_ringWidth: { value: 0.05 } as Uniform,
-    u_outerRadius: { value: 0.35 } as Uniform,
+    u_ringWidth: { value: 0.1 } as Uniform,
+    u_outerRadius: { value: 0.4 } as Uniform,
   },
 
   vertexShader: `
@@ -34,11 +34,17 @@ export const ringShader = {
       
       vec2 center = vec2(0.5);
       float dist = length(vUv - center);
-      float inner = u_outerRadius - u_ringWidth;
+      float innerRadius = u_outerRadius - u_ringWidth;
       
-      float outerEdge = smoothstep(u_outerRadius - 0.01, u_outerRadius + 0.01, dist);
-      float innerEdge = smoothstep(inner - 0.01, inner + 0.01, dist);
-      float mask = outerEdge - innerEdge;
+      // Dynamic anti-aliasing delta based on screen pixel derivative
+      float delta = fwidth(dist);
+      
+      // Inner edge transitions from 0 to 1 as dist increases
+      float innerEdge = smoothstep(innerRadius - delta, innerRadius + delta, dist);
+      // Outer edge transitions from 1 to 0 as dist increases past radius
+      float outerEdge = 1.0 - smoothstep(u_outerRadius - delta, u_outerRadius + delta, dist);
+      
+      float mask = innerEdge * outerEdge;
       
       if (mask < 0.01) discard;
       
