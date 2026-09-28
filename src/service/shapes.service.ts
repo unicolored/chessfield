@@ -28,7 +28,7 @@ export class ShapesService {
     this.shapes = this.createShapes(shaderName);
   }
 
-  private createShaderMaterial(shaderName: ShaderName): ShaderMaterial | MeshBasicMaterial {
+  public createShaderMaterial(shaderName: ShaderName): ShaderMaterial | MeshBasicMaterial {
     if (this.materials.has(shaderName)) {
       return this.materials.get(shaderName)!;
     }
@@ -46,15 +46,15 @@ export class ShapesService {
       depthWrite: false,
     });
     this.materials.set(shaderName, shaderMaterial);
-    const material = new MeshBasicMaterial({
-      transparent: false,
-      color: 0xff_00_00,
-      wireframe: true,
-      opacity: 1,
-      // depthWrite: false,
-    });
+    // const material = new MeshBasicMaterial({
+    //   transparent: false,
+    //   color: 0xff_00_00,
+    //   wireframe: true,
+    //   opacity: 1,
+    //   // depthWrite: false,
+    // });
 
-    return material;
+    return shaderMaterial;
   }
 
   private createShapes(shaderName: ShaderName): InstancedMesh {
