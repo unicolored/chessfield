@@ -10,6 +10,7 @@ import {
   ShaderMaterial,
   Vector2,
   Vector3,
+  DoubleSide,
 } from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -18,6 +19,7 @@ import { cm, hexToRgb } from '../helper.ts';
 import { Store } from '../provider/store.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
+import { ShapesService } from './shapes.service.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): Group {
@@ -59,6 +61,9 @@ export class BoardService {
   }
 
   public createCases(font: Font | null): Group {
+    const shapesService = new ShapesService();
+    const shaderMaterial = shapesService.createShaderMaterial('ring');
+
     // Create the chessboard
     const casesGroup = new Group();
     casesGroup.name = '🔲🔳 Cases';
@@ -81,6 +86,7 @@ export class BoardService {
           wireframe: true,
           transparent: true,
           opacity: 0,
+          side: DoubleSide,
         });
 
         const square = new Mesh(squareGeometry, squareMaterial);
