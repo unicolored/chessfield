@@ -62,7 +62,7 @@ export class BoardService {
 
   public createCases(font: Font | null): Group {
     const shapesService = new ShapesService();
-    const shaderMaterial = shapesService.createShaderMaterial('ring');
+    shapesService.createShaderMaterial('ring');
 
     // Create the chessboard
     const casesGroup = new Group();

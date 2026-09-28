@@ -3,10 +3,10 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
-import { Group, type InstancedBufferAttribute, InstancedMesh, Raycaster, type Scene, Vector2 } from 'three';
+import { Group, type Scene, InstancedMesh } from 'three';
 
 import { LoaderComponent } from './component/loader.component.ts';
-import { fadeAlpha, lmToCoordinates, vector2ToCoord } from './helper.ts';
+import { fadeAlpha, lmToCoordinates } from './helper.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
@@ -27,6 +27,7 @@ import { type HeadlessState } from './resource/chessfield.state.ts';
 import type * as cf from './resource/chessfield.types';
 import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
+import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 
 export class Chessfield implements ChessfieldApi {
@@ -42,6 +43,7 @@ export class Chessfield implements ChessfieldApi {
   private themeProvider!: ThemeProvider;
 
   private canvas!: HTMLCanvasElement;
+  private eventsService!: EventsService;
   private foundLastMove!: Move | null;
 
   constructor(
@@ -70,6 +72,7 @@ export class Chessfield implements ChessfieldApi {
     const updatedConfig = { ...currentConfig, ...partialConfig };
     this.store.setConfig(updatedConfig);
 
+    this.eventsService?.dispose();
     this.canvas.remove();
     this.start();
   }
@@ -93,22 +96,11 @@ export class Chessfield implements ChessfieldApi {
     this.controlsProvider = new ControlsProvider(this.store.getConfig());
     this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
 
-    // const gui: GUI = new GUI();
-
     const rect = cfElement.getBoundingClientRect();
     const sizes = {
       width: rect.width,
       height: rect.height,
     };
-
-    const mouse = new Vector2();
-    cfElement.addEventListener('mousemove', _event => {
-      mouse.x = ((_event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((_event.clientY - rect.top) / rect.height) * 2 + 1;
-    });
-    cfElement.addEventListener('mouseleave', () => {
-      mouse.x = mouse.y = -2; // Outside NDC range (-1 to 1)
-    });
 
     // Camera
     const camera = this.cameraProvider.getCamera(sizes);
@@ -119,58 +111,10 @@ export class Chessfield implements ChessfieldApi {
     const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
 
     // Set up the scene, camera, and renderer
-
     const backgroundColor = this.themeProvider.getBackgroundColor();
     const scene = this.sceneProvider.getScene(backgroundColor);
 
     scene.add(camGroup);
-
-    // Composer
-    // let fxaaPass: ShaderPass;
-    // const composer = new EffectComposer(renderer);
-    //
-    // const renderPass = new RenderPass(scene, camera);
-    // renderPass.clearAlpha = 0;
-    //
-    // const outputPass = new OutputPass();
-    //
-    // composer.addPass(renderPass);
-    // composer.addPass(outputPass);
-    //
-    // if (RendererProvider.enableAntialias) {
-    //   // FXAA is engineered to be applied towards the end of engine post processing after conversion to low dynamic range and conversion to the sRGB color space for display.
-    //   fxaaPass = new ShaderPass(FXAAShader);
-    //   fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
-    //   fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
-    //
-    //   composer.addPass(fxaaPass);
-    // }
-
-    // Handle window resize
-    function onWindowResize() {
-      const rect = cfElement.getBoundingClientRect();
-      const sizes = {
-        width: rect.width,
-        height: rect.height,
-      };
-
-      // Update camera aspect ratio
-      camera.aspect = sizes.width / sizes.height;
-      camera.updateProjectionMatrix();
-
-      // Update renderer size
-      renderer.setSize(sizes.width, sizes.height);
-      // composer.setSize(cfElement.offsetWidth, sizes.width);
-      // composer.setSize(cfElement.offsetWidth, sizes.height);
-      //
-      // if (RendererProvider.enableAntialias && fxaaPass) {
-      //   fxaaPass.material.uniforms['resolution'].value.x = 1 / (sizes.width * renderer.getPixelRatio());
-      //   fxaaPass.material.uniforms['resolution'].value.y = 1 / (sizes.height * renderer.getPixelRatio());
-      // }
-    }
-
-    // Add resize event listener
-    window.addEventListener('resize', onWindowResize);
 
     /**
      * 0. LOADER overlay
@@ -196,10 +140,8 @@ export class Chessfield implements ChessfieldApi {
       loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
     };
 
-    // let pieces: Object3D<Object3DEventMap>[] | undefined = [];
     loadingManagerProvider.getLoadingManager().onLoad = () => {
       setTimeout(() => {
-        // Example usage:
         fadeAlpha(loaderComponent.overlayMaterial.uniforms['uAlpha'], 500);
         loaderComponent.progressMaterial.uniforms['uAlpha'] = { value: 0 };
       }, 200);
@@ -230,77 +172,54 @@ export class Chessfield implements ChessfieldApi {
       this.store.chessboard = chessboard;
       this.store.casesGroup = casesGroup;
       this.store.shapes = shapes;
-    };
 
-    const raycaster = new Raycaster();
+      // Initialize EventsService after assets are loaded
+      this.eventsService = new EventsService({
+        cfElement: this.cfElement,
+        canvas: this.canvas,
+        camera: camera,
+        scene: scene,
+        store: this.store,
+        shapesService: this.shapesService,
+      });
 
-    // Controls
-    const controls = this.controlsProvider.getControls(camera, this.canvas);
+      this.eventsService.onSquareHover = (rank, file) =>
+        this.store.chessboard?.highlightSquareCursor(rank, file);
 
-    // Animate
-    // const clock = new THREE.Clock();
-    const animate = () => {
-      // const elapsedTime = clock.getElapsedTime();
-      // console.log(elapsedTime)
-      // camGroup.rotation.y += 0.00033;
-
-      if (this.store.chessboard) {
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(
-          [...this.store.getPieces(), ...this.store.getBoardCases()],
-          false,
-        );
-        this.store.chessboard.highlightSquareCursor(-1, -1);
-        if (intersects.length > 0) {
-          const firstIntersect = intersects.shift();
-          if (firstIntersect) {
-            if (firstIntersect.object.parent?.name.includes('Pièces')) {
-              const mesh = firstIntersect.object;
-              const instanceId = firstIntersect.instanceId;
-
-              let coord: string;
-              if (mesh instanceof InstancedMesh && instanceId !== undefined) {
-                const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
-                  InstancedBufferAttribute | undefined;
-                if (coordAttr) {
-                  const file = coordAttr.getX(instanceId);
-                  const rank = coordAttr.getY(instanceId);
-                  coord = vector2ToCoord(new Vector2(file, rank));
-                } else {
-                  coord = mesh.userData['coord'] as string;
-                }
-              } else {
-                coord = mesh.userData['coord'] as string;
-              }
-
-              const coords = lmToCoordinates(['a1', coord as cg.Key]);
-              this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
-            } else {
-              const coords = lmToCoordinates([
-                'a1',
-                firstIntersect.object.parent?.userData['coord'] as cg.Key,
-              ]);
-              this.store.chessboard.highlightSquareCursor(coords[1].x, coords[1].y);
-            }
-          }
+      this.eventsService.onSquareRightClick = (rank, file, color) => {
+        const index = rank * 8 + file;
+        if (this.shapesService.getVisible(index)) {
+          this.shapesService.clearShape(index);
+        } else {
+          this.shapesService.setShapeAt(rank, file, color);
         }
-      }
+      };
 
-      // Update controls
-      controls.update();
+      this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
 
-      // Render
-      renderer.render(scene, camera);
-      // composer.render();
+      this.eventsService.onResize = () => {
+        const rect = cfElement.getBoundingClientRect();
+        const sizes = { width: rect.width, height: rect.height };
+        camera.aspect = sizes.width / sizes.height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(sizes.width, sizes.height);
+      };
 
-      // Call tick again on the next frame
-      document.defaultView?.requestAnimationFrame(animate);
+      this.eventsService.init();
+
+      // Controls
+      const controls = this.controlsProvider.getControls(camera, this.canvas);
+
+      // Animate
+      const animate = () => {
+        controls.update();
+        renderer.render(scene, camera);
+        document.defaultView?.requestAnimationFrame(animate);
+      };
+
+      cfElement.appendChild(renderer.domElement);
+      animate();
     };
-
-    cfElement.appendChild(renderer.domElement);
-
-    // Start
-    animate();
   }
 
   private updatePieces(scene: Scene, chessboard: cf.ExtendedMesh) {

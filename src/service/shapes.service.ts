@@ -130,6 +130,10 @@ export class ShapesService {
     this.clearShape();
   }
 
+  getVisible(index: number): boolean {
+    return this.visible.getX(index) === 1;
+  }
+
   setShader(shaderName: ShaderName): void {
     if (shaderName === this.currentShader) return;
     this.currentShader = shaderName;
