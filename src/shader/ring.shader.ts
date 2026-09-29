@@ -3,8 +3,8 @@ import { type Uniform } from 'three';
 export const ringShader = {
   name: 'ring',
   uniforms: {
-    u_ringWidth: { value: 0.1 } as Uniform,
-    u_outerRadius: { value: 0.4 } as Uniform,
+    u_ringWidth: { value: 0.06 } as Uniform,
+    u_outerRadius: { value: 0.5 } as Uniform,
   },
 
   vertexShader: `
