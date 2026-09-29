@@ -1,4 +1,12 @@
-import { Raycaster, Vector2, Camera, Scene, type Intersection, InstancedMesh, InstancedBufferAttribute } from 'three';
+import {
+  Raycaster,
+  Vector2,
+  Camera,
+  Scene,
+  type Intersection,
+  InstancedMesh,
+  InstancedBufferAttribute,
+} from 'three';
 import { Store } from '../provider/store';
 import { ShapesService } from './shapes.service';
 import { lmToCoordinates, vector2ToCoord } from '../helper';
@@ -88,7 +96,9 @@ export class EventsService {
     }
 
     const square = this.getSquareFromIntersect(intersects[0]);
-    if (square) this.onSquareHover?.(square.rank, square.file);
+    if (square) {
+      this.onSquareHover?.(square.rank, square.file);
+    }
   }
 
   private getSquareFromIntersect(intersect: Intersection): { rank: number; file: number } | null {
@@ -122,12 +132,15 @@ export class EventsService {
     event.preventDefault();
 
     const square = this.getSquareFromMouse(this.mouse);
+    console.log(square);
     if (!square) return;
 
-    let color = '#00ff00';
-    if (event.altKey && event.ctrlKey) color = '#ffaa00';
-    else if (event.altKey) color = '#0000ff';
-    else if (event.ctrlKey) color = '#ff0000';
+    // TODO: move these colors to the brown theme in store.ts
+    // And set alternative colors for each theme so it appears correctly on dark and light squares
+    let color = '#73a45d';
+    if (event.altKey && event.ctrlKey) color = '#f0b24d';
+    else if (event.altKey) color = '#66799f';
+    else if (event.ctrlKey) color = '#b86f60';
 
     this.onSquareRightClick?.(square.rank, square.file, color);
   };

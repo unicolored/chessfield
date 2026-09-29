@@ -41,7 +41,7 @@ export class ShapesService {
       transparent: true,
       opacity: 1,
       side: DoubleSide,
-      depthWrite: false,
+      depthWrite: true,
     });
 
     shaderMaterial.needsUpdate = true;
@@ -52,7 +52,7 @@ export class ShapesService {
 
   private createShapes(shaderName: ShaderName): InstancedMesh {
     const geometry = new PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
-    geometry.scale(0.25, 0.25, 0.25);
+    // geometry.scale(0.25, 0.25, 0.25);
 
     this.colors = new InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
     this.visible = new InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
@@ -65,6 +65,7 @@ export class ShapesService {
     const mesh = new InstancedMesh(geometry, material, this.instanceCount);
     mesh.instanceMatrix.setUsage(DynamicDrawUsage as Usage);
     mesh.frustumCulled = false;
+    mesh.renderOrder = -1;
 
     this.initializeTransforms(mesh);
     this.resetAll();
@@ -74,13 +75,13 @@ export class ShapesService {
 
   private initializeTransforms(mesh: InstancedMesh): void {
     const matrix = new Matrix4();
-    const scaleMatrix = new Matrix4().makeScale(1, 1, 1);
-    const rotMatrix = new Matrix4().makeRotationX(-Math.PI / 2);
-    const yPos = 0.001;
+    const scaleMatrix = new Matrix4().makeScale(0.25, 0.25, 0.25);
+    const rotMatrix = new Matrix4().makeRotationX(Math.PI / 2);
+    const yPos = 0.000055;
 
     for (let i = 0; i < this.instanceCount; i++) {
       const rank = Math.floor(i / 8);
-      const file = i % 8;
+      const file = 7 - (i % 8);
 
       matrix.makeTranslation(cm(rank - 3.5), yPos, cm(file - 3.5));
       matrix.multiply(rotMatrix);
@@ -107,6 +108,7 @@ export class ShapesService {
   setShape(index: number, colorHex: string, show = true): void {
     const [r, g, b] = hexToRgb(colorHex);
     this.colors.setXYZ(index, r, g, b);
+    console.log('setX', index);
     this.visible.setX(index, show ? 1 : 0);
     this.colors.needsUpdate = true;
     this.visible.needsUpdate = true;

@@ -10,7 +10,6 @@ import {
   ShaderMaterial,
   Vector2,
   Vector3,
-  DoubleSide,
 } from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -86,13 +85,12 @@ export class BoardService {
           wireframe: true,
           transparent: true,
           opacity: 0,
-          side: DoubleSide,
         });
 
         const square = new Mesh(squareGeometry, squareMaterial);
         const squarePosition = new Vector3(
           cm(rankInt - Store.boardSize / 2 + 0.5),
-          cm(0.055),
+          cm(0.05),
           cm(colInt - Store.boardSize / 2 + 0.5),
         );
         square.rotation.x = -Math.PI / 2;
@@ -267,7 +265,7 @@ export class BoardService {
     };
 
     chessboard.rotation.x = -Math.PI / 2;
-    chessboard.position.y = 0.0005;
+    chessboard.position.y = 0.00005;
 
     return chessboard as cf.ExtendedMesh;
   }
