@@ -256,7 +256,7 @@ export class BoardService {
     chessboard.setStatusMate = function (x: number, y: number) {
       this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
       this.traverse((child: Object3D) => {
-        console.log('statusMate', child);
+        // console.log('statusMate', child);
 
         if (child.name === 'haha') {
           console.log('child found', child);
