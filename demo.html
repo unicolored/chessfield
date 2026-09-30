@@ -26,7 +26,7 @@
     </style>
 
     <script type="module">
-      import chessJs from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
+      import { Chess, BLACK, WHITE, KING } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
       import { Chessfield } from './dist/chessfield.js';
 
       const board1 = new Chessfield(document.getElementById('board-1'), {
@@ -49,12 +49,7 @@
       const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
       board1.setFen(fen, ['e2', 'e4']);
 
-      chess.getCastlingRights(BLACK); // black can castle queenside only
-      // -> { 'k': false, 'q': true }
-
-      chess.setHeader('White', 'Morphy'); // Retrieve the PGN headers.
-      chess.setHeader('Black', 'Anderssen');
-      chess.setHeader('Date', '1858-??-??');
+      const chess = new Chess();
 
       try {
         // import { validateFen } from 'chess.js'
@@ -62,24 +57,101 @@
         // -> { ok: true }
 
         // .load(fen: string, { skipValidation = false, preserveHeaders = false } = {})
-        chess.load('8/4p3/8/8/8/8/4P3/6K1 w - - 1 45', { skipValidation: true });
+
+        chess.setHeader('White', 'Morphy'); // Retrieve the PGN headers.
+        chess.setHeader('Black', 'Anderssen');
+        chess.setHeader('Date', '1858-??-??');
+
+        console.log(`${chess.getHeaders()['White']} plays against ${chess.getHeaders()['Black']}`);
+
+        chess.load(fen, { skipValidation: false });
+
+        let lastTime = 0;
+        const delay = 25;
+
+        function animate(time) {
+          if (!lastTime) lastTime = time;
+          if (time - lastTime >= delay && !chess.isGameOver()) {
+            lastTime = time;
+            const moves = chess.moves();
+            const move = moves[Math.floor(Math.random() * moves.length)];
+            chess.move(move);
+            const history = chess.history({ verbose: true });
+            const lastMove = [history[history.length - 1].from, history[history.length - 1].to];
+            board1.setFen(chess.fen(), lastMove);
+
+            if (chess.isGameOver()) {
+              if (chess.isCheckmate()) {
+                // Winner is the OPPOSITE of the side to move (they just got checkmated)
+                const winner = chess.turn() === WHITE ? 'Black' : 'White';
+                const loser = winner === 'White' ? 'Black' : 'White';
+                console.log(`Checkmate! Winner: ${winner}`);
+
+                const findMateKing = chess.findPiece({ type: KING, color: loser });
+                const findWinnerKing = chess.findPiece({ type: KING, color: winner });
+                // -> ['e8']
+                console.log(`Mate king ${loser} on:`, findMateKing);
+                console.log(`Winner king ${winner} on:`, findWinnerKing);
+                console.log(`${chess.getHeaders()[winner]} wins over ${chess.getHeaders()[loser]}`);
+              } else if (chess.isDraw()) {
+                // It's a draw - check specific reason
+                console.log('Draw!');
+                console.log('Stalemate:', chess.isStalemate());
+                console.log('Threefold repetition:', chess.isThreefoldRepetition());
+                console.log('50-move rule:', chess.isDrawByFiftyMoves());
+                console.log('Insufficient material:', chess.isInsufficientMaterial());
+
+                const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+                const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+                // -> ['e8']
+                console.log(`White king on:`, findWhiteKing);
+                console.log(`Black king on:`, findBlackKing);
+              }
+            } else if (chess.inCheck()) {
+              // Find king in check
+
+              // Returns a list containing the squares where the requested piece is located. Returns an empty list if the piece is not on the board.
+              const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
+              // -> ['e8']
+              console.log(`Check king ${chess.turn()} on:`, findCheckKing);
+            }
+          }
+          if (!chess.isGameOver()) requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+        const castling = chess.getCastlingRights(BLACK); // black can castle queenside only
+        // -> { 'k': false, 'q': true }
+
+        const moveNumber = chess.moveNumber();
+
+        const turn = chess.turn(); // Returns the current side to move.
+
+        const isAttacked = chess.isAttacked('e4', WHITE); // .isAttacked(square, color)
+
+        // if (chess.isGameOver()) {
+        //   const isCheckmate = chess.isCheckmate(); // Returns true or false if the side to move has been checkmated.
+        //   console.log('Checkmate', isCheckmate);
+        //
+        //   if (chess.isDraw()) {
+        //     console.log('isDraw');
+        //     console.log('Draw by stalemate', chess.isStalemate());
+        //     console.log('Draw by 50moves', chess.isDrawByFiftyMoves());
+        //     console.log('Draw by insufficient material', chess.isInsufficientMaterial());
+        //
+        //     // Returns true or false if the current board position has occurred three or more times.
+        //     console.log('Draw by threefold repeition', chess.isThreefoldRepetition());
+        //   }
+        // }
+
+        // Returns a list of legal moves from the current position.
+        // .moves({ piece?: Piece, square?: Square, verbose = false} = {})
+        const legalMoves = chess.moves({ square: 'e7', verbose: true });
+        // console.log(legalMoves);
       } catch (e) {
         console.error(e);
       }
-
-      chess.moveNumber();
-      chess.turn(); // Returns the current side to move.
-
-      chess.inCheck(); // Returns true or false if the side to move is in check.
-
-      chess.isCheckmate(); // Returns true or false if the side to move has been checkmated.
-      chess.isDraw(); // Returns true or false if the game is drawn (50-move rule or insufficient material).
-      chess.isStalemate(); // Returns true or false if the side to move has been stalemated.
-
-      chess.isGameOver(); // Returns true if the game has ended via checkmate, stalemate, draw, threefold repetition, or insufficient material. Otherwise, returns false.
-
-      // Returns a list of legal moves from the current position.
-      // .moves({ piece?: Piece, square?: Square, verbose = false} = {})
     </script>
   </head>
   <body>
