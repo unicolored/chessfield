@@ -26,6 +26,7 @@
     </style>
 
     <script type="module">
+      import chessJs from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
       import { Chessfield } from './dist/chessfield.js';
 
       const board1 = new Chessfield(document.getElementById('board-1'), {
@@ -45,7 +46,40 @@
       // Clear all
       // board1.clearShape();
 
-      board1.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+      const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
+      board1.setFen(fen, ['e2', 'e4']);
+
+      chess.getCastlingRights(BLACK); // black can castle queenside only
+      // -> { 'k': false, 'q': true }
+
+      chess.setHeader('White', 'Morphy'); // Retrieve the PGN headers.
+      chess.setHeader('Black', 'Anderssen');
+      chess.setHeader('Date', '1858-??-??');
+
+      try {
+        // import { validateFen } from 'chess.js'
+        // validateFen('2n1r3/p1k2pp1/B1p3b1/P7/5bP1/2N1B3/1P2KP2/2R5 b - - 4 25')
+        // -> { ok: true }
+
+        // .load(fen: string, { skipValidation = false, preserveHeaders = false } = {})
+        chess.load('8/4p3/8/8/8/8/4P3/6K1 w - - 1 45', { skipValidation: true });
+      } catch (e) {
+        console.error(e);
+      }
+
+      chess.moveNumber();
+      chess.turn(); // Returns the current side to move.
+
+      chess.inCheck(); // Returns true or false if the side to move is in check.
+
+      chess.isCheckmate(); // Returns true or false if the side to move has been checkmated.
+      chess.isDraw(); // Returns true or false if the game is drawn (50-move rule or insufficient material).
+      chess.isStalemate(); // Returns true or false if the side to move has been stalemated.
+
+      chess.isGameOver(); // Returns true if the game has ended via checkmate, stalemate, draw, threefold repetition, or insufficient material. Otherwise, returns false.
+
+      // Returns a list of legal moves from the current position.
+      // .moves({ piece?: Piece, square?: Square, verbose = false} = {})
     </script>
   </head>
   <body>
