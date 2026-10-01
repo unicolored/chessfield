@@ -91,12 +91,22 @@
                 const loser = winner === WHITE ? BLACK : WHITE;
                 console.log(`Checkmate! Winner: ${winner}`);
 
-                const findMateKing = chess.findPiece({ type: KING, color: loser });
-                const findWinnerKing = chess.findPiece({ type: KING, color: winner });
+                const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+                const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
                 // -> ['e8']
-                console.log(`Mate king ${loser} on:`, findMateKing);
-                console.log(`Winner king ${winner} on:`, findWinnerKing);
+                // console.log(`Mate king ${loser} on:`, findMateKing);
+                // console.log(`Winner king ${winner} on:`, findWinnerKing);
                 console.log(`${headers[winner]} wins over ${headers[loser]}`);
+
+                const gO = {
+                  winner,
+                  kings: {
+                    white: findWhiteKing,
+                    black: findBlackKing,
+                  },
+                };
+                console.log('board1 set gO', gO);
+                board1.setGameOver(gO);
               } else if (chess.isDraw()) {
                 // It's a draw - check specific reason
                 console.log('Draw!');
@@ -111,6 +121,15 @@
                 // -> ['e8']
                 console.log(`White king on:`, findWhiteKing);
                 console.log(`Black king on:`, findBlackKing);
+
+                const gO = {
+                  kings: {
+                    white: findWhiteKing,
+                    black: findBlackKing,
+                  },
+                };
+                console.log('board1 set gO', gO);
+                board1.setGameOver(gO);
               }
             } else if (chess.inCheck()) {
               // Find king in check

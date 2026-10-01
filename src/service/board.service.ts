@@ -153,7 +153,7 @@ export class BoardService {
         u_highlightPosCursor: { value: new Vector2(-1, -1) },
         u_highlightColor: { value: new Vector3(1, 1, 0) }, // Highlight color (yellow in this case)
         u_highlightStatusMateColor: { value: new Vector3(1, 1, 0) },
-        u_highlightStatusMate: { value: new Vector3(1, 1, 0) },
+        u_highlightStatusMate: { value: new Vector2(-1, -1) },
         // u_squareLightColor: Store.themes['blue'].light,
         // u_squareDarkColor: Store.themes['blue'].dark,
         u_squareLightColor: { value: new Vector3(0.9, 0.9, 0.9) }, // Light gray by default
@@ -196,13 +196,14 @@ export class BoardService {
             // Check if current square matches highlight position
             float isHighlightedStart = step(0.0, 0.0 - length(gridPos - u_highlightPosStart));
             float isHighlightedEnd = step(0.0, 0.0 - length(gridPos - u_highlightPosEnd));
-            float isHighlightedStatusMate = step(0.0, 0.0 - length(gridPos - u_highlightStatusMate));
             float isHighlightedCursor = step(0.0, 0.0 - length(gridPos - u_highlightPosCursor));
+            float isHighlightedStatusMate = step(0.0, 0.0 - length(gridPos - u_highlightStatusMate));
             
             // Mix base color with highlight color
             vec3 color = baseColor;
             color = mix(color, u_highlightColor, isHighlightedStart * 0.8);
             color = mix(color, u_highlightColor, isHighlightedEnd * 0.8);
+
             color = mix(color, u_highlightStatusMateColor, isHighlightedStatusMate * 0.8);
             color = mix(color, u_highlightColor, isHighlightedCursor * 0.8);
             
@@ -254,14 +255,15 @@ export class BoardService {
     };
 
     chessboard.setStatusMate = function (x: number, y: number) {
+      console.log('mate', x, y);
       this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
-      this.traverse((child: Object3D) => {
-        // console.log('statusMate', child);
-
-        if (child.name === 'haha') {
-          console.log('child found', child);
-        }
-      });
+      // this.traverse((child: Object3D) => {
+      //   // console.log('statusMate', child);
+      //
+      //   if (child.name === 'haha') {
+      //     console.log('child found', child);
+      //   }
+      // });
     };
 
     chessboard.rotation.x = -Math.PI / 2;
