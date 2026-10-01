@@ -98,7 +98,7 @@ export class Chessfield implements ChessfieldApi {
       // if (gO.status === 'mate') {
       if (gO.winner) {
         let mateKey;
-        if (gO.winner === 'white') {
+        if (gO.winner === 'w') {
           mateKey = gO.kings.black;
         } else {
           // Black wins
