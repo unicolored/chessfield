@@ -5,7 +5,7 @@ import type * as cf from './chessfield.types';
 
 export interface GameOverState {
   // status: 'mate' | 'draw';
-  winner?: cg.Color;
+  winner?: 'w' | 'b';
   kings: { white: cg.Key; black: cg.Key };
 }
 
