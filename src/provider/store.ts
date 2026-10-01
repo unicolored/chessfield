@@ -8,12 +8,14 @@ import { cm } from '../helper.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { Themes } from '../resource/chessfield.types.ts';
+import { GameOverState } from '../resource/chessfield.state.ts';
 
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: Group | null = null;
   piecesGroup: Group | null = null;
   shapes: InstancedMesh | null = null;
+  gameOver: GameOverState | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);

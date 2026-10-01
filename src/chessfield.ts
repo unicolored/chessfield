@@ -3,10 +3,10 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
-import { Group, type Scene, InstancedMesh } from 'three';
+import { Group, type Scene, InstancedMesh } from 'three/webgpu';
 
 import { LoaderComponent } from './component/loader.component.ts';
-import { fadeAlpha, lmToCoordinates } from './helper.ts';
+import { coordToVector2, fadeAlpha, lmToCoordinates } from './helper.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
@@ -23,7 +23,7 @@ import { Store } from './provider/store.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
-import { type HeadlessState } from './resource/chessfield.state.ts';
+import { GameOverState, type HeadlessState } from './resource/chessfield.state.ts';
 import type * as cf from './resource/chessfield.types';
 import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
@@ -86,6 +86,40 @@ export class Chessfield implements ChessfieldApi {
           state.check = k;
         }
       }
+  }
+
+  setGameOver(state: GameOverState): void {
+    console.log('setGameOver api');
+    this.store.gameOver = state;
+
+    console.log('updatePieces gO', this.store.gameOver);
+    if (this.store.gameOver) {
+      const gO = this.store.gameOver;
+      // if (gO.status === 'mate') {
+      if (gO.winner) {
+        let mateKey;
+        if (gO.winner === 'white') {
+          mateKey = gO.kings.black;
+        } else {
+          // Black wins
+          mateKey = gO.kings.white;
+        }
+        if (mateKey) {
+          console.log('mateKey', mateKey);
+
+          let squareVec2 = coordToVector2(mateKey[0]);
+
+          this.store.chessboard?.setStatusMate(squareVec2.x, squareVec2.y);
+        }
+      } else {
+        // game is a draw
+        const whiteVec2 = coordToVector2(gO.kings.white[0]);
+        this.store.chessboard?.setStatusMate(whiteVec2.x, whiteVec2.y);
+        const blackVec2 = coordToVector2(gO.kings.black[0]);
+        this.store.chessboard?.setStatusMate(blackVec2.x, blackVec2.y);
+      }
+      // }
+    }
   }
 
   async start() {
@@ -237,7 +271,34 @@ export class Chessfield implements ChessfieldApi {
         }
       }
 
-      chessboard.setStatusMate(4, 7);
+      console.log('updatePieces gO', this.store.gameOver);
+      if (this.store.gameOver) {
+        const gO = this.store.gameOver;
+        // if (gO.status === 'mate') {
+        if (gO.winner) {
+          let mateKey;
+          if (gO.winner === 'white') {
+            mateKey = gO.kings.black;
+          } else {
+            // Black wins
+            mateKey = gO.kings.white;
+          }
+          if (mateKey) {
+            console.log('mateKey', mateKey);
+
+            let squareVec2 = coordToVector2(mateKey);
+
+            chessboard.setStatusMate(squareVec2.x, squareVec2.y);
+          }
+        } else {
+          // game is a draw
+          const whiteVec2 = coordToVector2(gO.kings.white);
+          chessboard.setStatusMate(whiteVec2.x, whiteVec2.y);
+          const blackVec2 = coordToVector2(gO.kings.black);
+          chessboard.setStatusMate(blackVec2.x, blackVec2.y);
+        }
+        // }
+      }
 
       piecesGroup = this.pieceProvider.updateGamePositions();
       this.store.piecesGroup = piecesGroup;
