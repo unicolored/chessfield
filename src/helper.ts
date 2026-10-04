@@ -56,14 +56,14 @@ export function lmToCoordinates(lastMove: cg.Key[] | undefined): { x: number; y:
   return coords;
 }
 
-export function fadeAlpha(uAlpha: { value: number }, duration = 1000) {
+export function fadeAlpha(uAlpha: number, duration = 1000) {
   const startTime = Date.now();
 
   const animate = () => {
     const elapsed = Date.now() - startTime;
     const progress = Math.min(elapsed / duration, 1); // Clamps between 0 and 1
     if (uAlpha) {
-      uAlpha.value = 1 - progress; // Update uAlpha directly
+      uAlpha = 1 - progress; // Update uAlpha directly
 
       if (progress < 1) {
         requestAnimationFrame(animate);
