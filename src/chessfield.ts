@@ -3,7 +3,7 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
-import { Group, type Scene, InstancedMesh } from 'three/webgpu';
+import * as THREE from 'three/webgpu';
 
 import { LoaderComponent } from './component/loader.component.ts';
 import { coordToVector2, fadeAlpha, lmToCoordinates } from './helper.ts';
@@ -197,7 +197,7 @@ export class Chessfield implements ChessfieldApi {
       shapes.name = '🟢 Shapes';
       scene.add(shapes);
 
-      const chessboardGroup = new Group();
+      const chessboardGroup = new THREE.Group();
       chessboardGroup.name = '🟣 Chessboard Group';
       chessboardGroup.add(chessboard);
       chessboardGroup.add(casesGroup);
@@ -244,20 +244,24 @@ export class Chessfield implements ChessfieldApi {
       // Controls
       const controls = this.controlsProvider.getControls(camera, this.canvas);
 
+      cfElement.appendChild(renderer.domElement);
+
       // Animate
-      const animate = () => {
+      const timer = new THREE.Timer();
+      timer.connect(document);
+      const tick = () => {
+        timer.update();
+
         controls.update();
         renderer.render(scene, camera);
-        document.defaultView?.requestAnimationFrame(animate);
       };
 
-      cfElement.appendChild(renderer.domElement);
-      animate();
+      renderer.setAnimationLoop(tick);
     };
   }
 
-  private updatePieces(scene: Scene, chessboard: cf.ExtendedMesh) {
-    let piecesGroup: Group;
+  private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
+    let piecesGroup: THREE.Group;
 
     this.store.movesSubject$.pipe(tap(() => scene.remove(piecesGroup))).subscribe((moves: Moves) => {
       this.foundLastMove = GameProvider.findLastMove(moves.moves);
@@ -277,7 +281,7 @@ export class Chessfield implements ChessfieldApi {
         // if (gO.status === 'mate') {
         if (gO.winner) {
           let mateKey;
-          if (gO.winner === 'white') {
+          if (gO.winner === 'w') {
             mateKey = gO.kings.black;
           } else {
             // Black wins
@@ -318,7 +322,7 @@ export class Chessfield implements ChessfieldApi {
     }
   }
 
-  public getShapesMesh(): InstancedMesh {
+  public getShapesMesh(): THREE.InstancedMesh {
     return this.shapesService.getMesh();
   }
 }

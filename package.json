@@ -14,15 +14,15 @@
   },
   "scripts": {
     "prepare": "$npm_execpath run compile",
-    "compile": "tsc --sourceMap --declaration",
+    "compile": "tsc --project tsconfig.build.json --sourceMap --declaration",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "check-format": "oxfmt --check",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
-    "bundle": "vite build",
+    "bundle": "vite build --config vite.config.ts",
     "bundleEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.min.js --minify --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/assets/ --sourcemap",
-    "dev": "vite",
+    "dev": "vite --config vite.config.ts",
     "devEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.js --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/dist/ --servedir=. --serve=8000 --watch --sourcemap",
     "docs": "mkdocs serve",
     "test": "vitest run",
@@ -49,7 +49,6 @@
     "three": "^0.186.1",
     "typescript": "^7.0.2",
     "vite": "^6.2.5",
-    "vite-plugin-dts": "^4.5.3",
     "vitest": "^4.1.11"
   },
   "keywords": [
