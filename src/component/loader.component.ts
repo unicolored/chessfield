@@ -1,66 +1,84 @@
 import * as THREE from 'three/webgpu';
 
 import { hexToRgb } from '../helper.ts';
+import { time, uv, vec2, vec3 } from 'three/tsl';
+import { checker } from 'three/src/nodes/TSL.js';
 
 export class LoaderComponent {
-  overlayMaterial: THREE.ShaderMaterial;
-  progressMaterial: THREE.ShaderMaterial;
+  overlayMaterial: THREE.MeshBasicNodeMaterial;
+  progressMaterial: THREE.MeshBasicNodeMaterial;
 
   constructor(overlayColor: string | number, barColor: string | number) {
-    this.overlayMaterial = new THREE.ShaderMaterial({
+    // this.overlayMaterial = new THREE.ShaderMaterial({
+    //   transparent: true,
+    //   uniforms: {
+    //     uAlpha: { value: 1 },
+    //     uColor: { value: hexToRgb(overlayColor) },
+    //   },
+    //   vertexShader: `
+    //     void main()
+    //     {
+    //       gl_Position = vec4(position, 1.0);
+    //     }
+    // `,
+    //   fragmentShader: `
+    //   uniform float uAlpha;
+    //   uniform vec3 uColor;
+    //
+    //     void main()
+    //     {
+    //       gl_FragColor = vec4(uColor, uAlpha);
+    //     }
+    //   `,
+    // });
+    this.overlayMaterial = new THREE.MeshBasicNodeMaterial({
+      color: 0xff0000,
       transparent: true,
-      uniforms: {
-        uAlpha: { value: 1 },
-        uColor: { value: hexToRgb(overlayColor) },
-      },
-      vertexShader: `
-        void main()
-        {
-          gl_Position = vec4(position, 1.0);
-        }
-    `,
-      fragmentShader: `
-      uniform float uAlpha;
-      uniform vec3 uColor;
-      
-        void main()
-        {
-          gl_FragColor = vec4(uColor, uAlpha);
-        }
-      `,
+      opacity: 1,
     });
+    const colors = hexToRgb(overlayColor);
+    const pattern = checker(uv().add(time.mul(0.001)).mul(vec2(100)));
+    this.overlayMaterial.colorNode = vec3(pattern, colors[1], colors[2]);
 
-    this.progressMaterial = new THREE.ShaderMaterial({
+    // this.progressMaterial = new THREE.ShaderMaterial({
+    //   transparent: true,
+    //   uniforms: {
+    //     uColor: { value: hexToRgb(barColor) },
+    //     uPosition: { value: new THREE.Vector3(0, 0, 0) },
+    //     uTime: { value: -1 },
+    //     uAlpha: { value: 1 },
+    //   },
+    //   vertexShader: `
+    //     uniform vec3 uPosition;
+    //     uniform float uTime;
+    //
+    //     void main()
+    //     {
+    //         // Add the vertex position to see the actual geometry
+    //         vec3 animatedPosition = position + uPosition;
+    //         animatedPosition.x += uTime * 20.0 * 0.1;
+    //
+    //         gl_Position = vec4(animatedPosition, 1.0);
+    //     }
+    // `,
+    //   fragmentShader: `
+    //     uniform vec3 uColor;
+    //     uniform float uAlpha;
+    //
+    //     void main()
+    //     {
+    //         gl_FragColor = vec4(uColor, uAlpha);
+    //     }
+    // `,
+    // });
+    this.progressMaterial = new THREE.MeshBasicNodeMaterial({
+      color: 0xff0000,
       transparent: true,
-      uniforms: {
-        uColor: { value: hexToRgb(barColor) },
-        uPosition: { value: new THREE.Vector3(0, 0, 0) },
-        uTime: { value: -1 },
-        uAlpha: { value: 1 },
-      },
-      vertexShader: `
-        uniform vec3 uPosition;
-        uniform float uTime;
-        
-        void main()
-        {
-            // Add the vertex position to see the actual geometry
-            vec3 animatedPosition = position + uPosition;
-            animatedPosition.x += uTime * 20.0 * 0.1; 
-            
-            gl_Position = vec4(animatedPosition, 1.0);
-        }
-    `,
-      fragmentShader: `
-        uniform vec3 uColor;
-        uniform float uAlpha;
-        
-        void main()
-        {
-            gl_FragColor = vec4(uColor, uAlpha);
-        }
-    `,
+      opacity: 1,
     });
+    const colors2 = hexToRgb(barColor);
+    const pattern2 = checker(uv().mul(vec2(100)));
+    this.progressMaterial.colorNode = vec3(pattern2, colors2[1], colors2[2]);
   }
 
   getOverlay(): THREE.Mesh {

@@ -155,7 +155,7 @@ export class Chessfield implements ChessfieldApi {
      */
     const loaderComponent = new LoaderComponent(backgroundColor, this.themeProvider.getInvertColor());
     scene.add(loaderComponent.getOverlay());
-    scene.add(loaderComponent.getProgressBar());
+    // scene.add(loaderComponent.getProgressBar());
 
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
@@ -170,15 +170,15 @@ export class Chessfield implements ChessfieldApi {
       console.error('error', e);
     };
 
-    loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
-      loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
-    };
+    // loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
+    //   // loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
+    // };
 
     loadingManagerProvider.getLoadingManager().onLoad = () => {
-      setTimeout(() => {
-        fadeAlpha(loaderComponent.overlayMaterial.uniforms['uAlpha'], 500);
-        loaderComponent.progressMaterial.uniforms['uAlpha'] = { value: 0 };
-      }, 200);
+      // setTimeout(() => {
+      //   fadeAlpha(loaderComponent.overlayMaterial.opacityNode, 500);
+      //   loaderComponent.progressMaterial.opacityNode = { value: 0 };
+      // }, 200);
 
       const themeColors = this.themeProvider.getThemeColors();
       /**
