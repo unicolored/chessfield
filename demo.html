@@ -27,7 +27,7 @@
 
     <script type="module">
       import { Chess, BLACK, WHITE, KING } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
-      import { Chessfield } from './dist/chessfield.js';
+      import { Chessfield } from './dist/chessfield.ts';
 
       const board1 = new Chessfield(document.getElementById('board-1'), {
         orientation: 'white',
@@ -184,9 +184,11 @@
       <div class="chessfield" id="board-1"></div>
     </div>
 
-    <script>
-      // Connect to esbuild's live reload event stream
-      new EventSource('/esbuild').addEventListener('change', () => location.reload());
-    </script>
+    <!-- <script> -->
+    <!--   //   // Connect to esbuild's live reload event stream -->
+    <!--   //   new EventSource('/esbuild').addEventListener('change', () => location.reload()); -->
+    <!--   // -->
+    <!-- </script> -->
+    <script type="module" src="/@vite/client"></script>
   </body>
 </html>
