@@ -1,26 +1,16 @@
-import {
-  InstancedMesh,
-  PlaneGeometry,
-  Matrix4,
-  InstancedBufferAttribute,
-  ShaderMaterial,
-  DynamicDrawUsage,
-  type Usage,
-  DoubleSide,
-  MeshBasicMaterial,
-} from 'three';
+import * as THREE from 'three/webgpu';
 import { Store } from '../provider/store';
 import { cm, hexToRgb } from '../helper';
 import { shaderRegistry, type ShaderName } from '../shader';
 
 export class ShapesService {
-  private shapes: InstancedMesh;
-  private materials: Map<ShaderName, ShaderMaterial | MeshBasicMaterial>;
+  private shapes: THREE.InstancedMesh;
+  private materials: Map<ShaderName, THREE.ShaderMaterial | THREE.MeshBasicMaterial>;
   private currentShader: ShaderName = 'ring';
   private readonly instanceCount = 64;
 
-  private colors!: InstancedBufferAttribute;
-  private visible!: InstancedBufferAttribute;
+  private colors!: THREE.InstancedBufferAttribute;
+  private visible!: THREE.InstancedBufferAttribute;
 
   constructor(shaderName: ShaderName = 'ring') {
     this.materials = new Map();
@@ -28,19 +18,19 @@ export class ShapesService {
     this.shapes = this.createShapes(shaderName);
   }
 
-  public createShaderMaterial(shaderName: ShaderName): ShaderMaterial | MeshBasicMaterial {
+  public createShaderMaterial(shaderName: ShaderName): THREE.ShaderMaterial | THREE.MeshBasicMaterial {
     if (this.materials.has(shaderName)) {
       return this.materials.get(shaderName)!;
     }
 
     const shaderDef = shaderRegistry[shaderName];
-    const shaderMaterial = new ShaderMaterial({
+    const shaderMaterial = new THREE.ShaderMaterial({
       uniforms: shaderDef.uniforms,
       vertexShader: shaderDef.vertexShader,
       fragmentShader: shaderDef.fragmentShader,
       transparent: true,
       opacity: 1,
-      side: DoubleSide,
+      side: THREE.DoubleSide,
       depthWrite: true,
     });
 
@@ -50,20 +40,20 @@ export class ShapesService {
     return shaderMaterial;
   }
 
-  private createShapes(shaderName: ShaderName): InstancedMesh {
-    const geometry = new PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
+  private createShapes(shaderName: ShaderName): THREE.InstancedMesh {
+    const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
     // geometry.scale(0.25, 0.25, 0.25);
 
-    this.colors = new InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-    this.visible = new InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+    this.colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
+    this.visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
 
     geometry.setAttribute('instanceColor', this.colors);
     geometry.setAttribute('instanceVisible', this.visible);
 
     const material = this.createShaderMaterial(shaderName);
 
-    const mesh = new InstancedMesh(geometry, material, this.instanceCount);
-    mesh.instanceMatrix.setUsage(DynamicDrawUsage as Usage);
+    const mesh = new THREE.InstancedMesh(geometry, material, this.instanceCount);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage as THREE.Usage);
     mesh.frustumCulled = false;
     mesh.renderOrder = -1;
 
@@ -73,10 +63,10 @@ export class ShapesService {
     return mesh;
   }
 
-  private initializeTransforms(mesh: InstancedMesh): void {
-    const matrix = new Matrix4();
-    const scaleMatrix = new Matrix4().makeScale(0.25, 0.25, 0.25);
-    const rotMatrix = new Matrix4().makeRotationX(Math.PI / 2);
+  private initializeTransforms(mesh: THREE.InstancedMesh): void {
+    const matrix = new THREE.Matrix4();
+    const scaleMatrix = new THREE.Matrix4().makeScale(0.25, 0.25, 0.25);
+    const rotMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 2);
     const yPos = 0.000055;
 
     for (let i = 0; i < this.instanceCount; i++) {
@@ -101,7 +91,7 @@ export class ShapesService {
     this.visible.needsUpdate = true;
   }
 
-  getMesh(): InstancedMesh {
+  getMesh(): THREE.InstancedMesh {
     return this.shapes;
   }
 

@@ -1,4 +1,4 @@
-import { LoadingManager, MeshBasicMaterial, SRGBColorSpace, TextureLoader } from 'three';
+import * as THREE from 'three/webgpu';
 import { type Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 
 import helvetikerFont from '../assets/fonts/helvetiker_regular.typeface.json';
@@ -9,8 +9,8 @@ import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { type GameProvider } from './game.provider.ts';
 
 export class LoadingManagerProvider {
-  private readonly loadingManager = new LoadingManager();
-  private textureLoader: TextureLoader;
+  private readonly loadingManager = new THREE.LoadingManager();
+  private textureLoader: THREE.TextureLoader;
   font: Font | null = null;
 
   constructor(
@@ -26,7 +26,7 @@ export class LoadingManagerProvider {
     /**
      * 3. TEXTURES baked
      */
-    this.textureLoader = new TextureLoader(this.loadingManager);
+    this.textureLoader = new THREE.TextureLoader(this.loadingManager);
 
     this.loadTextures();
 
@@ -43,9 +43,9 @@ export class LoadingManagerProvider {
       bakedTexture,
       texture => {
         texture.flipY = false;
-        texture.colorSpace = SRGBColorSpace;
+        texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.white = new MeshBasicMaterial({ map: texture });
+        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({ map: texture });
       },
       undefined,
       (e: unknown) => {
@@ -56,9 +56,9 @@ export class LoadingManagerProvider {
       bakedBlackTexture,
       texture => {
         texture.flipY = false;
-        texture.colorSpace = SRGBColorSpace;
+        texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.black = new MeshBasicMaterial({
+        this.gameProvider.pieceMaterials.black = new THREE.MeshBasicMaterial({
           // color: Store.themes['bw'].dark,
           map: texture,
         });
@@ -78,7 +78,7 @@ export class LoadingManagerProvider {
     }
   }
 
-  getLoadingManager(): LoadingManager {
+  getLoadingManager(): THREE.LoadingManager {
     return this.loadingManager;
   }
 }
