@@ -1,4 +1,4 @@
-import { MOUSE, type PerspectiveCamera } from 'three';
+import * as THREE from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { cm } from '../helper.ts';
@@ -15,13 +15,13 @@ export class ControlsProvider {
     this.zoomMaxDistance = this.config.zoomMaxDistance ?? 25;
   }
 
-  getControls(camera: PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
+  getControls(camera: THREE.PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
     controls.mouseButtons = {
-      LEFT: MOUSE.PAN, // pan is disabled
-      MIDDLE: MOUSE.ROTATE,
-      RIGHT: MOUSE.DOLLY,
+      LEFT: THREE.MOUSE.PAN, // pan is disabled
+      MIDDLE: THREE.MOUSE.ROTATE,
+      RIGHT: THREE.MOUSE.DOLLY,
     };
     controls.enabled = this.enabled;
 

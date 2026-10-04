@@ -2,7 +2,7 @@ import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
 import type * as cg from '@lichess-org/chessground/types';
 import { BehaviorSubject, type Observable } from 'rxjs';
-import { type BufferGeometry, type Group, Mesh, type Object3D, type InstancedMesh } from 'three';
+import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
@@ -12,9 +12,9 @@ import { GameOverState } from '../resource/chessfield.state.ts';
 
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
-  casesGroup: Group | null = null;
-  piecesGroup: Group | null = null;
-  shapes: InstancedMesh | null = null;
+  casesGroup: THREE.Group | null = null;
+  piecesGroup: THREE.Group | null = null;
+  shapes: THREE.InstancedMesh | null = null;
   gameOver: GameOverState | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
@@ -68,9 +68,9 @@ export class Store {
   private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
   // private loader: GLTFLoader;
-  private piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry> = new Map();
+  private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
 
-  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry>) {
+  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry>) {
     this.piecesGeometriesGltfMap = piecesGeometriesGltfMap;
   }
 
@@ -136,21 +136,21 @@ export class Store {
     return this.boardPiecesObjectsMap;
   }
 
-  getBoardCases(): Mesh[] {
-    const cases: Mesh[] = [];
+  getBoardCases(): THREE.Mesh[] {
+    const cases: THREE.Mesh[] = [];
 
-    this.casesGroup?.traverse((child: Object3D) => {
-      if (child instanceof Mesh) cases.push(child);
+    this.casesGroup?.traverse((child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh) cases.push(child);
     });
 
     return cases;
   }
 
-  getPieces(): Mesh[] {
-    const pieces: Mesh[] = [];
+  getPieces(): THREE.Mesh[] {
+    const pieces: THREE.Mesh[] = [];
 
-    this.piecesGroup?.traverse((child: Object3D) => {
-      if (child instanceof Mesh) pieces.push(child);
+    this.piecesGroup?.traverse((child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh) pieces.push(child);
     });
 
     return pieces;

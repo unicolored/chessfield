@@ -1,13 +1,6 @@
 import { FenParser } from '@chess-fu/fen-parser';
 import * as cg from '@lichess-org/chessground/types';
-import {
-  type BufferGeometry,
-  InstancedMesh,
-  type LoadingManager,
-  Mesh,
-  MeshBasicMaterial,
-  type Object3D,
-} from 'three';
+import * as THREE from 'three/webgpu';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
@@ -82,16 +75,18 @@ export class GameProvider {
 
     const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
-    const fallbackMaterial = new MeshBasicMaterial({
+    const fallbackMaterial = new THREE.MeshBasicMaterial({
       color: 0xff_00_00,
     });
 
     mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
-      const baseGeometry: BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
+      const baseGeometry: THREE.BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
       const geometry = baseGeometry ? baseGeometry.clone() : undefined;
       const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
       const mesh =
-        value.count > 1 ? new InstancedMesh(geometry, material, value.count) : new Mesh(geometry, material);
+        value.count > 1
+          ? new THREE.InstancedMesh(geometry, material, value.count)
+          : new THREE.Mesh(geometry, material);
 
       mesh.castShadow = false;
       mesh.receiveShadow = false;
@@ -104,19 +99,19 @@ export class GameProvider {
     this.store.updategamePieces(boardPieces);
   }
 
-  public loadGlbGeometry(loadingManager: LoadingManager): void {
+  public loadGlbGeometry(loadingManager: THREE.LoadingManager): void {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
     const loader = new GLTFLoader(loadingManager);
     loader.setDRACOLoader(dracoLoader);
 
-    const piecesGeometriesGltfMap = new Map<cf.PiecesEnum, BufferGeometry>();
+    const piecesGeometriesGltfMap = new Map<cf.PiecesEnum, THREE.BufferGeometry>();
 
     loader.load(
       piecesLiteModel,
       (gltf: GLTF) => {
-        gltf.scene.children.forEach((obj: Object3D) => {
-          const mesh = obj as Mesh;
+        gltf.scene.children.forEach((obj: THREE.Object3D) => {
+          const mesh = obj as THREE.Mesh;
           mesh.geometry.scale(0.2, 0.2, 0.2);
 
           piecesGeometriesGltfMap.set(obj.name as cf.PiecesEnum, mesh.geometry);

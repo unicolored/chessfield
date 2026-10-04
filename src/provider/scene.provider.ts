@@ -1,9 +1,9 @@
-import { Color, Scene } from 'three';
+import * as THREE from 'three/webgpu';
 
 export class SceneProvider {
-  getScene(backgroundColor: string | number): Scene {
-    const scene = new Scene();
-    scene.background = new Color(backgroundColor);
+  getScene(backgroundColor: string | number): THREE.Scene {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(backgroundColor);
 
     return scene;
   }

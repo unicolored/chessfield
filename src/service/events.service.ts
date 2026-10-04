@@ -1,28 +1,20 @@
-import {
-  Raycaster,
-  Vector2,
-  Camera,
-  Scene,
-  type Intersection,
-  InstancedMesh,
-  InstancedBufferAttribute,
-} from 'three';
+import * as THREE from 'three/webgpu';
 import { Store } from '../provider/store';
 import { ShapesService } from './shapes.service';
 import { lmToCoordinates, vector2ToCoord } from '../helper';
 import type * as cg from '@lichess-org/chessground/types';
 
 export class EventsService {
-  public readonly mouse = new Vector2();
+  public readonly mouse = new THREE.Vector2();
 
   private readonly cfElement: HTMLElement;
   private readonly canvas: HTMLCanvasElement;
-  private readonly camera: Camera;
-  private readonly scene: Scene;
+  private readonly camera: THREE.Camera;
+  private readonly scene: THREE.Scene;
   private readonly store: Store;
   private readonly _shapesService: ShapesService;
 
-  private readonly raycaster = new Raycaster();
+  private readonly raycaster = new THREE.Raycaster();
   private lastRaycastTime = 0;
   private readonly RAYCAST_INTERVAL = 33;
 
@@ -34,8 +26,8 @@ export class EventsService {
   constructor(params: {
     cfElement: HTMLElement;
     canvas: HTMLCanvasElement;
-    camera: Camera;
-    scene: Scene;
+    camera: THREE.Camera;
+    scene: THREE.Scene;
     store: Store;
     shapesService: ShapesService;
   }) {
@@ -101,18 +93,19 @@ export class EventsService {
     }
   }
 
-  private getSquareFromIntersect(intersect: Intersection): { rank: number; file: number } | null {
+  private getSquareFromIntersect(intersect: THREE.Intersection): { rank: number; file: number } | null {
     let coord: string | null = null;
 
     if (intersect.object.parent?.name.includes('Pièces')) {
       const mesh = intersect.object;
       const instanceId = intersect.instanceId;
-      if (mesh instanceof InstancedMesh && instanceId !== undefined) {
-        const coordAttr = mesh.geometry.getAttribute('instanceCoord') as InstancedBufferAttribute | undefined;
+      if (mesh instanceof THREE.InstancedMesh && instanceId !== undefined) {
+        const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
+          THREE.InstancedBufferAttribute | undefined;
         if (coordAttr) {
           const file = coordAttr.getX(instanceId);
           const rank = coordAttr.getY(instanceId);
-          coord = vector2ToCoord(new Vector2(file, rank));
+          coord = vector2ToCoord(new THREE.Vector2(file, rank));
         } else {
           coord = mesh.userData['coord'] as string;
         }
@@ -145,7 +138,7 @@ export class EventsService {
     this.onSquareRightClick?.(square.rank, square.file, color);
   };
 
-  private getSquareFromMouse(mouse: Vector2): { rank: number; file: number } | null {
+  private getSquareFromMouse(mouse: THREE.Vector2): { rank: number; file: number } | null {
     if (!this.scene || !this.camera) return null;
 
     this.raycaster.setFromCamera(mouse, this.camera);
