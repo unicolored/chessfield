@@ -23,7 +23,7 @@
     </style>
 
     <script type="module">
-      import { Chessfield } from './dist/chessfield.js';
+      import { Chessfield } from './dist/chessfield.ts';
 
       let controlsEnabled = true;
       const board1 = new Chessfield(document.getElementById('board-1'), {
@@ -137,9 +137,10 @@
       <div class="chessfield" id="board-3"></div>
     </div>
 
-    <script>
-      // Connect to esbuild's live reload event stream
-      new EventSource('/esbuild').addEventListener('change', () => location.reload());
-    </script>
+    <!-- <script> -->
+    <!--   // Connect to esbuild's live reload event stream -->
+    <!--   new EventSource('/esbuild').addEventListener('change', () => location.reload()); -->
+    <!-- </script> -->
+    <script type="module" src="/@vite/client"></script>
   </body>
 </html>

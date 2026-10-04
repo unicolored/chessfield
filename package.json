@@ -20,8 +20,10 @@
     "format": "oxfmt",
     "check-format": "oxfmt --check",
     "dist": "$npm_execpath run compile && $npm_execpath run bundle",
-    "bundle": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.min.js --minify --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/assets/ --sourcemap",
-    "dev": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.js --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/dist/ --servedir=. --serve=8000 --watch --sourcemap",
+    "bundle": "vite build",
+    "bundleEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.min.js --minify --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/assets/ --sourcemap",
+    "dev": "vite",
+    "devEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.js --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/dist/ --servedir=. --serve=8000 --watch --sourcemap",
     "docs": "mkdocs serve",
     "test": "vitest run",
     "test:watch": "vitest"
