@@ -45,7 +45,7 @@ export class LoadingManagerProvider {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicMaterial({ map: texture });
+        this.gameProvider.pieceMaterials.white = new THREE.MeshBasicNodeMaterial({ map: texture });
       },
       undefined,
       (e: unknown) => {
@@ -58,7 +58,7 @@ export class LoadingManagerProvider {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
 
-        this.gameProvider.pieceMaterials.black = new THREE.MeshBasicMaterial({
+        this.gameProvider.pieceMaterials.black = new THREE.MeshBasicNodeMaterial({
           // color: Store.themes['bw'].dark,
           map: texture,
         });

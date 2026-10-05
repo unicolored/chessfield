@@ -6,7 +6,7 @@ import { tap } from 'rxjs';
 import * as THREE from 'three/webgpu';
 
 import { LoaderComponent } from './component/loader.component.ts';
-import { coordToVector2, fadeAlpha, lmToCoordinates } from './helper.ts';
+import { coordToVector2, lmToCoordinates } from './helper.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
@@ -29,6 +29,7 @@ import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
+import { float } from 'three/tsl';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
@@ -155,7 +156,7 @@ export class Chessfield implements ChessfieldApi {
      */
     const loaderComponent = new LoaderComponent(backgroundColor, this.themeProvider.getInvertColor());
     scene.add(loaderComponent.getOverlay());
-    // scene.add(loaderComponent.getProgressBar());
+    scene.add(loaderComponent.getProgressBar());
 
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
@@ -175,10 +176,11 @@ export class Chessfield implements ChessfieldApi {
     // };
 
     loadingManagerProvider.getLoadingManager().onLoad = () => {
-      // setTimeout(() => {
-      //   fadeAlpha(loaderComponent.overlayMaterial.opacityNode, 500);
-      //   loaderComponent.progressMaterial.opacityNode = { value: 0 };
-      // }, 200);
+      setTimeout(() => {
+        // fadeAlpha(loaderComponent.overlayMaterial.opacityNode, 500);
+        loaderComponent.overlayMaterial.opacityNode = float(1);
+        // loaderComponent.progressMaterial.opacityNode = { value: 0 };
+      }, 200);
 
       const themeColors = this.themeProvider.getThemeColors();
       /**

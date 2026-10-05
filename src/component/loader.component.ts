@@ -1,8 +1,7 @@
 import * as THREE from 'three/webgpu';
 
 import { hexToRgb } from '../helper.ts';
-import { time, uv, vec2, vec3 } from 'three/tsl';
-import { checker } from 'three/src/nodes/TSL.js';
+import { cameraViewMatrix, positionLocal, vec3 } from 'three/tsl';
 
 export class LoaderComponent {
   overlayMaterial: THREE.MeshBasicNodeMaterial;
@@ -37,8 +36,8 @@ export class LoaderComponent {
       opacity: 1,
     });
     const colors = hexToRgb(overlayColor);
-    const pattern = checker(uv().add(time.mul(0.001)).mul(vec2(100)));
-    this.overlayMaterial.colorNode = vec3(pattern, colors[1], colors[2]);
+    this.overlayMaterial.colorNode = vec3(colors[0], colors[1], colors[2]);
+    this.overlayMaterial.positionNode = positionLocal.mul(cameraViewMatrix);
 
     // this.progressMaterial = new THREE.ShaderMaterial({
     //   transparent: true,
@@ -77,8 +76,8 @@ export class LoaderComponent {
       opacity: 1,
     });
     const colors2 = hexToRgb(barColor);
-    const pattern2 = checker(uv().mul(vec2(100)));
-    this.progressMaterial.colorNode = vec3(pattern2, colors2[1], colors2[2]);
+    this.progressMaterial.colorNode = vec3(colors2[0], colors2[1], colors2[2]);
+    this.progressMaterial.positionNode = positionLocal.mul(cameraViewMatrix).mul(0.15);
   }
 
   getOverlay(): THREE.Mesh {

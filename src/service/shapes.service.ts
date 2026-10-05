@@ -5,7 +5,7 @@ import { shaderRegistry, type ShaderName } from '../shader';
 
 export class ShapesService {
   private shapes: THREE.InstancedMesh;
-  private materials: Map<ShaderName, THREE.ShaderMaterial | THREE.MeshBasicMaterial>;
+  private materials: Map<ShaderName, THREE.MeshBasicNodeMaterial>;
   private currentShader: ShaderName = 'ring';
   private readonly instanceCount = 64;
 
@@ -18,16 +18,16 @@ export class ShapesService {
     this.shapes = this.createShapes(shaderName);
   }
 
-  public createShaderMaterial(shaderName: ShaderName): THREE.ShaderMaterial | THREE.MeshBasicMaterial {
+  public createShaderMaterial(shaderName: ShaderName): THREE.MeshBasicNodeMaterial {
     if (this.materials.has(shaderName)) {
       return this.materials.get(shaderName)!;
     }
 
-    const shaderDef = shaderRegistry[shaderName];
-    const shaderMaterial = new THREE.ShaderMaterial({
-      uniforms: shaderDef.uniforms,
-      vertexShader: shaderDef.vertexShader,
-      fragmentShader: shaderDef.fragmentShader,
+    // const shaderDef = shaderRegistry[shaderName];
+    const shaderMaterial = new THREE.MeshBasicNodeMaterial({
+      // uniforms: shaderDef.uniforms,
+      // vertexShader: shaderDef.vertexShader,
+      // fragmentShader: shaderDef.fragmentShader,
       transparent: true,
       opacity: 1,
       side: THREE.DoubleSide,
