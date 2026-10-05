@@ -124,48 +124,6 @@ export class GameProvider {
     this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
   }
 
-  // /**
-  //  * @deprecated Use loadGlbGeometry() to load all pieces at once
-  //  * @param loadingManager
-  //  */
-  // public loadGltfGeometries(loadingManager: LoadingManager): void {
-  //   const piecesUrl = new Map();
-  //   piecesUrl.set(cf.PiecesEnum.p, pawnModel);
-  //   piecesUrl.set(cf.PiecesEnum.q, queenModel);
-  //   piecesUrl.set(cf.PiecesEnum.k, kingModel);
-  //   piecesUrl.set(cf.PiecesEnum.n, knightModel);
-  //   piecesUrl.set(cf.PiecesEnum.b, bishopModel);
-  //   piecesUrl.set(cf.PiecesEnum.r, rookModel);
-  //
-  //   // Here i disabled the DracoLoader since i did not export
-  //   // const dracoLoader = new DRACOLoader();
-  //   // dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-  //   const loader = new GLTFLoader(loadingManager);
-  //   // loader.setDRACOLoader(dracoLoader);
-  //
-  //   const piecesGeometriesGltfMap = new Map<cf.PiecesEnum, BufferGeometry>();
-  //   piecesUrl.forEach((url: string, pieceName: cf.PiecesEnum) => {
-  //     loader.load(
-  //       url,
-  //       (gltf: GLTF) => {
-  //         if (gltf.scene.children[0]) {
-  //           const mesh = gltf.scene.children[0] as Mesh;
-  //           mesh.geometry.scale(0.2, 0.2, 0.2);
-  //
-  //           mesh.position.set(0, 0, 0);
-  //           piecesGeometriesGltfMap.set(pieceName, mesh.geometry);
-  //         } else {
-  //           console.error('No children found');
-  //         }
-  //       }, // Success: resolve with the loaded gltf
-  //       undefined, // Progress: optional, omitted here
-  //       error => error, // Error: reject with the error
-  //     );
-  //   });
-  //
-  //   this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
-  // }
-
   static findLastMove(moves: cf.Move[]): cf.Move | null {
     for (let i = moves.length - 1; i >= 0; i--) {
       const move = moves[i];
@@ -186,28 +144,4 @@ export class GameProvider {
     });
     return map;
   }
-
-  // /**
-  //  * @deprecated Using glb instead
-  //  * @private
-  //  */
-  // private getGeometries(): Map<cf.PiecesEnum, BufferGeometry> {
-  //   const pieceGeometriesMap = new Map<cf.PiecesEnum, BufferGeometry>();
-  //
-  //   const kingGeometry = new THREE.BoxGeometry(0.5, 1.33, 0.5, 4).translate(0, 0.5, 0);
-  //   const queenGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.2, 4).translate(0, 0.5, 0);
-  //   const bishopGeometry = new THREE.CylinderGeometry(0.1, 0.33, 1, 4).translate(0, 0.5, 0);
-  //   const knightGeometry = new THREE.CylinderGeometry(0.33, 0.1, 1, 4).translate(0, 0.5, 0);
-  //   const rookGeometry = new THREE.CylinderGeometry(0.33, 0.33, 0.85, 12).translate(0, 0.5, 0);
-  //   const pawnGeometry = new THREE.SphereGeometry(0.2, 4, 4).translate(0, 0.5, 0);
-  //
-  //   pieceGeometriesMap.set(cf.PiecesEnum.k, kingGeometry.scale(0.2, 0.2, 0.2));
-  //   pieceGeometriesMap.set(cf.PiecesEnum.q, queenGeometry.scale(0.2, 0.2, 0.2));
-  //   pieceGeometriesMap.set(cf.PiecesEnum.b, bishopGeometry.scale(0.2, 0.2, 0.2));
-  //   pieceGeometriesMap.set(cf.PiecesEnum.n, knightGeometry.scale(0.2, 0.2, 0.2));
-  //   pieceGeometriesMap.set(cf.PiecesEnum.r, rookGeometry.scale(0.2, 0.2, 0.2));
-  //   pieceGeometriesMap.set(cf.PiecesEnum.p, pawnGeometry.scale(0.2, 0.2, 0.2));
-  //
-  //   return pieceGeometriesMap;
-  // }
 }
