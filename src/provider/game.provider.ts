@@ -118,7 +118,9 @@ export class GameProvider {
         });
       }, // Success: resolve with the loaded gltf
       undefined, // Progress: optional, omitted here
-      error => error, // Error: reject with the error
+      error => {
+        console.error(`Failed to load pieces:`, error);
+      },
     );
 
     this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
