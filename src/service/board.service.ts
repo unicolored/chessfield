@@ -8,7 +8,8 @@ import { Store } from '../provider/store.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
 import { ShapesService } from './shapes.service.ts';
-import { checker, uv, vec2, vec3 } from 'three/tsl';
+import { checker, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { chessboardShader } from '../shader/chessboard.shader.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): THREE.Group {
@@ -17,7 +18,7 @@ export class BoardService {
     // Create a box geometry and material
     const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
     const frameColor = mode.dark;
-    const frameMaterial = new THREE.MeshBasicMaterial({ color: frameColor });
+    const frameMaterial = new THREE.MeshBasicNodeMaterial({ color: frameColor });
     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
     // Position the box in the scene
     frame.position.set(0, cm(-0.1), cm(0));
@@ -70,7 +71,7 @@ export class BoardService {
         const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
         squareGeometry.scale(0.25, 0.25, 0.25);
         const theme = Store.themes['blue'];
-        const squareMaterial = new THREE.MeshBasicMaterial({
+        const squareMaterial = new THREE.MeshBasicNodeMaterial({
           color: 0xff_00_00,
           wireframe: true,
           transparent: true,
@@ -133,129 +134,72 @@ export class BoardService {
   }
 
   createChessboard(): cf.ExtendedMesh {
-    // Updated shader with highlight capability
-    const chessboardShader = {
-      uniforms: {
-        u_resolution: { value: new THREE.Vector2() },
-        u_squareSize: { value: 0.01 },
-        u_highlightPosStart: { value: new THREE.Vector2(-1, -1) }, // Target square coordinates
-        u_highlightPosEnd: { value: new THREE.Vector2(-1, -1) }, // Target square coordinates
-        u_highlightPosCursor: { value: new THREE.Vector2(-1, -1) },
-        u_highlightColor: { value: new THREE.Vector3(1, 1, 0) }, // Highlight color (yellow in this case)
-        u_highlightStatusMateColor: { value: new THREE.Vector3(1, 1, 0) },
-        u_highlightStatusMate: { value: new THREE.Vector2(-1, -1) },
-        // u_squareLightColor: Store.themes['blue'].light,
-        // u_squareDarkColor: Store.themes['blue'].dark,
-        u_squareLightColor: { value: new THREE.Vector3(0.9, 0.9, 0.9) }, // Light gray by default
-        u_squareDarkColor: { value: new THREE.Vector3(0.3, 0.3, 0.3) },
-      },
-
-      vertexShader: `
-        varying vec2 vUv;
-        
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-
-      fragmentShader: `
-        uniform vec2 u_resolution;
-        uniform float u_squareSize;
-        uniform vec2 u_highlightPosStart;
-        uniform vec2 u_highlightPosEnd;
-        uniform vec2 u_highlightPosCursor;
-        uniform vec2 u_highlightStatusMate;
-        uniform vec3 u_highlightColor;
-        uniform vec3 u_highlightStatusMateColor;
-        uniform vec3 u_squareLightColor;
-        uniform vec3 u_squareDarkColor;
-        varying vec2 vUv;
-        
-        void main() {
-            vec2 coord = vUv * u_resolution / u_squareSize;
-            vec2 gridPos = floor(coord);
-            
-            // Basic chessboard pattern
-            float chess = mod(floor(coord.x) + floor(coord.y), 2.0);
-            // vec3 baseColor = vec3(chess);
-            
-            // Base color based on light/dark squares
-            vec3 baseColor = mix(u_squareDarkColor, u_squareLightColor, chess);
-            
-            // Check if current square matches highlight position
-            float isHighlightedStart = step(0.0, 0.0 - length(gridPos - u_highlightPosStart));
-            float isHighlightedEnd = step(0.0, 0.0 - length(gridPos - u_highlightPosEnd));
-            float isHighlightedCursor = step(0.0, 0.0 - length(gridPos - u_highlightPosCursor));
-            float isHighlightedStatusMate = step(0.0, 0.0 - length(gridPos - u_highlightStatusMate));
-            
-            // Mix base color with highlight color
-            vec3 color = baseColor;
-            color = mix(color, u_highlightColor, isHighlightedStart * 0.8);
-            color = mix(color, u_highlightColor, isHighlightedEnd * 0.8);
-
-            color = mix(color, u_highlightStatusMateColor, isHighlightedStatusMate * 0.8);
-            color = mix(color, u_highlightColor, isHighlightedCursor * 0.8);
-            
-            gl_FragColor = vec4(color, 1.0);
-        }
-    `,
-    };
-
     const geometry = new THREE.PlaneGeometry(0.08, 0.08);
     const material = new THREE.MeshBasicNodeMaterial({
       // uniforms: chessboardShader.uniforms,
       // vertexShader: chessboardShader.vertexShader,
       // fragmentShader: chessboardShader.fragmentShader,
     });
-    material.colorNode = checker(uv());
+    material.colorNode = vec3(
+      checker(uv().mul(4)).mix(userData('u_squareLightColor'), userData('u_squareDarkColor')),
+    );
+    // material.outputNode = vec4(userData('u_squareLightColor'), 1);
+    // material.vertexNode = chessboardShader.vertexShader;
+    // material.fragmentNode = chessboardShader.fragmentShader;
 
     const chessboard = new THREE.Mesh(geometry, material);
 
     // material.uniforms['u_resolution'].value.set(0.08, 0.08);
+    // const material = this.material as THREE.MeshBasicNodeMaterial;
 
     // Add custom methods
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
-      const [lightR, lightG, lightB] = hexToRgb(light); // light: 0xbfcfdd,
-      const [darkR, darkG, darkB] = hexToRgb(dark); // dark: 0x9dabb6
-      const material = this.material as THREE.MeshBasicNodeMaterial;
+      // const [lightR, lightG, lightB] = hexToRgb(light); // light: 0xbfcfdd,
+      // const [darkR, darkG, darkB] = hexToRgb(dark); // dark: 0x9dabb6
+      this.userData['u_squareLightColor'] = new THREE.Color(light);
+      this.userData['u_squareDarkColor'] = new THREE.Color(dark);
+      // this.userData['u_squareLightColor'].set(vec3(lightR, lightG, lightB));
+      // this.userData['u_squareDarkColor'].set(vec3(darkR, darkG, darkB));
+      // const material = this.material as THREE.MeshBasicNodeMaterial;
+      // material.userData['u_squareLightColor'] = vec3(lightR, lightG, lightB);
+      // material.colorNode = checker(uv().mul(4)).add(material.userData['u_squareLightColor']);
       // material.uniforms['u_squareLightColor'].value.set(lightR, lightG, lightB);
       // material.uniforms['u_squareDarkColor'].value.set(darkR, darkG, darkB);
-      material.userData['u_squareLightColor'] = vec3(lightR, lightG, lightB);
-      material.userData['u_squareDarkColor'] = vec3(darkR, darkG, darkB);
+      // material.userData['u_squareLightColor'] = vec3(lightR, lightG, lightB);
+      // material.userData['u_squareDarkColor'] = vec3(darkR, darkG, darkB);
     };
 
     chessboard.highlightSquareStart = function (x: number, y: number) {
       // this.material.uniforms['u_highlightPosStart'].value.set(x, y);
-      this.material.userData['u_highlightPosStart'] = vec2(x, y);
+      material.userData['u_highlightPosStart'] = vec2(x, y);
     };
 
     chessboard.highlightSquareEnd = function (x: number, y: number) {
       // this.material.uniforms['u_highlightPosEnd'].value.set(x, y);
-      this.material.userData['u_highlightPosEnd'] = vec2(x, y);
+      material.userData['u_highlightPosEnd'] = vec2(x, y);
     };
 
     chessboard.setHighlightColor = function (hex: string | number) {
       const [r, g, b] = hexToRgb(hex);
       // this.material.uniforms['u_highlightColor'].value.set(r, g, b);
-      this.material.userData['u_highlightColor'] = vec3(r, g, b);
+      material.userData['u_highlightColor'] = vec3(r, g, b);
     };
 
     chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
       const [r, g, b] = hexToRgb(hex);
       // this.material.uniforms['u_highlightStatusMateColor'].value.set(r, g, b);
-      this.material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
+      material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
     };
 
     chessboard.highlightSquareCursor = function (x: number, y: number) {
       // this.material.uniforms['u_highlightPosCursor'].value.set(x, y);
-      this.material.userData['u_highlightPosCursor'] = vec2(x, y);
+      material.userData['u_highlightPosCursor'] = vec2(x, y);
     };
 
     chessboard.setStatusMate = function (x: number, y: number) {
       console.log('mate', x, y);
       // this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
-      this.material.userData['u_highlightStatusMate'] = vec2(x, y);
+      material.userData['u_highlightStatusMate'] = vec2(x, y);
       // this.traverse((child: Object3D) => {
       //   // console.log('statusMate', child);
       //
