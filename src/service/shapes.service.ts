@@ -29,7 +29,7 @@ export class ShapesService {
       // vertexShader: shaderDef.vertexShader,
       // fragmentShader: shaderDef.fragmentShader,
       transparent: true,
-      opacity: 1,
+      opacity: 0,
       side: THREE.DoubleSide,
       depthWrite: true,
     });
