@@ -70,6 +70,81 @@
 
         chess.load(fen, { skipValidation: false });
 
+        let lastTime = 0;
+        const delay = 5;
+
+        function animate(time) {
+          if (!lastTime) lastTime = time;
+          if (time - lastTime >= delay && !chess.isGameOver()) {
+            lastTime = time;
+            const moves = chess.moves();
+            const move = moves[Math.floor(Math.random() * moves.length)];
+            chess.move(move);
+            const history = chess.history({ verbose: true });
+            const lastMove = [history[history.length - 1].from, history[history.length - 1].to];
+            board1.setFen(chess.fen(), lastMove);
+
+            if (chess.isGameOver()) {
+              if (chess.isCheckmate()) {
+                // Winner is the OPPOSITE of the side to move (they just got checkmated)
+                const winner = chess.turn() === WHITE ? BLACK : WHITE;
+                const loser = winner === WHITE ? BLACK : WHITE;
+                console.log(`Checkmate! Winner: ${winner}`);
+
+                const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+                const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+                // -> ['e8']
+                // console.log(`Mate king ${loser} on:`, findMateKing);
+                // console.log(`Winner king ${winner} on:`, findWinnerKing);
+                console.log(`${headers[winner]} wins over ${headers[loser]}`);
+
+                const gO = {
+                  winner,
+                  kings: {
+                    white: findWhiteKing,
+                    black: findBlackKing,
+                  },
+                };
+                console.log('board1 set gO', gO);
+                board1.setGameOver(gO);
+              } else if (chess.isDraw()) {
+                // It's a draw - check specific reason
+                console.log('Draw!');
+                console.log(`${headers[WHITE]} draw ${headers[BLACK]}`);
+                console.log('Stalemate:', chess.isStalemate());
+                console.log('Threefold repetition:', chess.isThreefoldRepetition());
+                console.log('50-move rule:', chess.isDrawByFiftyMoves());
+                console.log('Insufficient material:', chess.isInsufficientMaterial());
+
+                const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+                const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+                // -> ['e8']
+                console.log(`White king on:`, findWhiteKing);
+                console.log(`Black king on:`, findBlackKing);
+
+                const gO = {
+                  kings: {
+                    white: findWhiteKing,
+                    black: findBlackKing,
+                  },
+                };
+                console.log('board1 set gO', gO);
+                board1.setGameOver(gO);
+              }
+            } else if (chess.inCheck()) {
+              // Find king in check
+
+              // Returns a list containing the squares where the requested piece is located. Returns an empty list if the piece is not on the board.
+              const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
+              // -> ['e8']
+              console.log(`Check king ${chess.turn()} on:`, findCheckKing);
+            }
+          }
+          if (!chess.isGameOver()) requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
         const castling = chess.getCastlingRights(BLACK); // black can castle queenside only
         // -> { 'k': false, 'q': true }
 
