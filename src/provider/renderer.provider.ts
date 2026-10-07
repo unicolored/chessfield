@@ -15,6 +15,7 @@ export class RendererProvider {
       canvas,
       // powerPreference: 'high-performance',
       antialias: RendererProvider.enableAntialias,
+      forceWebGL: false,
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
