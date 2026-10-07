@@ -8,8 +8,22 @@ import { Store } from '../provider/store.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
 import { ShapesService } from './shapes.service.ts';
-import { checker, userData, uv, vec2, vec3, vec4 } from 'three/tsl';
-import { chessboardShader } from '../shader/chessboard.shader.ts';
+import {
+  cameraProjectionMatrix,
+  checker,
+  float,
+  floor,
+  mix,
+  mod,
+  modelViewMatrix,
+  userData,
+  uv,
+  vec2,
+  vec3,
+  vec4,
+} from 'three/tsl';
+import { positionLocal } from 'three/src/nodes/TSL.js';
+// import { chessboardShader } from '../shader/chessboard.shader.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): THREE.Group {
@@ -140,10 +154,36 @@ export class BoardService {
       // vertexShader: chessboardShader.vertexShader,
       // fragmentShader: chessboardShader.fragmentShader,
     });
-    material.colorNode = vec3(
-      checker(uv().mul(4)).mix(userData('u_squareLightColor'), userData('u_squareDarkColor')),
-    );
-    // material.outputNode = vec4(userData('u_squareLightColor'), 1);
+    // const uv1 = uv().mul(4).toVar('uv1').debug().toInspector('UV1');
+    // const checker1 = checker(uv1).toVar('checker').toInspector('CHECKER');
+    const lightColor = vec3(userData('u_squareLightColor', ''));
+    const darkColor = vec3(userData('u_squareDarkColor', ''));
+
+    // vec2 coord = vUv * u_resolution / u_squareSize;
+    const coord = vec2(uv().mul(userData('u_resolution', '')).div(float(0.01)));
+    console.log(coord);
+
+    // const gl_Position = vec3(
+    //   cameraProjectionMatrix * modelViewMatrix * vec4(positionLocal, 1.0),
+    // ).toVertexStage();
+
+    // vec2 gridPos = floor(coord);
+    const gridPos = floor(coord);
+    console.log(gridPos);
+
+    // Basic chessboard pattern
+    // float chess = mod(floor(coord.x) + floor(coord.y), 2.0);
+    const chess = mod(floor(coord.x) + floor(coord.y), 2.0);
+    console.log('chess', chess);
+
+    // Base color based on light/dark squares
+    // vec3 baseColor = mix(u_squareDarkColor, u_squareLightColor, chess);
+    const baseMix = vec3(mix(lightColor, darkColor, chess));
+    const baseColor = vec4(baseMix, 1);
+
+    // const pattern = checker1.mix(lightColor, darkColor);
+
+    material.colorNode = vec3(baseColor);
     // material.vertexNode = chessboardShader.vertexShader;
     // material.fragmentNode = chessboardShader.fragmentShader;
 
@@ -154,19 +194,9 @@ export class BoardService {
 
     // Add custom methods
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
-      // const [lightR, lightG, lightB] = hexToRgb(light); // light: 0xbfcfdd,
-      // const [darkR, darkG, darkB] = hexToRgb(dark); // dark: 0x9dabb6
       this.userData['u_squareLightColor'] = new THREE.Color(light);
       this.userData['u_squareDarkColor'] = new THREE.Color(dark);
-      // this.userData['u_squareLightColor'].set(vec3(lightR, lightG, lightB));
-      // this.userData['u_squareDarkColor'].set(vec3(darkR, darkG, darkB));
-      // const material = this.material as THREE.MeshBasicNodeMaterial;
-      // material.userData['u_squareLightColor'] = vec3(lightR, lightG, lightB);
-      // material.colorNode = checker(uv().mul(4)).add(material.userData['u_squareLightColor']);
-      // material.uniforms['u_squareLightColor'].value.set(lightR, lightG, lightB);
-      // material.uniforms['u_squareDarkColor'].value.set(darkR, darkG, darkB);
-      // material.userData['u_squareLightColor'] = vec3(lightR, lightG, lightB);
-      // material.userData['u_squareDarkColor'] = vec3(darkR, darkG, darkB);
+      this.userData['u_resolution'] = vec2(0.08);
     };
 
     chessboard.highlightSquareStart = function (x: number, y: number) {

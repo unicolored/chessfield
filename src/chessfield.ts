@@ -3,6 +3,7 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
+import { Inspector } from 'three/addons/inspector/Inspector.js';
 import * as THREE from 'three/webgpu';
 
 import { LoaderComponent } from './component/loader.component.ts';
@@ -144,6 +145,8 @@ export class Chessfield implements ChessfieldApi {
     // Renderer
     this.canvas = this.rendererProvider.getCanvas();
     const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
+    renderer.inspector = new Inspector();
+    await renderer.init();
 
     // Set up the scene, camera, and renderer
     const backgroundColor = this.themeProvider.getBackgroundColor();
