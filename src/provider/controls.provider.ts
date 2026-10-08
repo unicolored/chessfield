@@ -1,5 +1,5 @@
-import * as THREE from 'three/webgpu';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
 import { type ChessfieldConfig } from '../resource/chessfield.config.ts';

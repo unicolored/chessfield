@@ -1,5 +1,5 @@
-import * as THREE from 'three/webgpu';
 import { type Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import * as THREE from 'three/webgpu';
 
 import helvetikerFont from '../assets/fonts/helvetiker_regular.typeface.json?url';
 import bakedBlackTexture from '../assets/models/dark-pieces.jpg?url';

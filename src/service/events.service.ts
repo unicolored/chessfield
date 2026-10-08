@@ -1,8 +1,10 @@
-import * as THREE from 'three/webgpu';
-import { Store } from '../provider/store';
-import { ShapesService } from './shapes.service';
-import { lmToCoordinates, vector2ToCoord } from '../helper';
 import type * as cg from '@lichess-org/chessground/types';
+import * as THREE from 'three/webgpu';
+
+import { lmToCoordinates, vector2ToCoord } from '../helper';
+import { Store } from '../provider/store';
+
+import { ShapesService } from './shapes.service';
 
 export class EventsService {
   public readonly mouse = new THREE.Vector2();
@@ -101,7 +103,8 @@ export class EventsService {
       const instanceId = intersect.instanceId;
       if (mesh instanceof THREE.InstancedMesh && instanceId !== undefined) {
         const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
-          THREE.InstancedBufferAttribute | undefined;
+          | THREE.InstancedBufferAttribute
+          | undefined;
         if (coordAttr) {
           const file = coordAttr.getX(instanceId);
           const rank = coordAttr.getY(instanceId);

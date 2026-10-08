@@ -1,8 +1,8 @@
 import { FenParser } from '@chess-fu/fen-parser';
 import * as cg from '@lichess-org/chessground/types';
-import * as THREE from 'three/webgpu';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'three/webgpu';
 
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
 import { objKey } from '../helper.ts';

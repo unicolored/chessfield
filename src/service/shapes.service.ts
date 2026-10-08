@@ -1,6 +1,7 @@
 import * as THREE from 'three/webgpu';
-import { Store } from '../provider/store';
+
 import { cm, hexToRgb } from '../helper';
+import { Store } from '../provider/store';
 import { shaderRegistry, type ShaderName } from '../shader';
 
 export class ShapesService {
