@@ -16,6 +16,7 @@ import {
   mix,
   mod,
   modelViewMatrix,
+  select,
   userData,
   uv,
   vec2,
@@ -158,32 +159,32 @@ export class BoardService {
     // const checker1 = checker(uv1).toVar('checker').toInspector('CHECKER');
     const lightColor = vec3(userData('u_squareLightColor', ''));
     const darkColor = vec3(userData('u_squareDarkColor', ''));
+    const posStart = vec2(userData('u_highlightPosStart', ''));
+    console.log('posStart', posStart);
+    // const posEnd = vec2(userData('u_highlightPosEnd', ''));
+    // const highlightColor = vec3(userData('u_highlightColor'));
 
-    // vec2 coord = vUv * u_resolution / u_squareSize;
-    const coord = vec2(uv().mul(userData('u_resolution', '')).div(float(0.01)));
-    console.log(coord);
+    // 1. Define colors and grid settings
+    const targetColor = vec3(0, 0, 1); // Blue
+    const squareSize = float(0.125); // 1 / 8 for an 8x8 grid
 
-    // const gl_Position = vec3(
-    //   cameraProjectionMatrix * modelViewMatrix * vec4(positionLocal, 1.0),
-    // ).toVertexStage();
+    // 2. Scale UV coordinates to grid space (0.0 to 8.0)
+    const coord = uv().div(squareSize);
 
-    // vec2 gridPos = floor(coord);
-    const gridPos = floor(coord);
-    console.log(gridPos);
+    // 3. Calculate checkerboard pattern
+    const chess = floor(coord.x).add(floor(coord.y)).mod(2);
+    const baseMix = mix(lightColor, darkColor, chess);
 
-    // Basic chessboard pattern
-    // float chess = mod(floor(coord.x) + floor(coord.y), 2.0);
-    const chess = mod(floor(coord.x) + floor(coord.y), 2.0);
-    console.log('chess', chess);
+    // 4. Check if current pixel is at x = 3 and y = 4 (0-indexed)
+    const isTargetX = floor(coord.x).equal(posStart.x).debug();
+    const isTargetY = floor(coord.y).equal(posStart.y);
+    const isTargetSquare = isTargetX.and(isTargetY);
 
-    // Base color based on light/dark squares
-    // vec3 baseColor = mix(u_squareDarkColor, u_squareLightColor, chess);
-    const baseMix = vec3(mix(lightColor, darkColor, chess));
-    const baseColor = vec4(baseMix, 1);
+    // 5. Override color with blue if condition is met
+    const finalMix = select(isTargetSquare, targetColor, baseMix);
+    const colorNode = vec4(finalMix, 1.0);
 
-    // const pattern = checker1.mix(lightColor, darkColor);
-
-    material.colorNode = vec3(baseColor);
+    material.colorNode = colorNode;
     // material.vertexNode = chessboardShader.vertexShader;
     // material.fragmentNode = chessboardShader.fragmentShader;
 
@@ -196,23 +197,23 @@ export class BoardService {
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
       this.userData['u_squareLightColor'] = new THREE.Color(light);
       this.userData['u_squareDarkColor'] = new THREE.Color(dark);
-      this.userData['u_resolution'] = vec2(0.08);
+      // this.userData['u_resolution'] = vec2(0.08);
     };
 
     chessboard.highlightSquareStart = function (x: number, y: number) {
       // this.material.uniforms['u_highlightPosStart'].value.set(x, y);
-      material.userData['u_highlightPosStart'] = vec2(x, y);
+      this.userData['u_highlightPosStart'] = { x: x, y: y };
     };
 
     chessboard.highlightSquareEnd = function (x: number, y: number) {
       // this.material.uniforms['u_highlightPosEnd'].value.set(x, y);
-      material.userData['u_highlightPosEnd'] = vec2(x, y);
+      this.userData['u_highlightPosEnd'] = { x: x, y: y };
     };
 
     chessboard.setHighlightColor = function (hex: string | number) {
       const [r, g, b] = hexToRgb(hex);
       // this.material.uniforms['u_highlightColor'].value.set(r, g, b);
-      material.userData['u_highlightColor'] = vec3(r, g, b);
+      this.userData['u_highlightColor'] = vec3(r, g, b);
     };
 
     chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
