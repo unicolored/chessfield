@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -9,7 +9,7 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/chessfield.ts'),
       name: 'Chessfield',
-      fileName: (format) => `chessfield.${format}.js`,
+      fileName: format => `chessfield.${format}.js`,
       formats: ['es', 'umd'],
     },
     rollupOptions: {
