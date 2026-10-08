@@ -1,13 +1,7 @@
 import * as cg from '@lichess-org/chessground/types';
-import * as THREE from 'three/webgpu';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-
-import { cm, hexToRgb } from '../helper.ts';
-import { Store } from '../provider/store.ts';
-import type * as cf from '../resource/chessfield.types.ts';
-import { type ThemeColors } from '../resource/chessfield.types.ts';
-import { ShapesService } from './shapes.service.ts';
+import { positionLocal } from 'three/src/nodes/TSL.js';
 import {
   cameraProjectionMatrix,
   checker,
@@ -17,13 +11,21 @@ import {
   mod,
   modelViewMatrix,
   select,
+  uniform,
   userData,
   uv,
   vec2,
   vec3,
   vec4,
 } from 'three/tsl';
-import { positionLocal } from 'three/src/nodes/TSL.js';
+import * as THREE from 'three/webgpu';
+
+import { cm, hexToRgb } from '../helper.ts';
+import { Store } from '../provider/store.ts';
+import type * as cf from '../resource/chessfield.types.ts';
+import { type ThemeColors } from '../resource/chessfield.types.ts';
+
+import { ShapesService } from './shapes.service.ts';
 // import { chessboardShader } from '../shader/chessboard.shader.ts';
 
 export class BoardService {
@@ -155,36 +157,35 @@ export class BoardService {
       // vertexShader: chessboardShader.vertexShader,
       // fragmentShader: chessboardShader.fragmentShader,
     });
-    // const uv1 = uv().mul(4).toVar('uv1').debug().toInspector('UV1');
-    // const checker1 = checker(uv1).toVar('checker').toInspector('CHECKER');
-    const lightColor = vec3(userData('u_squareLightColor', ''));
-    const darkColor = vec3(userData('u_squareDarkColor', ''));
-    const posStart = vec2(userData('u_highlightPosStart', ''));
-    console.log('posStart', posStart);
-    // const posEnd = vec2(userData('u_highlightPosEnd', ''));
-    // const highlightColor = vec3(userData('u_highlightColor'));
+    const uHighlightPosStart = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
+    const uHighlightPosEnd = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
 
-    // 1. Define colors and grid settings
-    const targetColor = vec3(0, 0, 1); // Blue
-    const squareSize = float(0.125); // 1 / 8 for an 8x8 grid
+    const uHighlightColor = uniform(new THREE.Color(0, 0, 1));
+    const uLightColor = uniform(new THREE.Color(1, 0, 0));
+    const uDarkColor = uniform(new THREE.Color(0, 1, 0));
 
-    // 2. Scale UV coordinates to grid space (0.0 to 8.0)
+    // TSL Graph
+    const squareSize = float(0.125);
     const coord = uv().div(squareSize);
 
-    // 3. Calculate checkerboard pattern
     const chess = floor(coord.x).add(floor(coord.y)).mod(2);
-    const baseMix = mix(lightColor, darkColor, chess);
+    const baseMix = mix(uLightColor, uDarkColor, chess);
 
-    // 4. Check if current pixel is at x = 3 and y = 4 (0-indexed)
-    const isTargetX = floor(coord.x).equal(posStart.x).debug();
-    const isTargetY = floor(coord.y).equal(posStart.y);
-    const isTargetSquare = isTargetX.and(isTargetY);
+    // Check Start Square
+    const isStartSquare = floor(coord.x)
+      .equal(uHighlightPosStart.x)
+      .and(floor(coord.y).equal(uHighlightPosStart.y));
 
-    // 5. Override color with blue if condition is met
-    const finalMix = select(isTargetSquare, targetColor, baseMix);
-    const colorNode = vec4(finalMix, 1.0);
+    // Check End Square
+    const isEndSquare = floor(coord.x)
+      .equal(uHighlightPosEnd.x)
+      .and(floor(coord.y).equal(uHighlightPosEnd.y));
 
-    material.colorNode = colorNode;
+    // Chain select() calls to apply highlights
+    const mixStart = select(isStartSquare, uHighlightColor, baseMix);
+    const finalMix = select(isEndSquare, uHighlightColor, mixStart);
+
+    material.colorNode = vec4(finalMix, 1.0);
     // material.vertexNode = chessboardShader.vertexShader;
     // material.fragmentNode = chessboardShader.fragmentShader;
 
@@ -195,25 +196,26 @@ export class BoardService {
 
     // Add custom methods
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
-      this.userData['u_squareLightColor'] = new THREE.Color(light);
-      this.userData['u_squareDarkColor'] = new THREE.Color(dark);
+      uLightColor.value.set(new THREE.Color(light));
+      uDarkColor.value.set(new THREE.Color(dark));
       // this.userData['u_resolution'] = vec2(0.08);
     };
 
     chessboard.highlightSquareStart = function (x: number, y: number) {
-      // this.material.uniforms['u_highlightPosStart'].value.set(x, y);
-      this.userData['u_highlightPosStart'] = { x: x, y: y };
+      // this.userData['u_highlightPosStart'] = new THREE.Vector2(x, y);
+      uHighlightPosStart.value.set(x, y);
     };
 
     chessboard.highlightSquareEnd = function (x: number, y: number) {
       // this.material.uniforms['u_highlightPosEnd'].value.set(x, y);
-      this.userData['u_highlightPosEnd'] = { x: x, y: y };
+      uHighlightPosEnd.value.set(x, y);
     };
 
     chessboard.setHighlightColor = function (hex: string | number) {
-      const [r, g, b] = hexToRgb(hex);
+      // const [r, g, b] = hexToRgb(hex);
       // this.material.uniforms['u_highlightColor'].value.set(r, g, b);
-      this.userData['u_highlightColor'] = vec3(r, g, b);
+      // this.userData['u_highlightColor'] = vec3(r, g, b);
+      uHighlightColor.value.set(new THREE.Color(hex));
     };
 
     chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
