@@ -4,6 +4,7 @@ import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
 import { Inspector } from 'three/addons/inspector/Inspector.js';
+import { float } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { LoaderComponent } from './component/loader.component.ts';
@@ -30,7 +31,6 @@ import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
-import { float } from 'three/tsl';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();

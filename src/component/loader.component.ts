@@ -1,7 +1,7 @@
+import { cameraViewMatrix, positionLocal, vec3 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { hexToRgb } from '../helper.ts';
-import { cameraViewMatrix, positionLocal, vec3 } from 'three/tsl';
 
 export class LoaderComponent {
   overlayMaterial: THREE.MeshBasicNodeMaterial;
