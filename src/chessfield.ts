@@ -225,10 +225,17 @@ export class Chessfield implements ChessfieldApi {
 
       this.eventsService.onSquareRightClick = (rank, file, color) => {
         const index = rank * 8 + file;
-        if (this.shapesService.getVisible(index)) {
-          this.shapesService.clearShape(index);
-        } else {
+        const isVisible = this.shapesService.getVisible(index);
+
+        if (!isVisible) {
           this.shapesService.setShapeAt(rank, file, color);
+        } else {
+          const currentColor = this.shapesService.getColor(index);
+          if (currentColor.toLowerCase() === color.toLowerCase()) {
+            this.shapesService.clearShape(index);
+          } else {
+            this.shapesService.setShapeAt(rank, file, color);
+          }
         }
       };
 

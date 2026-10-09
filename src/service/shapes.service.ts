@@ -44,9 +44,6 @@ export class ShapesService {
 
     console.log('mat instanceVisible', instanceVisible);
 
-    // Discard hidden instances early
-    instanceVisible.lessThan(0.5).discard();
-
     const center = vec2(0.5);
     const dist = uv().sub(center).length();
     const innerRadius = u_outerRadius.sub(u_ringWidth);
@@ -161,6 +158,14 @@ export class ShapesService {
   getVisible(index: number): boolean {
     console.log('getVisible', index, this.visible, this.visible.getX(index));
     return this.visible.getX(index) === 1;
+  }
+
+  getColor(index: number): string {
+    const r = this.colors.getX(index);
+    const g = this.colors.getY(index);
+    const b = this.colors.getZ(index);
+    const toHex = (c: number) => Math.round(c * 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
   setShader(shaderName: ShaderName): void {
