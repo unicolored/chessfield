@@ -2,7 +2,8 @@ import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper';
 import { Store } from '../provider/store';
-import { shaderRegistry, type ShaderName } from '../shader';
+import { type ShaderName } from '../shader';
+import { attribute, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 
 export class ShapesService {
   private shapes: THREE.InstancedMesh;
@@ -26,16 +27,49 @@ export class ShapesService {
 
     // const shaderDef = shaderRegistry[shaderName];
     const shaderMaterial = new THREE.MeshBasicNodeMaterial({
-      // uniforms: shaderDef.uniforms,
-      // vertexShader: shaderDef.vertexShader,
-      // fragmentShader: shaderDef.fragmentShader,
       transparent: true,
-      opacity: 0,
+      // wireframe: true,
+      // opacity: 0,
       side: THREE.DoubleSide,
-      depthWrite: true,
+      // depthWrite: true,
     });
 
-    shaderMaterial.needsUpdate = true;
+    // Node uniforms
+    const u_ringWidth = uniform(0.06);
+    const u_outerRadius = uniform(0.5);
+
+    // Instanced attributes
+    const instanceColor = attribute('instanceColor', 'vec3');
+    const instanceVisible = attribute('instanceVisible', 'float');
+
+    console.log('mat instanceVisible', instanceVisible);
+
+    // Discard hidden instances early
+    instanceVisible.lessThan(0.5).discard();
+
+    const center = vec2(0.5);
+    const dist = uv().sub(center).length();
+    const innerRadius = u_outerRadius.sub(u_ringWidth);
+
+    // Dynamic anti-aliasing delta
+    const delta = fwidth(dist);
+
+    // Anti-aliased ring edges
+    const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
+    const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
+
+    const mask = innerEdge.mul(outerEdge);
+
+    // Discard pixels outside the ring mask
+    mask.lessThan(0.01).discard();
+
+    // Return final RGBA color output
+    const ring = vec3(instanceColor);
+
+    const alpha = mask.mul(instanceVisible);
+    shaderMaterial.colorNode = vec4(ring, alpha);
+
+    // shaderMaterial.needsUpdate = true;
     this.materials.set(shaderName, shaderMaterial);
 
     return shaderMaterial;
@@ -43,7 +77,6 @@ export class ShapesService {
 
   private createShapes(shaderName: ShaderName): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
-    // geometry.scale(0.25, 0.25, 0.25);
 
     this.colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
     this.visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
@@ -85,7 +118,7 @@ export class ShapesService {
 
   private resetAll(): void {
     for (let i = 0; i < this.instanceCount; i++) {
-      this.colors.setXYZ(i, 0, 1, 0);
+      this.colors.setXYZ(i, 0, 0, 0);
       this.visible.setX(i, 0);
     }
     this.colors.needsUpdate = true;
@@ -99,7 +132,6 @@ export class ShapesService {
   setShape(index: number, colorHex: string, show = true): void {
     const [r, g, b] = hexToRgb(colorHex);
     this.colors.setXYZ(index, r, g, b);
-    console.log('setX', index);
     this.visible.setX(index, show ? 1 : 0);
     this.colors.needsUpdate = true;
     this.visible.needsUpdate = true;
@@ -111,19 +143,23 @@ export class ShapesService {
   }
 
   clearShape(index?: number): void {
+    console.log('clearShape', index);
     if (index !== undefined) {
       this.visible.setX(index, 0);
     } else {
+      this.getMesh().geometry.setAttribute('instanceVisible', this.visible);
       this.visible.array.fill(0);
     }
     this.visible.needsUpdate = true;
   }
 
   clearAll(): void {
+    console.log('clearAll');
     this.clearShape();
   }
 
   getVisible(index: number): boolean {
+    console.log('getVisible', index, this.visible, this.visible.getX(index));
     return this.visible.getX(index) === 1;
   }
 
