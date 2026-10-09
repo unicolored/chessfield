@@ -4,10 +4,8 @@ import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
 import { Inspector } from 'three/addons/inspector/Inspector.js';
-import { float } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { LoaderComponent } from './component/loader.component.ts';
 import { coordToVector2, lmToCoordinates } from './helper.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
