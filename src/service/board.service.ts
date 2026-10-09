@@ -181,9 +181,17 @@ export class BoardService {
       .equal(uHighlightPosEnd.x)
       .and(floor(coord.y).equal(uHighlightPosEnd.y));
 
+    // Determine if square is light or dark
+    const isLightSquare = chess.equal(float(0));
+
+    // Mix highlight with the appropriate square color
+    const highlightLight = mix(uLightColor, uHighlightColor, float(0.5));
+    const highlightDark = mix(uDarkColor, uHighlightColor, float(0.5));
+    const highlightMix = select(isLightSquare, highlightLight, highlightDark);
+
     // Chain select() calls to apply highlights
-    const mixStart = select(isStartSquare, uHighlightColor, baseMix);
-    const finalMix = select(isEndSquare, uHighlightColor, mixStart);
+    const mixStart = select(isStartSquare, highlightMix, baseMix);
+    const finalMix = select(isEndSquare, highlightMix, mixStart);
 
     material.colorNode = vec4(finalMix, 1.0);
     // material.vertexNode = chessboardShader.vertexShader;
