@@ -73,6 +73,11 @@
           fen: 'r4k1r/1b2bPR1/p4n1B/3p4/4P2P/1q5B/PpP5/1K4R1 b - - 1 26',
           lastMove: ['e3', 'h6'],
         },
+        {
+          status: 'time',
+          fen: '4r1k1/2b2p2/p5pp/1p1RP1r1/4N3/2P1R1P1/PP4K1/8 b - - 6 36',
+          lastMove: ['f2', 'e4'],
+        },
       ];
 
       // CHECK
@@ -171,6 +176,10 @@
       <div>
         black resigned
         <div class="chessfield" id="board-resign"></div>
+      </div>
+      <div>
+        lost on time
+        <div class="chessfield" id="board-time"></div>
       </div>
     </div>
 
