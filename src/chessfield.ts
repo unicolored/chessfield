@@ -23,7 +23,7 @@ import { Store } from './provider/store.ts';
 import { ThemeProvider } from './provider/theme.provider.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
-import { GameOverState, type HeadlessState } from './resource/chessfield.state.ts';
+import { type GameState } from './resource/chessfield.state.ts';
 import type * as cf from './resource/chessfield.types';
 import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
@@ -77,49 +77,46 @@ export class Chessfield implements ChessfieldApi {
     this.start();
   }
 
-  setCheck(state: HeadlessState, color: cg.Color | boolean): void {
-    state.check = undefined;
-    if (color === true) color = state.turnColor;
-    if (color)
-      for (const [k, p] of state.pieces) {
-        if (p.role === 'king' && p.color === color) {
-          state.check = k;
-        }
-      }
+  setCheck(state: GameState): void {
+    console.log('setCheck', state);
+    state.status = 'check';
+    this.addShapes(state);
   }
 
-  setGameOver(state: GameOverState): void {
-    console.log('setGameOver api');
+  setGameOver(state: GameState): void {
+    console.log('setGameOver api', state);
     this.store.gameOver = state;
 
-    console.log('updatePieces gO', this.store.gameOver);
-    if (this.store.gameOver) {
-      const gO = this.store.gameOver;
-      // if (gO.status === 'mate') {
-      if (gO.winner) {
-        let mateKey;
-        if (gO.winner === 'w') {
-          mateKey = gO.kings.black;
-        } else {
-          // Black wins
-          mateKey = gO.kings.white;
-        }
-        if (mateKey) {
-          console.log('mateKey', mateKey);
+    this.addShapes(state);
 
-          let squareVec2 = coordToVector2(mateKey[0]);
-
-          this.store.chessboard?.setStatusMate(squareVec2.x, squareVec2.y);
-        }
-      } else {
-        // game is a draw
-        const whiteVec2 = coordToVector2(gO.kings.white[0]);
-        this.store.chessboard?.setStatusMate(whiteVec2.x, whiteVec2.y);
-        const blackVec2 = coordToVector2(gO.kings.black[0]);
-        this.store.chessboard?.setStatusMate(blackVec2.x, blackVec2.y);
-      }
-      // }
-    }
+    // console.log('updatePieces gO', this.store.gameOver);
+    // if (this.store.gameOver) {
+    //   const gO = this.store.gameOver;
+    //   // if (gO.status === 'mate') {
+    //   if (gO.winner) {
+    //     let mateKey;
+    //     if (gO.winner === 'w') {
+    //       mateKey = gO.kings.black;
+    //     } else {
+    //       // Black wins
+    //       mateKey = gO.kings.white;
+    //     }
+    //     if (mateKey) {
+    //       console.log('mateKey', mateKey);
+    //
+    //       let squareVec2 = coordToVector2(mateKey[0]);
+    //
+    //         this.shapesService.setShapeAt(squareVec2.x, squareVec2.y, '#ff0000', true);
+    //     }
+    //   } else {
+    //     // game is a draw
+    //     const whiteVec2 = coordToVector2(gO.kings.white[0]);
+    //       this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true);
+    //     const blackVec2 = coordToVector2(gO.kings.black[0]);
+    //       this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true);
+    //   }
+    //   // }
+    // }
   }
 
   async start() {
@@ -270,6 +267,50 @@ export class Chessfield implements ChessfieldApi {
     };
   }
 
+  private addShapes(state: GameState): void {
+    const gO = state;
+    if (gO.status === 'check') {
+      if (gO.kings.white) {
+        const whiteVec2 = coordToVector2(gO.kings.white);
+        console.log(whiteVec2);
+        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true);
+      } else if (gO.kings.black) {
+        const blackVec2 = coordToVector2(gO.kings.black);
+        console.log(blackVec2);
+        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true);
+      }
+    } else if (gO.winner) {
+      let mateKey;
+      if (gO.winner === 'w') {
+        mateKey = gO.kings.black;
+      } else {
+        // Black wins
+        mateKey = gO.kings.white;
+      }
+      if (mateKey) {
+        console.log('mateKey', mateKey);
+
+        let squareVec2 = coordToVector2(mateKey);
+
+        this.shapesService.setShapeAt(squareVec2.x, squareVec2.y, '#ff0000', true);
+      }
+    } else {
+      // game is a draw
+      console.log('addShape draw', gO.kings);
+      if (gO.kings.white) {
+        const whiteVec2 = coordToVector2(gO.kings.white);
+        console.log(whiteVec2);
+        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true);
+      }
+      if (gO.kings.black) {
+        const blackVec2 = coordToVector2(gO.kings.black);
+        console.log(blackVec2);
+        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true);
+      }
+    }
+    // }
+  }
+
   private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
     let piecesGroup: THREE.Group;
 
@@ -286,32 +327,9 @@ export class Chessfield implements ChessfieldApi {
       }
 
       console.log('updatePieces gO', this.store.gameOver);
+      this.shapesService.clearAll(['check']);
       if (this.store.gameOver) {
-        const gO = this.store.gameOver;
-        // if (gO.status === 'mate') {
-        if (gO.winner) {
-          let mateKey;
-          if (gO.winner === 'w') {
-            mateKey = gO.kings.black;
-          } else {
-            // Black wins
-            mateKey = gO.kings.white;
-          }
-          if (mateKey) {
-            console.log('mateKey', mateKey);
-
-            let squareVec2 = coordToVector2(mateKey);
-
-            chessboard.setStatusMate(squareVec2.x, squareVec2.y);
-          }
-        } else {
-          // game is a draw
-          const whiteVec2 = coordToVector2(gO.kings.white);
-          chessboard.setStatusMate(whiteVec2.x, whiteVec2.y);
-          const blackVec2 = coordToVector2(gO.kings.black);
-          chessboard.setStatusMate(blackVec2.x, blackVec2.y);
-        }
-        // }
+        this.addShapes(this.store.gameOver);
       }
 
       piecesGroup = this.pieceProvider.updateGamePositions();

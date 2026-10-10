@@ -3,10 +3,10 @@ import type * as cg from '@lichess-org/chessground/types';
 
 import type * as cf from './chessfield.types';
 
-export interface GameOverState {
-  // status: 'mate' | 'draw';
+export interface GameState {
+  status?: 'check' | 'mate' | 'draw';
+  kings: { white?: cg.Key; black?: cg.Key };
   winner?: 'w' | 'b';
-  kings: { white: cg.Key; black: cg.Key };
 }
 
 export interface HeadlessState {

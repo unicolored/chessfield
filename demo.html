@@ -79,20 +79,21 @@
 
         const isAttacked = chess.isAttacked('e4', WHITE); // .isAttacked(square, color)
 
-        // if (chess.isGameOver()) {
-        //   const isCheckmate = chess.isCheckmate(); // Returns true or false if the side to move has been checkmated.
-        //   console.log('Checkmate', isCheckmate);
-        //
-        //   if (chess.isDraw()) {
-        //     console.log('isDraw');
-        //     console.log('Draw by stalemate', chess.isStalemate());
-        //     console.log('Draw by 50moves', chess.isDrawByFiftyMoves());
-        //     console.log('Draw by insufficient material', chess.isInsufficientMaterial());
-        //
-        //     // Returns true or false if the current board position has occurred three or more times.
-        //     console.log('Draw by threefold repeition', chess.isThreefoldRepetition());
-        //   }
-        // }
+        // const gO = {
+        //   winner: 'b',
+        //   kings: {
+        //     white: 'e1',
+        //     black: 'e8',
+        //   },
+        // };
+        // console.log('board1 set gO', gO);
+        // board1.setGameOver(gO);
+
+        board1.setCheck({
+          kings: {
+            white: 'e1',
+          },
+        });
 
         // Returns a list of legal moves from the current position.
         // .moves({ piece?: Piece, square?: Square, verbose = false} = {})

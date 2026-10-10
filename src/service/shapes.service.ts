@@ -42,8 +42,6 @@ export class ShapesService {
     const instanceColor = attribute('instanceColor', 'vec3');
     const instanceVisible = attribute('instanceVisible', 'float');
 
-    console.log('mat instanceVisible', instanceVisible);
-
     const center = vec2(0.5);
     const dist = uv().sub(center).length();
     const innerRadius = u_outerRadius.sub(u_ringWidth);
@@ -126,7 +124,7 @@ export class ShapesService {
     return this.shapes;
   }
 
-  setShape(index: number, colorHex: string, show = true): void {
+  private setShape(index: number, colorHex: string, show = true): void {
     const [r, g, b] = hexToRgb(colorHex);
     this.colors.setXYZ(index, r, g, b);
     this.visible.setX(index, show ? 1 : 0);
@@ -139,9 +137,9 @@ export class ShapesService {
     this.setShape(index, colorHex, show);
   }
 
-  clearShape(index?: number): void {
+  clearShape(index?: number | null, types = []): void {
     console.log('clearShape', index);
-    if (index !== undefined) {
+    if (index) {
       this.visible.setX(index, 0);
     } else {
       this.getMesh().geometry.setAttribute('instanceVisible', this.visible);
@@ -150,9 +148,9 @@ export class ShapesService {
     this.visible.needsUpdate = true;
   }
 
-  clearAll(): void {
+  clearAll(types = []): void {
     console.log('clearAll');
-    this.clearShape();
+    this.clearShape(null, types);
   }
 
   getVisible(index: number): boolean {
@@ -164,7 +162,10 @@ export class ShapesService {
     const r = this.colors.getX(index);
     const g = this.colors.getY(index);
     const b = this.colors.getZ(index);
-    const toHex = (c: number) => Math.round(c * 255).toString(16).padStart(2, '0');
+    const toHex = (c: number) =>
+      Math.round(c * 255)
+        .toString(16)
+        .padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 

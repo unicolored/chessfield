@@ -101,8 +101,8 @@
                 const gO = {
                   winner,
                   kings: {
-                    white: findWhiteKing,
-                    black: findBlackKing,
+                    white: findWhiteKing.pop(),
+                    black: findBlackKing.pop(),
                   },
                 };
                 console.log('board1 set gO', gO);
@@ -124,8 +124,8 @@
 
                 const gO = {
                   kings: {
-                    white: findWhiteKing,
-                    black: findBlackKing,
+                    white: findWhiteKing.pop(),
+                    black: findBlackKing.pop(),
                   },
                 };
                 console.log('board1 set gO', gO);
@@ -138,6 +138,13 @@
               const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
               // -> ['e8']
               console.log(`Check king ${chess.turn()} on:`, findCheckKing);
+              const check = {
+                kings: {
+                  white: chess.turn() === 'w' ? findCheckKing.pop() : null,
+                  black: chess.turn() === 'w' ? findCheckKing.pop() : null,
+                },
+              };
+              board1.setCheck(check);
             }
           }
           if (!chess.isGameOver()) requestAnimationFrame(animate);
