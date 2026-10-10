@@ -6,6 +6,30 @@
     <title>Chessfield Demo</title>
 
     <style>
+      .demo-nav {
+        display: flex;
+        width: 100%
+        gap: 1rem;
+        padding: 0.5rem 1rem;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ddd;
+        font-family: system-ui, sans-serif;
+        font-size: 0.9rem;
+      }
+      .demo-nav a {
+        color: #333;
+        text-decoration: none;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+      .demo-nav a:hover {
+        background: #e0e0e0;
+      }
+      .demo-nav a.current {
+        font-weight: bold;
+        color: #000;
+      }
+
       body {
         display: flex;
         flex-wrap: wrap;
@@ -23,7 +47,7 @@
     </style>
 
     <script type="module">
-      import { Chessfield } from './src/chessfield.ts';
+      import { Chessfield } from '/src/chessfield.ts';
 
       let controlsEnabled = true;
       const board1 = new Chessfield(document.getElementById('board-1'), {
@@ -124,17 +148,25 @@
     </script>
   </head>
   <body>
-    <div>
-      basic board, default config (<button class="js-mode-toggle-controls">toggle controls</button>)
-      <div class="chessfield" id="board-1"></div>
-    </div>
-    <div>
-      board with custom theme mode (<button class="js-mode-toggle">toggle</button>)
-      <div class="chessfield" id="board-2"></div>
-    </div>
-    <div>
-      board with a fen (<button class="js-tv-random">random fen</button>)
-      <div class="chessfield" id="board-3"></div>
+    <nav class="demo-nav">
+      <a href="index.html" class="current">Main Demo</a>
+      <a href="demo/demo.html">Basic Demo</a>
+      <a href="demo/state.html">State Demo</a>
+      <a href="demo/animated.html">Animated Demo</a>
+    </nav>
+    <div style="display: flex">
+      <div>
+        basic board, default config (<button class="js-mode-toggle-controls">toggle controls</button>)
+        <div class="chessfield" id="board-1"></div>
+      </div>
+      <div>
+        board with custom theme mode (<button class="js-mode-toggle">toggle</button>)
+        <div class="chessfield" id="board-2"></div>
+      </div>
+      <div>
+        board with a fen (<button class="js-tv-random">random fen</button>)
+        <div class="chessfield" id="board-3"></div>
+      </div>
     </div>
 
     <!-- <script> -->
