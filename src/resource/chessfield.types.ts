@@ -18,7 +18,7 @@ export interface Move {
 }
 
 export type ColorMaterial = {
-  [key in cg.Color]: THREE.Material | null;
+  [key in cg.Color]: THREE.Material | THREE.TextureNode | null;
 };
 
 export type PieceColorRole = 'white-knight' | `${cg.Color}-${cg.Role}`;
@@ -76,7 +76,7 @@ declare module 'three/webgpu' {
     setHighlightColor: (hex: string | number) => void;
     setHighlightStatusMateColor: (hex: string | number) => void;
     highlightSquareCursor: (x: number, y: number) => void;
-    setStatusMate: (x: number, y: number) => void;
+    // setStatusMate: (x: number, y: number) => void;
     setShape: (index: number, colorHex: string, show?: boolean) => void;
     setShapeAt: (rank: number, file: number, colorHex: string, show?: boolean) => void;
     clearShape: (index?: number) => void;

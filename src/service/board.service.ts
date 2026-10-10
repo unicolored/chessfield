@@ -237,18 +237,18 @@ export class BoardService {
       material.userData['u_highlightPosCursor'] = vec2(x, y);
     };
 
-    chessboard.setStatusMate = function (x: number, y: number) {
-      console.log('mate', x, y);
-      // this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
-      material.userData['u_highlightStatusMate'] = vec2(x, y);
-      // this.traverse((child: Object3D) => {
-      //   // console.log('statusMate', child);
-      //
-      //   if (child.name === 'haha') {
-      //     console.log('child found', child);
-      //   }
-      // });
-    };
+    // chessboard.setStatusMate = function (x: number, y: number) {
+    //   console.log('mate', x, y);
+    //   // this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
+    //   material.userData['u_highlightStatusMate'] = vec2(x, y);
+    //   // this.traverse((child: Object3D) => {
+    //   //   // console.log('statusMate', child);
+    //   //
+    //   //   if (child.name === 'haha') {
+    //   //     console.log('child found', child);
+    //   //   }
+    //   // });
+    // };
 
     chessboard.rotation.x = -Math.PI / 2;
     chessboard.position.y = 0.00005;
