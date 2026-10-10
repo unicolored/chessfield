@@ -197,7 +197,7 @@ export class Chessfield implements ChessfieldApi {
       const shapes = this.shapesService.getMesh('ring');
       shapes.name = '🟢 Shapes (ring)';
       scene.add(shapes);
-      
+
       const checkShapes = this.shapesService.getMesh('check');
       checkShapes.name = '🟢 Shapes (check)';
       scene.add(checkShapes);
@@ -277,12 +277,12 @@ export class Chessfield implements ChessfieldApi {
     if (gO.status === 'check') {
       if (gO.kings.white) {
         const whiteVec2 = coordToVector2(gO.kings.white);
-        console.log(whiteVec2);
-        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'check');
+        console.log('whiteVec2', whiteVec2);
+        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'ring');
       } else if (gO.kings.black) {
         const blackVec2 = coordToVector2(gO.kings.black);
         console.log(blackVec2);
-        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'check');
+        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
       }
     } else if (gO.winner) {
       let mateKey;
