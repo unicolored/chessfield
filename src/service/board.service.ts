@@ -68,8 +68,9 @@ export class BoardService {
   }
 
   public createCases(font: Font | null): THREE.Group {
-    const shapesService = new ShapesService();
+    const shapesService = new ShapesService(['ring', 'check']);
     shapesService.createShaderMaterial('ring');
+    shapesService.createShaderMaterial('check');
 
     // Create the chessboard
     const casesGroup = new THREE.Group();
