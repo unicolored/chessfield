@@ -6,18 +6,18 @@ import { type ShaderName } from '../shader';
 import { attribute, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 
 export class ShapesService {
-  private shapes: THREE.InstancedMesh;
-  private materials: Map<ShaderName, THREE.MeshBasicNodeMaterial>;
-  private currentShader: ShaderName = 'ring';
+  private meshes: Map<ShaderName, THREE.InstancedMesh> = new Map();
+  private materials: Map<ShaderName, THREE.MeshBasicNodeMaterial> = new Map();
+  private attributes: Map<ShaderName, { 
+    colors: THREE.InstancedBufferAttribute; 
+    visible: THREE.InstancedBufferAttribute 
+  }> = new Map();
   private readonly instanceCount = 64;
 
-  private colors!: THREE.InstancedBufferAttribute;
-  private visible!: THREE.InstancedBufferAttribute;
-
-  constructor(shaderName: ShaderName = 'ring') {
-    this.materials = new Map();
-    this.currentShader = shaderName;
-    this.shapes = this.createShapes(shaderName);
+  constructor(shaderNames: ShaderName[] = ['ring']) {
+    for (const name of shaderNames) {
+      this.meshes.set(name, this.createShapes(name));
+    }
   }
 
   public createShaderMaterial(shaderName: ShaderName): THREE.MeshBasicNodeMaterial {
@@ -25,46 +25,45 @@ export class ShapesService {
       return this.materials.get(shaderName)!;
     }
 
-    // const shaderDef = shaderRegistry[shaderName];
     const shaderMaterial = new THREE.MeshBasicNodeMaterial({
       transparent: true,
-      // wireframe: true,
-      // opacity: 0,
       side: THREE.DoubleSide,
-      // depthWrite: true,
     });
 
-    // Node uniforms
-    const u_ringWidth = uniform(0.06);
     const u_outerRadius = uniform(0.5);
 
-    // Instanced attributes
     const instanceColor = attribute('instanceColor', 'vec3');
     const instanceVisible = attribute('instanceVisible', 'float');
 
     const center = vec2(0.5);
     const dist = uv().sub(center).length();
-    const innerRadius = u_outerRadius.sub(u_ringWidth);
 
-    // Dynamic anti-aliasing delta
     const delta = fwidth(dist);
 
-    // Anti-aliased ring edges
-    const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
-    const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
+    let alpha: any;
 
-    const mask = innerEdge.mul(outerEdge);
+    if (shaderName === 'ring') {
+      const u_ringWidth = uniform(0.06);
+      const innerRadius = u_outerRadius.sub(u_ringWidth);
 
-    // Discard pixels outside the ring mask
-    mask.lessThan(0.01).discard();
+      const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
+      const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
 
-    // Return final RGBA color output
+      const mask = innerEdge.mul(outerEdge);
+      mask.lessThan(0.01).discard();
+
+      alpha = mask.mul(instanceVisible);
+    } else if (shaderName === 'check') {
+      const gradient = float(1.0).sub(smoothstep(float(0.0), u_outerRadius.add(delta), dist));
+      gradient.lessThan(0.01).discard();
+      alpha = gradient.mul(instanceVisible);
+    } else {
+      alpha = instanceVisible;
+    }
+
     const ring = vec3(instanceColor);
-
-    const alpha = mask.mul(instanceVisible);
     shaderMaterial.colorNode = vec4(ring, alpha);
 
-    // shaderMaterial.needsUpdate = true;
     this.materials.set(shaderName, shaderMaterial);
 
     return shaderMaterial;
@@ -73,11 +72,13 @@ export class ShapesService {
   private createShapes(shaderName: ShaderName): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
 
-    this.colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
-    this.visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
+    const colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
+    const visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
 
-    geometry.setAttribute('instanceColor', this.colors);
-    geometry.setAttribute('instanceVisible', this.visible);
+    geometry.setAttribute('instanceColor', colors);
+    geometry.setAttribute('instanceVisible', visible);
+
+    this.attributes.set(shaderName, { colors, visible });
 
     const material = this.createShaderMaterial(shaderName);
 
@@ -87,7 +88,7 @@ export class ShapesService {
     mesh.renderOrder = -1;
 
     this.initializeTransforms(mesh);
-    this.resetAll();
+    this.resetAll(shaderName);
 
     return mesh;
   }
@@ -111,57 +112,75 @@ export class ShapesService {
     mesh.instanceMatrix.needsUpdate = true;
   }
 
-  private resetAll(): void {
+  private resetAll(shaderName: ShaderName): void {
+    const attrs = this.attributes.get(shaderName)!;
     for (let i = 0; i < this.instanceCount; i++) {
-      this.colors.setXYZ(i, 0, 0, 0);
-      this.visible.setX(i, 0);
+      attrs.colors.setXYZ(i, 0, 0, 0);
+      attrs.visible.setX(i, 0);
     }
-    this.colors.needsUpdate = true;
-    this.visible.needsUpdate = true;
+    attrs.colors.needsUpdate = true;
+    attrs.visible.needsUpdate = true;
   }
 
-  getMesh(): THREE.InstancedMesh {
-    return this.shapes;
+  getMesh(shaderName: ShaderName): THREE.InstancedMesh {
+    return this.meshes.get(shaderName)!;
   }
 
-  private setShape(index: number, colorHex: string, show = true): void {
+  private setShape(index: number, colorHex: string, show = true, shaderName: ShaderName = 'ring'): void {
+    const attrs = this.attributes.get(shaderName)!;
     const [r, g, b] = hexToRgb(colorHex);
-    this.colors.setXYZ(index, r, g, b);
-    this.visible.setX(index, show ? 1 : 0);
-    this.colors.needsUpdate = true;
-    this.visible.needsUpdate = true;
+    attrs.colors.setXYZ(index, r, g, b);
+    attrs.visible.setX(index, show ? 1 : 0);
+    attrs.colors.needsUpdate = true;
+    attrs.visible.needsUpdate = true;
   }
 
-  setShapeAt(rank: number, file: number, colorHex: string, show = true): void {
+  setShapeAt(rank: number, file: number, colorHex: string, show = true, shaderName: ShaderName = 'ring'): void {
     const index = rank * 8 + file;
-    this.setShape(index, colorHex, show);
+    this.setShape(index, colorHex, show, shaderName);
   }
 
-  clearShape(index?: number | null, types = []): void {
-    console.log('clearShape', index);
-    if (index) {
-      this.visible.setX(index, 0);
+  clearShape(index?: number | null, shaderName?: ShaderName): void {
+    if (shaderName) {
+      const attrs = this.attributes.get(shaderName)!;
+      if (index !== undefined && index !== null) {
+        attrs.visible.setX(index, 0);
+      } else {
+        attrs.visible.array.fill(0);
+      }
+      attrs.visible.needsUpdate = true;
     } else {
-      this.getMesh().geometry.setAttribute('instanceVisible', this.visible);
-      this.visible.array.fill(0);
+      for (const [, attrs] of this.attributes) {
+        if (index !== undefined && index !== null) {
+          attrs.visible.setX(index, 0);
+        } else {
+          attrs.visible.array.fill(0);
+        }
+        attrs.visible.needsUpdate = true;
+      }
     }
-    this.visible.needsUpdate = true;
   }
 
-  clearAll(types = []): void {
-    console.log('clearAll');
-    this.clearShape(null, types);
+  clearAll(shaderNames?: ShaderName[]): void {
+    if (shaderNames) {
+      for (const name of shaderNames) {
+        this.clearShape(null, name);
+      }
+    } else {
+      this.clearShape(null);
+    }
   }
 
-  getVisible(index: number): boolean {
-    console.log('getVisible', index, this.visible, this.visible.getX(index));
-    return this.visible.getX(index) === 1;
+  getVisible(index: number, shaderName: ShaderName): boolean {
+    const attrs = this.attributes.get(shaderName)!;
+    return attrs.visible.getX(index) === 1;
   }
 
-  getColor(index: number): string {
-    const r = this.colors.getX(index);
-    const g = this.colors.getY(index);
-    const b = this.colors.getZ(index);
+  getColor(index: number, shaderName: ShaderName): string {
+    const attrs = this.attributes.get(shaderName)!;
+    const r = attrs.colors.getX(index);
+    const g = attrs.colors.getY(index);
+    const b = attrs.colors.getZ(index);
     const toHex = (c: number) =>
       Math.round(c * 255)
         .toString(16)
@@ -169,16 +188,15 @@ export class ShapesService {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
-  setShader(shaderName: ShaderName): void {
-    if (shaderName === this.currentShader) return;
-    this.currentShader = shaderName;
-    const material = this.createShaderMaterial(shaderName);
-    this.shapes.material = material;
-  }
-
   dispose(): void {
-    this.shapes.geometry.dispose();
-    this.materials.forEach(m => m.dispose());
+    for (const [, mesh] of this.meshes) {
+      mesh.geometry.dispose();
+    }
+    for (const [, material] of this.materials) {
+      material.dispose();
+    }
+    this.meshes.clear();
     this.materials.clear();
+    this.attributes.clear();
   }
 }

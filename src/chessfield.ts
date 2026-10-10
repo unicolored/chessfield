@@ -29,10 +29,11 @@ import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
+import { type ShaderName } from './shader';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
-  private readonly shapesService = new ShapesService('ring');
+  private readonly shapesService = new ShapesService(['ring', 'check']);
   private readonly rendererProvider = new RendererProvider();
   private readonly sceneProvider = new SceneProvider();
   private readonly store: Store;
@@ -193,9 +194,13 @@ export class Chessfield implements ChessfieldApi {
 
       const casesGroup = this.boardService.createCases(loadingManagerProvider.font);
 
-      const shapes = this.shapesService.getMesh();
-      shapes.name = '🟢 Shapes';
+      const shapes = this.shapesService.getMesh('ring');
+      shapes.name = '🟢 Shapes (ring)';
       scene.add(shapes);
+      
+      const checkShapes = this.shapesService.getMesh('check');
+      checkShapes.name = '🟢 Shapes (check)';
+      scene.add(checkShapes);
 
       const chessboardGroup = new THREE.Group();
       chessboardGroup.name = '🟣 Chessboard Group';
@@ -222,16 +227,16 @@ export class Chessfield implements ChessfieldApi {
 
       this.eventsService.onSquareRightClick = (rank, file, color) => {
         const index = rank * 8 + file;
-        const isVisible = this.shapesService.getVisible(index);
+        const isVisible = this.shapesService.getVisible(index, 'ring');
 
         if (!isVisible) {
-          this.shapesService.setShapeAt(rank, file, color);
+          this.shapesService.setShapeAt(rank, file, color, true, 'ring');
         } else {
-          const currentColor = this.shapesService.getColor(index);
+          const currentColor = this.shapesService.getColor(index, 'ring');
           if (currentColor.toLowerCase() === color.toLowerCase()) {
-            this.shapesService.clearShape(index);
+            this.shapesService.clearShape(index, 'ring');
           } else {
-            this.shapesService.setShapeAt(rank, file, color);
+            this.shapesService.setShapeAt(rank, file, color, true, 'ring');
           }
         }
       };
@@ -273,11 +278,11 @@ export class Chessfield implements ChessfieldApi {
       if (gO.kings.white) {
         const whiteVec2 = coordToVector2(gO.kings.white);
         console.log(whiteVec2);
-        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true);
+        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'check');
       } else if (gO.kings.black) {
         const blackVec2 = coordToVector2(gO.kings.black);
         console.log(blackVec2);
-        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true);
+        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'check');
       }
     } else if (gO.winner) {
       let mateKey;
@@ -292,7 +297,7 @@ export class Chessfield implements ChessfieldApi {
 
         let squareVec2 = coordToVector2(mateKey);
 
-        this.shapesService.setShapeAt(squareVec2.x, squareVec2.y, '#ff0000', true);
+        this.shapesService.setShapeAt(squareVec2.x, squareVec2.y, '#ff0000', true, 'ring');
       }
     } else {
       // game is a draw
@@ -300,15 +305,14 @@ export class Chessfield implements ChessfieldApi {
       if (gO.kings.white) {
         const whiteVec2 = coordToVector2(gO.kings.white);
         console.log(whiteVec2);
-        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true);
+        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'ring');
       }
       if (gO.kings.black) {
         const blackVec2 = coordToVector2(gO.kings.black);
         console.log(blackVec2);
-        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true);
+        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
       }
     }
-    // }
   }
 
   private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
@@ -338,19 +342,19 @@ export class Chessfield implements ChessfieldApi {
     });
   }
 
-  public setShape(rank: number, file: number, color: string): void {
-    this.shapesService.setShapeAt(rank, file, color);
+  public setShape(rank: number, file: number, color: string, shaderName: ShaderName = 'ring'): void {
+    this.shapesService.setShapeAt(rank, file, color, true, shaderName);
   }
 
-  public clearShape(rank?: number, file?: number): void {
+  public clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
     if (rank !== undefined && file !== undefined) {
-      this.shapesService.clearShape(rank * 8 + file);
+      this.shapesService.clearShape(rank * 8 + file, shaderName);
     } else {
-      this.shapesService.clearAll();
+      this.shapesService.clearAll(shaderName ? [shaderName] : undefined);
     }
   }
 
-  public getShapesMesh(): THREE.InstancedMesh {
-    return this.shapesService.getMesh();
+  public getShapesMesh(shaderName: ShaderName): THREE.InstancedMesh {
+    return this.shapesService.getMesh(shaderName);
   }
 }
