@@ -1,5 +1,5 @@
-import { ringShader } from './ring.shader';
 import { checkShader } from './check.shader';
+import { ringShader } from './ring.shader';
 
 export { ringShader } from './ring.shader';
 export { checkShader } from './check.shader';

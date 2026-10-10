@@ -1,17 +1,20 @@
+import { attribute, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper';
 import { Store } from '../provider/store';
 import { type ShaderName } from '../shader';
-import { attribute, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 
 export class ShapesService {
   private meshes: Map<ShaderName, THREE.InstancedMesh> = new Map();
   private materials: Map<ShaderName, THREE.MeshBasicNodeMaterial> = new Map();
-  private attributes: Map<ShaderName, { 
-    colors: THREE.InstancedBufferAttribute; 
-    visible: THREE.InstancedBufferAttribute 
-  }> = new Map();
+  private attributes: Map<
+    ShaderName,
+    {
+      colors: THREE.InstancedBufferAttribute;
+      visible: THREE.InstancedBufferAttribute;
+    }
+  > = new Map();
   private readonly instanceCount = 64;
 
   constructor(shaderNames: ShaderName[] = ['ring']) {
@@ -54,15 +57,21 @@ export class ShapesService {
 
       alpha = mask.mul(instanceVisible);
     } else if (shaderName === 'check') {
-      const gradient = float(1.0).sub(smoothstep(float(0.0), u_outerRadius.add(delta), dist));
-      gradient.lessThan(0.01).discard();
-      alpha = gradient.mul(instanceVisible);
+      const u_ringWidth = uniform(0.06);
+      const innerRadius = u_outerRadius.sub(u_ringWidth);
+
+      const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
+      const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
+
+      const mask = innerEdge.mul(outerEdge);
+      mask.lessThan(0.01).discard();
+
+      alpha = mask.mul(instanceVisible);
     } else {
       alpha = instanceVisible;
     }
-
-    const ring = vec3(instanceColor);
-    shaderMaterial.colorNode = vec4(ring, alpha);
+    const shader = vec3(instanceColor);
+    shaderMaterial.colorNode = vec4(shader, alpha);
 
     this.materials.set(shaderName, shaderMaterial);
 
@@ -135,7 +144,13 @@ export class ShapesService {
     attrs.visible.needsUpdate = true;
   }
 
-  setShapeAt(rank: number, file: number, colorHex: string, show = true, shaderName: ShaderName = 'ring'): void {
+  setShapeAt(
+    rank: number,
+    file: number,
+    colorHex: string,
+    show = true,
+    shaderName: ShaderName = 'ring',
+  ): void {
     const index = rank * 8 + file;
     this.setShape(index, colorHex, show, shaderName);
   }
