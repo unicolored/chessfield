@@ -1,7 +1,7 @@
-import { float, uv, vec4 } from 'three/tsl';
+import { attribute, float, uv, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { cm, hexToRgb } from '../helper';
+import { cm } from '../helper';
 import { Store } from '../provider/store';
 import { type StateName } from '../shader';
 
@@ -29,18 +29,16 @@ export class StateService {
 
     const shaderMaterial = new THREE.MeshBasicNodeMaterial({
       transparent: true,
-      // side: THREE.DoubleSide,
+      side: THREE.DoubleSide,
     });
 
     // const instanceColor = attribute('instanceColor', 'vec3');
-    // const instanceVisible = attribute('instanceVisible', 'float');
+    const instanceVisible = attribute('instanceVisible', 'float');
 
     const shader = new THREE.Color('crimson');
-
-    console.log('shaderName', shaderName);
-    const pattern = uv().sub(0.5).length().smoothstep(0.5, 0.33);
+    const pattern = uv().sub(0.5).length().smoothstep(0.68, 0.33);
     shaderMaterial.opacityNode = float(pattern);
-    shaderMaterial.colorNode = vec4(shader, 1.0);
+    shaderMaterial.colorNode = vec4(shader, instanceVisible);
 
     this.materials.set(shaderName, shaderMaterial);
 
@@ -50,10 +48,10 @@ export class StateService {
   private createState(shaderName: StateName): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
 
-    const colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
+    // const colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
     const visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
 
-    geometry.setAttribute('instanceColor', colors);
+    // geometry.setAttribute('instanceColor', colors);
     geometry.setAttribute('instanceVisible', visible);
 
     this.attributes.set(shaderName, { visible });
@@ -104,7 +102,6 @@ export class StateService {
 
   private setState(index: number, show = true, shaderName: StateName = 'check'): void {
     const attrs = this.attributes.get(shaderName)!;
-    console.log('setState', index, show, shaderName);
     attrs.visible.setX(index, show ? 1 : 0);
     attrs.visible.needsUpdate = true;
   }
@@ -148,18 +145,6 @@ export class StateService {
   getVisible(index: number, shaderName: StateName): boolean {
     const attrs = this.attributes.get(shaderName)!;
     return attrs.visible.getX(index) === 1;
-  }
-
-  getColor(index: number, shaderName: StateName): string {
-    const attrs = this.attributes.get(shaderName)!;
-    const r = attrs.colors.getX(index);
-    const g = attrs.colors.getY(index);
-    const b = attrs.colors.getZ(index);
-    const toHex = (c: number) =>
-      Math.round(c * 255)
-        .toString(16)
-        .padStart(2, '0');
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
   dispose(): void {
