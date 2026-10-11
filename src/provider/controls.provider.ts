@@ -21,7 +21,7 @@ export class ControlsProvider {
     controls.mouseButtons = {
       LEFT: THREE.MOUSE.PAN, // pan is disabled
       MIDDLE: THREE.MOUSE.ROTATE,
-      RIGHT: THREE.MOUSE.DOLLY,
+      RIGHT: null, // THREE.MOUSE.DOLLY,
     };
     controls.enabled = this.enabled;
 

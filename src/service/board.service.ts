@@ -1,23 +1,7 @@
 import * as cg from '@lichess-org/chessground/types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { positionLocal } from 'three/src/nodes/TSL.js';
-import {
-  cameraProjectionMatrix,
-  checker,
-  float,
-  floor,
-  mix,
-  mod,
-  modelViewMatrix,
-  select,
-  uniform,
-  userData,
-  uv,
-  vec2,
-  vec3,
-  vec4,
-} from 'three/tsl';
+import { float, floor, fwidth, mix, select, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper.ts';
@@ -26,7 +10,6 @@ import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
 
 import { ShapesService } from './shapes.service.ts';
-// import { chessboardShader } from '../shader/chessboard.shader.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): THREE.Group {
@@ -75,6 +58,7 @@ export class BoardService {
     // Create the chessboard
     const casesGroup = new THREE.Group();
     casesGroup.name = '🔲🔳 Cases';
+    const checkCoord = vec2(2, 5);
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
@@ -96,12 +80,24 @@ export class BoardService {
           opacity: 0,
         });
 
-        const square = new THREE.Mesh(squareGeometry, squareMaterial);
         const squarePosition = new THREE.Vector3(
           cm(rankInt - Store.boardSize / 2 + 0.5),
-          cm(0.05),
+          0.0001,
           cm(colInt - Store.boardSize / 2 + 0.5),
         );
+        // const instanceVisible = select(
+        //   checkCoord.x.equal(rankInt).and(checkCoord.y.equal(colInt)),
+        //   float(1.0),
+        //   float(0.0),
+        // );
+
+        // const instanceColor = new THREE.Color(0, 1, 1);
+        // const pattern = uv().sub(0.5).length().smoothstep(0.5, 0.33);
+        // const shader = new THREE.Color('crimson');
+        // squareMaterial.opacityNode = float(pattern);
+        // squareMaterial.colorNode = vec4(shader, instanceVisible);
+
+        const square = new THREE.Mesh(squareGeometry, squareMaterial);
         square.rotation.x = -Math.PI / 2;
 
         square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);

@@ -31,11 +31,13 @@ import { type Move, type Moves } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
+import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
-  private readonly shapesService = new ShapesService(['ring', 'check']);
+  private readonly shapesService = new ShapesService(['ring']);
+  private readonly stateService = new StateService(['check']);
   private readonly rendererProvider = new RendererProvider();
   private readonly sceneProvider = new SceneProvider();
   private readonly store: Store;
@@ -104,7 +106,17 @@ export class Chessfield implements ChessfieldApi {
   public setCheck(state: GameState): void {
     console.log('setCheck', state);
     state.status = 'check';
-    this.addShapes(state);
+
+    const gO = state;
+    if (gO.kings.white) {
+      const whiteVec2 = coordToVector2(gO.kings.white);
+      console.log('whiteVec2', whiteVec2);
+      this.stateService.setStateAt(whiteVec2.x, whiteVec2.y);
+    } else if (gO.kings.black) {
+      const blackVec2 = coordToVector2(gO.kings.black);
+      console.log(blackVec2);
+      this.stateService.setStateAt(blackVec2.x, blackVec2.y);
+    }
   }
 
   public setGameOver(state: GameState): void {
@@ -131,6 +143,10 @@ export class Chessfield implements ChessfieldApi {
     chessboardGroup.name = '🟣 Chessboard Group';
     scene.add(chessboardGroup);
 
+    const stateGroup = new THREE.Group();
+    stateGroup.name = '🟣 State Group';
+    scene.add(stateGroup);
+
     const shapesGroup = new THREE.Group();
     shapesGroup.name = '🟣 Shapes Group';
     scene.add(shapesGroup);
@@ -155,9 +171,9 @@ export class Chessfield implements ChessfieldApi {
     shapesGroup.add(this.store.shapesRing);
 
     // Shapes / Checks
-    this.store.shapesCheck = this.shapesService.getMesh('check');
-    this.store.shapesCheck.name = '🟢 Shapes (check)';
-    shapesGroup.add(this.store.shapesCheck);
+    this.store.state = this.stateService.getMesh('check');
+    this.store.state.name = '🟢 Shapes (check)';
+    shapesGroup.add(this.store.state);
 
     // EventsService
     this.eventsService = new EventsService({
@@ -279,7 +295,7 @@ export class Chessfield implements ChessfieldApi {
 
   private addShapes(state: GameState): void {
     const gO = state;
-    if (gO.status === 'check') {
+    /*if (gO.status === 'check') {
       if (gO.kings.white) {
         const whiteVec2 = coordToVector2(gO.kings.white);
         console.log('whiteVec2', whiteVec2);
@@ -289,7 +305,7 @@ export class Chessfield implements ChessfieldApi {
         console.log(blackVec2);
         this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
       }
-    } else if (gO.winner) {
+    } else*/ if (gO.winner) {
       let mateKey;
       if (gO.winner === 'w') {
         mateKey = gO.kings.black;
@@ -336,7 +352,7 @@ export class Chessfield implements ChessfieldApi {
       }
 
       console.log('updatePieces gO', this.store.gameOver);
-      this.shapesService.clearAll(['check']);
+      // this.stateService.clearAll(['check']);
       if (this.store.gameOver) {
         this.addShapes(this.store.gameOver);
       }

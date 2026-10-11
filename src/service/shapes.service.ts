@@ -56,17 +56,17 @@ export class ShapesService {
       mask.lessThan(0.01).discard();
 
       alpha = mask.mul(instanceVisible);
-    } else if (shaderName === 'check') {
-      const u_ringWidth = uniform(0.06);
-      const innerRadius = u_outerRadius.sub(u_ringWidth);
-
-      const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
-      const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
-
-      const mask = innerEdge.mul(outerEdge);
-      mask.lessThan(0.01).discard();
-
-      alpha = mask.mul(instanceVisible);
+      // } else if (shaderName === 'check') {
+      //   const u_ringWidth = uniform(0.06);
+      //   const innerRadius = u_outerRadius.sub(u_ringWidth);
+      //
+      //   const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
+      //   const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
+      //
+      //   const mask = innerEdge.mul(outerEdge);
+      //   mask.lessThan(0.01).discard();
+      //
+      //   alpha = mask.mul(instanceVisible);
     } else {
       alpha = instanceVisible;
     }
