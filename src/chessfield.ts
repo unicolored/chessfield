@@ -104,17 +104,14 @@ export class Chessfield implements ChessfieldApi {
   }
 
   public setCheck(state: GameState): void {
-    console.log('setCheck', state);
     state.status = 'check';
 
     const gO = state;
     if (gO.kings.white) {
       const whiteVec2 = coordToVector2(gO.kings.white);
-      console.log('whiteVec2', whiteVec2);
       this.stateService.setStateAt(whiteVec2.x, whiteVec2.y);
     } else if (gO.kings.black) {
       const blackVec2 = coordToVector2(gO.kings.black);
-      console.log(blackVec2);
       this.stateService.setStateAt(blackVec2.x, blackVec2.y);
     }
   }
@@ -318,21 +315,19 @@ export class Chessfield implements ChessfieldApi {
 
         let squareVec2 = coordToVector2(mateKey);
 
-        this.shapesService.setShapeAt(squareVec2.x, squareVec2.y, '#ff0000', true, 'ring');
+        this.stateService.setStateAt(squareVec2.x, squareVec2.y);
       }
     } else {
       // game is a draw
-      console.log('addShape draw', gO.kings);
-      if (gO.kings.white) {
-        const whiteVec2 = coordToVector2(gO.kings.white);
-        console.log(whiteVec2);
-        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'ring');
-      }
-      if (gO.kings.black) {
-        const blackVec2 = coordToVector2(gO.kings.black);
-        console.log(blackVec2);
-        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
-      }
+      console.log('draw!', gO.kings);
+      // if (gO.kings.white) {
+      //   const whiteVec2 = coordToVector2(gO.kings.white);
+      //   // this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'ring');
+      // }
+      // if (gO.kings.black) {
+      //   const blackVec2 = coordToVector2(gO.kings.black);
+      //   // this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
+      // }
     }
   }
 
@@ -351,8 +346,7 @@ export class Chessfield implements ChessfieldApi {
         }
       }
 
-      console.log('updatePieces gO', this.store.gameOver);
-      // this.stateService.clearAll(['check']);
+      this.stateService.clearAll(['check']);
       if (this.store.gameOver) {
         this.addShapes(this.store.gameOver);
       }

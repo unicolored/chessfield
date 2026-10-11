@@ -129,7 +129,6 @@
                     black: findBlackKing.pop(),
                   },
                 };
-                console.log('board1 set gO', gO);
                 board1.setGameOver(gO);
               } else if (chess.isDraw()) {
                 // It's a draw - check specific reason
@@ -142,9 +141,6 @@
 
                 const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
                 const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-                // -> ['e8']
-                console.log(`White king on:`, findWhiteKing);
-                console.log(`Black king on:`, findBlackKing);
 
                 const gO = {
                   kings: {
@@ -152,7 +148,6 @@
                     black: findBlackKing.pop(),
                   },
                 };
-                console.log('board1 set gO', gO);
                 board1.setGameOver(gO);
               }
             } else if (chess.inCheck()) {
@@ -161,11 +156,10 @@
               // Returns a list containing the squares where the requested piece is located. Returns an empty list if the piece is not on the board.
               const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
               // -> ['e8']
-              console.log(`Check king ${chess.turn()} on:`, findCheckKing);
               const check = {
                 kings: {
                   white: chess.turn() === 'w' ? findCheckKing.pop() : null,
-                  black: chess.turn() === 'r' ? findCheckKing.pop() : null,
+                  black: chess.turn() === 'b' ? findCheckKing.pop() : null,
                 },
               };
               board1.setCheck(check);
