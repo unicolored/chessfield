@@ -6,7 +6,7 @@ import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import { GameOverState } from '../resource/chessfield.state.ts';
+import { GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { Themes } from '../resource/chessfield.types.ts';
 
@@ -14,8 +14,9 @@ export class Store {
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: THREE.Group | null = null;
   piecesGroup: THREE.Group | null = null;
-  shapes: THREE.InstancedMesh | null = null;
-  gameOver: GameOverState | null = null;
+  shapesRing: THREE.InstancedMesh | null = null;
+  shapesCheck: THREE.InstancedMesh | null = null;
+  gameOver: GameState | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
