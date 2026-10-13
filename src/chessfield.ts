@@ -121,6 +121,8 @@ export class Chessfield implements ChessfieldApi {
     this.store.gameOver = state;
 
     this.addShapes(state);
+
+    // TODO: add/enable/show king sprites
   }
 
   private onLoad(
