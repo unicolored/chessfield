@@ -1,7 +1,7 @@
 import * as cg from '@lichess-org/chessground/types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { float, floor, fwidth, mix, select, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { color, float, floor, Fn, mix, select, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper.ts';
@@ -10,6 +10,7 @@ import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
 
 import { ShapesService } from './shapes.service.ts';
+import { cbShader } from '../shader/cbShader.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): THREE.Group {
@@ -51,14 +52,14 @@ export class BoardService {
   }
 
   public createCases(font: Font | null): THREE.Group {
-    const shapesService = new ShapesService(['ring', 'check']);
+    const shapesService = new ShapesService(['ring']);
     shapesService.createShaderMaterial('ring');
-    shapesService.createShaderMaterial('check');
+    // shapesService.createShaderMaterial('check');
 
     // Create the chessboard
     const casesGroup = new THREE.Group();
     casesGroup.name = '🔲🔳 Cases';
-    const checkCoord = vec2(2, 5);
+    // const checkCoord = vec2(2, 5);
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
@@ -149,11 +150,8 @@ export class BoardService {
 
   createChessboard(): cf.ExtendedMesh {
     const geometry = new THREE.PlaneGeometry(0.08, 0.08);
-    const material = new THREE.MeshBasicNodeMaterial({
-      // uniforms: chessboardShader.uniforms,
-      // vertexShader: chessboardShader.vertexShader,
-      // fragmentShader: chessboardShader.fragmentShader,
-    });
+    const material = new THREE.MeshBasicNodeMaterial();
+
     const uHighlightPosStart = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
     const uHighlightPosEnd = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
 
@@ -161,36 +159,13 @@ export class BoardService {
     const uLightColor = uniform(new THREE.Color(1, 0, 0));
     const uDarkColor = uniform(new THREE.Color(0, 1, 0));
 
-    // TSL Graph
-    const squareSize = float(0.125);
-    const coord = uv().div(squareSize);
+    const cbConfig = {
+      lightColor: uLightColor,
+      darkColor: uDarkColor,
+      highlightColor: uHighlightColor,
+    };
 
-    const chess = floor(coord.x).add(floor(coord.y)).mod(2);
-    const baseMix = mix(uLightColor, uDarkColor, chess);
-
-    // Check Start Square
-    const isStartSquare = floor(coord.x)
-      .equal(uHighlightPosStart.x)
-      .and(floor(coord.y).equal(uHighlightPosStart.y));
-
-    // Check End Square
-    const isEndSquare = floor(coord.x)
-      .equal(uHighlightPosEnd.x)
-      .and(floor(coord.y).equal(uHighlightPosEnd.y));
-
-    // Determine if square is light or dark
-    const isLightSquare = chess.equal(float(0));
-
-    // Mix highlight with the appropriate square color
-    const highlightLight = mix(uLightColor, uHighlightColor, float(0.5));
-    const highlightDark = mix(uDarkColor, uHighlightColor, float(0.5));
-    const highlightMix = select(isLightSquare, highlightLight, highlightDark);
-
-    // Chain select() calls to apply highlights
-    const mixStart = select(isStartSquare, highlightMix, baseMix);
-    const finalMix = select(isEndSquare, highlightMix, mixStart);
-
-    material.colorNode = vec4(finalMix, 1.0);
+    material.colorNode = vec4(cbShader(cbConfig), 1.0);
     // material.vertexNode = chessboardShader.vertexShader;
     // material.fragmentNode = chessboardShader.fragmentShader;
 
