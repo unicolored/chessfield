@@ -11,7 +11,7 @@ import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts
 
 import { PieceProvider } from './piece.provider';
 import { Store } from './store.ts';
-import { If, bool, color, distance, Fn, mul, remap, sub, uniform, uv, vec3, userData, vec2 } from 'three/tsl';
+import { If, bool, color, Fn, uv, userData, vec2 } from 'three/tsl';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
