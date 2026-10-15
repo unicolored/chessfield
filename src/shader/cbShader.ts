@@ -1,4 +1,5 @@
 import { Fn, float, uv, floor, mix, select, vec3, color, vec2 } from 'three/tsl';
+import { ring } from './ringShader';
 export const cbShader = Fn(
   ({
     lightColor = color('white'),

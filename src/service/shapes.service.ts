@@ -1,9 +1,10 @@
-import { attribute, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { attribute, bool, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper';
 import { Store } from '../provider/store';
 import { type ShaderName } from '../shader';
+import { ring } from '../shader/ringShader';
 
 export class ShapesService {
   private meshes: Map<ShaderName, THREE.InstancedMesh> = new Map();
@@ -33,45 +34,15 @@ export class ShapesService {
       side: THREE.DoubleSide,
     });
 
-    const u_outerRadius = uniform(0.5);
-
     const instanceColor = attribute('instanceColor', 'vec3');
     const instanceVisible = attribute('instanceVisible', 'float');
 
-    const center = vec2(0.5);
-    const dist = uv().sub(center).length();
+    const hidden = float(instanceVisible).equal(0.0);
 
-    const delta = fwidth(dist);
-
-    let alpha: any;
-
-    if (shaderName === 'ring') {
-      const u_ringWidth = uniform(0.06);
-      const innerRadius = u_outerRadius.sub(u_ringWidth);
-
-      const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
-      const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
-
-      const mask = innerEdge.mul(outerEdge);
-      mask.lessThan(0.01).discard();
-
-      alpha = mask.mul(instanceVisible);
-      // } else if (shaderName === 'check') {
-      //   const u_ringWidth = uniform(0.06);
-      //   const innerRadius = u_outerRadius.sub(u_ringWidth);
-      //
-      //   const innerEdge = smoothstep(innerRadius.sub(delta), innerRadius.add(delta), dist);
-      //   const outerEdge = float(1.0).sub(smoothstep(u_outerRadius.sub(delta), u_outerRadius.add(delta), dist));
-      //
-      //   const mask = innerEdge.mul(outerEdge);
-      //   mask.lessThan(0.01).discard();
-      //
-      //   alpha = mask.mul(instanceVisible);
-    } else {
-      alpha = instanceVisible;
-    }
-    const shader = vec3(instanceColor);
-    shaderMaterial.colorNode = vec4(shader, alpha);
+    shaderMaterial.colorNode = ring({
+      hidden: bool(hidden),
+      color: instanceColor,
+    });
 
     this.materials.set(shaderName, shaderMaterial);
 
