@@ -1,5 +1,4 @@
 import { Fn, float, uv, floor, mix, select, vec3, color, vec2 } from 'three/tsl';
-import { ring } from './ringShader';
 export const cbShader = Fn(
   ({
     lightColor = color('white'),
@@ -13,6 +12,7 @@ export const cbShader = Fn(
     const coord = uv().div(squareSize);
 
     const chess = floor(coord.x).add(floor(coord.y)).mod(2);
+
     const baseMix = mix(lightColor, darkColor, chess);
 
     // Check Start Square
