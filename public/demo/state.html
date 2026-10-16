@@ -150,6 +150,42 @@
       };
       console.log('board3 set gO', gOdraw);
       board3.setGameOver(gOdraw);
+
+      // RESIGN
+      const board4 = new Chessfield(document.getElementById('board-resign'), {});
+
+      const fenResign = fens.find(f => f.status === 'resign');
+
+      board4.setFen(fenResign.fen, fenResign.lastMove);
+      chess.load(fenResign.fen, { skipValidation: false });
+      // const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+      const findResignBlackKing = chess.findPiece({ type: KING, color: BLACK });
+      const gOresign = {
+        kings: {
+          // white: findResignWhiteKing.pop(),
+          black: findResignBlackKing.pop(),
+        },
+      };
+      console.log('board4 set gO', gOdraw);
+      board4.setGameOver(gOresign);
+
+      // LOST ON TIME
+      const board5 = new Chessfield(document.getElementById('board-time'), {});
+
+      const fenTime = fens.find(f => f.status === 'time');
+
+      board5.setFen(fenTime.fen, fenTime.lastMove);
+      chess.load(fenTime.fen, { skipValidation: false });
+      const findTimeWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+      // const findDrawBlackKing = chess.findPiece({ type: KING, color: BLACK });
+      const gOtime = {
+        kings: {
+          white: findTimeWhiteKing.pop(),
+          // black: findDrawBlackKing.pop(),
+        },
+      };
+      console.log('board5 set gO', gOdraw);
+      board5.setGameOver(gOtime);
     </script>
   </head>
   <body>
