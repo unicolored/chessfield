@@ -38,29 +38,31 @@ const fens = [
 
 // CHECK
 const fenCheck = fens.find(f => f.status === 'check');
-const board1 = new Chessfield(document.getElementById('board-check'), {
-  orientation: 'white',
-  camera: 'white',
-  angle: 'right',
-  theme: 'green',
-  fen: fenCheck.fen,
-  lastMove: fenCheck.lastMove,
-  zoomMinDistance: 5,
-  zoomMaxDistance: 30,
-});
-chess.load(fenCheck.fen, { skipValidation: false });
-const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
-// -> ['e8']
-console.log(`Check king ${chess.turn()} on:`, findCheckKing);
-const check = {
-  state: 'check',
-  kings: {
-    white: chess.turn() === 'w' ? findCheckKing.pop() : null,
-    black: chess.turn() === 'b' ? findCheckKing.pop() : null,
-  },
-};
-console.log('check', check);
-board1.setCheck(check);
+if (fenCheck) {
+  const board1 = new Chessfield(document.getElementById('board-check'), {
+    orientation: 'white',
+    camera: 'white',
+    angle: 'right',
+    theme: 'green',
+    fen: fenCheck.fen,
+    lastMove: fenCheck.lastMove,
+    zoomMinDistance: 5,
+    zoomMaxDistance: 30,
+  });
+  chess.load(fenCheck.fen, { skipValidation: false });
+  const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
+  // -> ['e8']
+  console.log(`Check king ${chess.turn()} on:`, findCheckKing);
+  const check = {
+    state: 'check',
+    kings: {
+      white: chess.turn() === 'w' ? findCheckKing.pop() : null,
+      black: chess.turn() === 'b' ? findCheckKing.pop() : null,
+    },
+  };
+  console.log('check', check);
+  board1.setCheck(check);
+}
 
 // MATE
 const board2 = new Chessfield(document.getElementById('board-mate'), {

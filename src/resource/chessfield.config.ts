@@ -7,7 +7,7 @@ export interface ChessfieldConfig {
   mode?: cf.Mode; //
   theme?: cf.Theme; //
   fen?: cg.FEN; // chess position in Forsyth notation
-  lastMove?: cg.Key[]; // squares part of the last move ["c3", "c4"]
+  lastMove?: cg.Key[] | string[]; // squares part of the last move ["c3", "c4"]
   orientation?: cg.Color; // board orientation when 'view' is 'top'.
   camera?: cf.Camera; // camera position around the chessboard.
   angle?: cf.Angle; // angle of the chessboard when camera is 'white' or 'black'.
