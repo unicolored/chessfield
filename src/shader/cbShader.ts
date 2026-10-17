@@ -1,4 +1,4 @@
-import { Fn, float, uv, floor, mix, select, vec3, color, vec2 } from 'three/tsl';
+import { color, float, floor, Fn, mix, select, uv, vec2, vec3 } from 'three/tsl';
 export const cbShader = Fn(
   ({
     lightColor = color('white'),

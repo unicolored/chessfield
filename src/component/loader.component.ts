@@ -31,7 +31,7 @@ export class LoaderComponent {
     //   `,
     // });
     this.overlayMaterial = new THREE.MeshBasicNodeMaterial({
-      color: 0xff0000,
+      color: 0xff_00_00,
       transparent: true,
       opacity: 1,
     });
@@ -71,7 +71,7 @@ export class LoaderComponent {
     // `,
     // });
     this.progressMaterial = new THREE.MeshBasicNodeMaterial({
-      color: 0xff0000,
+      color: 0xff_00_00,
       transparent: true,
       opacity: 1,
     });

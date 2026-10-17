@@ -1,4 +1,4 @@
-import { attribute, bool, float, fwidth, smoothstep, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { attribute, bool, float } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper';

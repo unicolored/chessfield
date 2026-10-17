@@ -2,14 +2,14 @@ import { FenParser } from '@chess-fu/fen-parser';
 import * as cg from '@lichess-org/chessground/types';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { bool, userData } from 'three/tsl';
+import { userData } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
 import { cm, objKey } from '../helper.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
-import { kingState, stateSprite } from '../shader/stateSprite.ts';
+import { stateSprite } from '../shader/stateSprite.ts';
 
 import { PieceProvider } from './piece.provider';
 import { Store } from './store.ts';

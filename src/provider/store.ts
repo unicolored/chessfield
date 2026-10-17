@@ -6,7 +6,7 @@ import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import { GameState } from '../resource/chessfield.state.ts';
+import { type GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { Themes } from '../resource/chessfield.types.ts';
 
