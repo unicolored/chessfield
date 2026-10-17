@@ -26,13 +26,13 @@ const fens = [
   },
   {
     status: 'resign',
-    fen: 'r4k1r/1b2bPR1/p4n1B/3p4/4P2P/1q5B/PpP5/1K4R1 b - - 1 26',
-    lastMove: ['e3', 'h6'],
+    fen: '1k1r2r1/pN3p2/1p5p/3RP3/2p2P2/Q7/PPP5/2KR4 b - - 0 32',
+    lastMove: ['d6', 'b7'],
   },
   {
     status: 'timeout',
-    fen: '4r1k1/2b2p2/p5pp/1p1RP1r1/4N3/2P1R1P1/PP4K1/8 b - - 6 36',
-    lastMove: ['f2', 'e4'],
+    fen: '8/5ppk/7p/2RpPp2/r2P1P2/8/3NK1PP/8 b - - 3 37',
+    lastMove: ['c8', 'c5'],
   },
 ];
 
@@ -135,18 +135,19 @@ board4.setGameOver(gOresign);
 const board5 = new Chessfield(document.getElementById('board-timeout'), {});
 
 const fenTime = fens.find(f => f.status === 'timeout');
-
-board5.setFen(fenTime.fen, fenTime.lastMove);
-chess.load(fenTime.fen, { skipValidation: false });
-const findTimeWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-// const findDrawBlackKing = chess.findPiece({ type: KING, color: BLACK });
-const gOtime = {
-  state: 'timeout',
-  winner: 'b',
-  kings: {
-    white: findTimeWhiteKing.pop(),
-    // black: findDrawBlackKing.pop(),
-  },
-};
-console.log('board5 set gO', gOdraw);
-board5.setGameOver(gOtime);
+if (fenTime) {
+  board5.setFen(fenTime.fen, fenTime.lastMove);
+  chess.load(fenTime.fen, { skipValidation: false });
+  // const findTimeWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+  const findTimeBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const gOtime = {
+    state: 'timeout',
+    winner: 'w',
+    kings: {
+      // white: findTimeWhiteKing.pop(),
+      black: findTimeBlackKing.pop(),
+    },
+  };
+  console.log('board5 set gO', gOdraw);
+  board5.setGameOver(gOtime);
+}
