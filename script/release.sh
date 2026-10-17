@@ -4,9 +4,9 @@
 
 set -e
 
-DEV_BRANCH="next"
-PUB_BRANCH="main"
-VERSION_FILE="version.json"
+DEV_BRANCH="develop"
+PUB_BRANCH="next"
+VERSION_FILE="package.json"
 
 # 1. Check if version.json exists
 if [[ ! -f "$VERSION_FILE" ]]; then
@@ -32,7 +32,7 @@ git checkout "${DEV_BRANCH}"
 git pull origin "${DEV_BRANCH}"
 
 # 5. Switch to next, update it, and merge develop into next
-echo "🔀 Preparing '${PUB_BRANCH}' for release..."
+# echo "🔀 Preparing '${PUB_BRANCH}' for release..."
 # git checkout "${PUB_BRANCH}"
 # git pull origin "${PUB_BRANCH}"
 # git merge "${DEV_BRANCH}" -m "chore: sync ${DEV_BRANCH} into ${PUB_BRANCH} for release"
@@ -61,12 +61,11 @@ GIT_TAG="v${NEW_VERSION}"
 git tag -a "${GIT_TAG}" -m "Release ${GIT_TAG}"
 
 # 11. Push next and tags to remote
-echo "📤 Pushing '${PUB_BRANCH}' and tags..."
-git push origin "${PUB_BRANCH}"
+echo "📤 Pushing '${DEV_BRANCH}' and tags..."
+git push origin "${DEV_BRANCH}"
 git push origin "${GIT_TAG}"
 
 # 12. Switch back to develop so you're ready to code again
 # git checkout "${DEV_BRANCH}"
 
-echo "✅ Release ${GIT_TAG} created on '${PUB_BRANCH}'!"
-echo "➡️  Next step: Create a Merge Request on GitLab from '${PUB_BRANCH}' into 'main'."
+echo "✅ Release ${GIT_TAG} created on '${DEV_BRANCH}'!"
