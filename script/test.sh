@@ -3,4 +3,4 @@
 set -e
 
 pnpm run lint
-pnpm run check
+pnpm run check-format

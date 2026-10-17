@@ -1,6 +1,8 @@
-import { Color } from '@lichess-org/chessground/types';
+import { type Color } from '@lichess-org/chessground/types';
 import * as cg from '@lichess-org/chessground/types';
-import { PieceColorRole } from './resource/chessfield.types.ts';
+import * as THREE from 'three/webgpu';
+
+import { type PieceColorRole } from './resource/chessfield.types.ts';
 
 export const cm = (meter: number): number => {
   return meter / 100;
@@ -22,9 +24,9 @@ export function hexToRgb(hex: string | number): [number, number, number] {
       .join('');
   }
 
-  const r = parseInt(hexValue.slice(0, 2), 16) / 255;
-  const g = parseInt(hexValue.slice(2, 4), 16) / 255;
-  const b = parseInt(hexValue.slice(4, 6), 16) / 255;
+  const r = Number.parseInt(hexValue.slice(0, 2), 16) / 255;
+  const g = Number.parseInt(hexValue.slice(2, 4), 16) / 255;
+  const b = Number.parseInt(hexValue.slice(4, 6), 16) / 255;
 
   return [r, g, b];
 }
@@ -47,21 +49,21 @@ export function lmToCoordinates(lastMove: cg.Key[] | undefined): { x: number; y:
 
     coords.push({
       x: letterStart,
-      y: parseInt(m[1]) - 1,
+      y: Number.parseInt(m[1]) - 1,
     });
   });
 
   return coords;
 }
 
-export function fadeAlpha(uAlpha: { value: number }, duration: number = 1000) {
+export function fadeAlpha(uAlpha: number, duration = 1000) {
   const startTime = Date.now();
 
   const animate = () => {
     const elapsed = Date.now() - startTime;
     const progress = Math.min(elapsed / duration, 1); // Clamps between 0 and 1
     if (uAlpha) {
-      uAlpha.value = 1 - progress; // Update uAlpha directly
+      uAlpha = 1 - progress; // Update uAlpha directly
 
       if (progress < 1) {
         requestAnimationFrame(animate);
@@ -70,4 +72,16 @@ export function fadeAlpha(uAlpha: { value: number }, duration: number = 1000) {
   };
 
   requestAnimationFrame(animate);
+}
+
+export function coordToVector2(coord: string): THREE.Vector2 {
+  const file = coord.charCodeAt(0) - 97;
+  const rank = Number.parseInt(coord[1]) - 1;
+  return new THREE.Vector2(file, rank);
+}
+
+export function vector2ToCoord(vec: THREE.Vector2): string {
+  const file = String.fromCharCode(97 + Math.round(vec.x));
+  const rank = Math.round(vec.y) + 1;
+  return `${file}${rank}`;
 }

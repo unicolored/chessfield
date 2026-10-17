@@ -1,7 +1,8 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three/webgpu';
+
 import { cm } from '../helper.ts';
-import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import { MOUSE, PerspectiveCamera } from 'three';
+import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
 
 export class ControlsProvider {
   private readonly enabled;
@@ -14,13 +15,13 @@ export class ControlsProvider {
     this.zoomMaxDistance = this.config.zoomMaxDistance ?? 25;
   }
 
-  getControls(camera: PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
+  getControls(camera: THREE.PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
     controls.mouseButtons = {
-      LEFT: MOUSE.PAN, // pan is disabled
-      MIDDLE: MOUSE.DOLLY,
-      RIGHT: MOUSE.ROTATE,
+      LEFT: THREE.MOUSE.PAN, // pan is disabled
+      MIDDLE: THREE.MOUSE.ROTATE,
+      RIGHT: null, // THREE.MOUSE.DOLLY,
     };
     controls.enabled = this.enabled;
 

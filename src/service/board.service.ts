@@ -1,31 +1,26 @@
-import {
-  BoxGeometry,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  MeshPhongMaterial,
-  PlaneGeometry,
-  ShaderMaterial,
-  Vector2,
-  Vector3,
-} from 'three';
-import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { Store } from '../provider/store.ts';
-import { cm, hexToRgb } from '../helper.ts';
 import * as cg from '@lichess-org/chessground/types';
-import * as cf from '../resource/chessfield.types.ts';
-import { ThemeColors } from '../resource/chessfield.types.ts';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
+import { uniform, vec2, vec3, vec4 } from 'three/tsl';
+import * as THREE from 'three/webgpu';
+
+import { cm, hexToRgb } from '../helper.ts';
+import { Store } from '../provider/store.ts';
+import type * as cf from '../resource/chessfield.types.ts';
+import { type ThemeColors } from '../resource/chessfield.types.ts';
+import { cbShader } from '../shader/cbShader.ts';
+
+import { ShapesService } from './shapes.service.ts';
 
 export class BoardService {
-  public decor(mode: ThemeColors): Group {
-    const decorGroup = new Group();
+  public decor(mode: ThemeColors): THREE.Group {
+    const decorGroup = new THREE.Group();
 
     // Create a box geometry and material
-    const frameGeometry = new BoxGeometry(cm(10), cm(0.025), cm(10));
+    const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
     const frameColor = mode.dark;
-    const frameMaterial = new MeshBasicMaterial({ color: frameColor });
-    const frame = new Mesh(frameGeometry, frameMaterial);
+    const frameMaterial = new THREE.MeshBasicNodeMaterial({ color: frameColor });
+    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
     // Position the box in the scene
     frame.position.set(0, cm(-0.1), cm(0));
     // Add the box to the scene
@@ -36,18 +31,18 @@ export class BoardService {
     // decorGroup.add(gridHelper);
 
     // Create a box geometry and material
-    const playerGeometry = new BoxGeometry(cm(8), cm(0.025), cm(0.025));
+    const playerGeometry = new THREE.BoxGeometry(cm(8), cm(0.025), cm(0.025));
 
-    const player1Material = new MeshBasicMaterial({ color: Store.themes['light'].dark });
-    const player1 = new Mesh(playerGeometry, player1Material);
+    const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['light'].dark });
+    const player1 = new THREE.Mesh(playerGeometry, player1Material);
     // Position the box in the scene
     player1.position.set(0, cm(0), cm(4.5));
     // Add the box to the scene
     decorGroup.add(player1);
 
     // Create a box geometry and material
-    const player2Material = new MeshBasicMaterial({ color: Store.themes['dark'].dark });
-    const player2 = new Mesh(playerGeometry, player2Material);
+    const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['dark'].dark });
+    const player2 = new THREE.Mesh(playerGeometry, player2Material);
     // Position the box in the scene
     player2.position.set(0, cm(0), cm(-4.5));
     // Add the box to the scene
@@ -56,37 +51,54 @@ export class BoardService {
     return decorGroup;
   }
 
-  public createCases(font: Font | null): Group {
+  public createCases(font: Font | null): THREE.Group {
+    const shapesService = new ShapesService(['ring']);
+    shapesService.createShaderMaterial('ring');
+    // shapesService.createShaderMaterial('check');
+
     // Create the chessboard
-    const casesGroup = new Group();
+    const casesGroup = new THREE.Group();
     casesGroup.name = '🔲🔳 Cases';
+    // const checkCoord = vec2(2, 5);
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
         const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
 
         // GROUP
-        const caseGroup = new Group();
+        const caseGroup = new THREE.Group();
         caseGroup.name = coord;
         caseGroup.userData['coord'] = coord;
 
         // SQUARE
-        const squareGeometry = new PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
+        const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
         squareGeometry.scale(0.25, 0.25, 0.25);
         const theme = Store.themes['blue'];
-        const squareMaterial = new MeshBasicMaterial({
-          color: 0xff0000,
+        const squareMaterial = new THREE.MeshBasicNodeMaterial({
+          color: 0xff_00_00,
           wireframe: true,
           transparent: true,
           opacity: 0,
         });
 
-        const square = new Mesh(squareGeometry, squareMaterial);
-        const squarePosition = new Vector3(
+        const squarePosition = new THREE.Vector3(
           cm(rankInt - Store.boardSize / 2 + 0.5),
-          cm(0.055),
+          0.0001,
           cm(colInt - Store.boardSize / 2 + 0.5),
         );
+        // const instanceVisible = select(
+        //   checkCoord.x.equal(rankInt).and(checkCoord.y.equal(colInt)),
+        //   float(1.0),
+        //   float(0.0),
+        // );
+
+        // const instanceColor = new THREE.Color(0, 1, 1);
+        // const pattern = uv().sub(0.5).length().smoothstep(0.5, 0.33);
+        // const shader = new THREE.Color('crimson');
+        // squareMaterial.opacityNode = float(pattern);
+        // squareMaterial.colorNode = vec4(shader, instanceVisible);
+
+        const square = new THREE.Mesh(squareGeometry, squareMaterial);
         square.rotation.x = -Math.PI / 2;
 
         square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
@@ -113,12 +125,12 @@ export class BoardService {
     text: string,
     pos: { rankInt: number; colInt: number },
     theme: cf.ThemeColors,
-  ): Mesh {
-    const textMaterial = new MeshPhongMaterial({
+  ): THREE.Mesh {
+    const textMaterial = new THREE.MeshPhongMaterial({
       color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,
     });
     const textGeometry = new TextGeometry(text, {
-      font: font,
+      font,
       size: cm(0.1),
       depth: cm(0.01),
       // curveSegments: 12,
@@ -128,7 +140,7 @@ export class BoardService {
       // bevelOffset: 0,
       // bevelSegments: 5
     });
-    const textMesh = new Mesh(textGeometry, textMaterial);
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
     textMesh.position.set(cm(0.25), cm(0.25), cm(0.005));
     // textMesh.rotation.x = Math.PI * 60;
@@ -137,107 +149,57 @@ export class BoardService {
   }
 
   createChessboard(): cf.ExtendedMesh {
-    // Updated shader with highlight capability
-    const chessboardShader = {
-      uniforms: {
-        u_resolution: { value: new Vector2() },
-        u_squareSize: { value: 0.01 },
-        u_highlightPosStart: { value: new Vector2(-1, -1) }, // Target square coordinates
-        u_highlightPosEnd: { value: new Vector2(-1, -1) }, // Target square coordinates
-        u_highlightPosCursor: { value: new Vector2(-1, -1) },
-        u_highlightColor: { value: new Vector3(1, 1, 0) }, // Highlight color (yellow in this case)
-        // u_squareLightColor: Store.themes['blue'].light,
-        // u_squareDarkColor: Store.themes['blue'].dark,
-        u_squareLightColor: { value: new Vector3(0.9, 0.9, 0.9) }, // Light gray by default
-        u_squareDarkColor: { value: new Vector3(0.3, 0.3, 0.3) },
-      },
+    const geometry = new THREE.PlaneGeometry(0.08, 0.08);
+    const material = new THREE.MeshBasicNodeMaterial();
 
-      vertexShader: `
-        varying vec2 vUv;
-        
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
+    const uHighlightPosStart = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
+    const uHighlightPosEnd = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
 
-      fragmentShader: `
-        uniform vec2 u_resolution;
-        uniform float u_squareSize;
-        uniform vec2 u_highlightPosStart;
-        uniform vec2 u_highlightPosEnd;
-        uniform vec2 u_highlightPosCursor;
-        uniform vec3 u_highlightColor;
-        uniform vec3 u_squareLightColor;
-        uniform vec3 u_squareDarkColor;
-        varying vec2 vUv;
-        
-        void main() {
-            vec2 coord = vUv * u_resolution / u_squareSize;
-            vec2 gridPos = floor(coord);
-            
-            // Basic chessboard pattern
-            float chess = mod(floor(coord.x) + floor(coord.y), 2.0);
-            // vec3 baseColor = vec3(chess);
-            
-            // Base color based on light/dark squares
-            vec3 baseColor = mix(u_squareDarkColor, u_squareLightColor, chess);
-            
-            // Check if current square matches highlight position
-            float isHighlightedStart = step(0.0, 0.0 - length(gridPos - u_highlightPosStart));
-            float isHighlightedEnd = step(0.0, 0.0 - length(gridPos - u_highlightPosEnd));
-            float isHighlightedCursor = step(0.0, 0.0 - length(gridPos - u_highlightPosCursor));
-            
-            // Mix base color with highlight color
-            vec3 color = baseColor;
-            color = mix(color, u_highlightColor, isHighlightedStart * 0.8);
-            color = mix(color, u_highlightColor, isHighlightedEnd * 0.8);
-            color = mix(color, u_highlightColor, isHighlightedCursor * 0.8);
-            
-            gl_FragColor = vec4(color, 1.0);
-        }
-    `,
+    const uHighlightColor = uniform(new THREE.Color(0, 0, 1));
+    const uLightColor = uniform(new THREE.Color(1, 0, 0));
+    const uDarkColor = uniform(new THREE.Color(0, 1, 0));
+
+    const cbConfig = {
+      lightColor: uLightColor,
+      darkColor: uDarkColor,
+      highlightColor: uHighlightColor,
+      posStart: uHighlightPosStart,
+      posEnd: uHighlightPosEnd,
     };
 
-    const geometry = new PlaneGeometry(0.08, 0.08);
-    const material = new ShaderMaterial({
-      uniforms: chessboardShader.uniforms,
-      vertexShader: chessboardShader.vertexShader,
-      fragmentShader: chessboardShader.fragmentShader,
-    });
+    material.colorNode = vec4(cbShader(cbConfig), 1.0);
 
-    const chessboard = new Mesh(geometry, material);
-
-    material.uniforms['u_resolution'].value.set(0.08, 0.08);
+    const chessboard = new THREE.Mesh(geometry, material);
 
     // Add custom methods
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
-      const [lightR, lightG, lightB] = hexToRgb(light); // light: 0xbfcfdd,
-      const [darkR, darkG, darkB] = hexToRgb(dark); // dark: 0x9dabb6
-      const material = this.material as ShaderMaterial;
-      material.uniforms['u_squareLightColor'].value.set(lightR, lightG, lightB);
-      material.uniforms['u_squareDarkColor'].value.set(darkR, darkG, darkB);
+      uLightColor.value.set(new THREE.Color(light));
+      uDarkColor.value.set(new THREE.Color(dark));
     };
 
     chessboard.highlightSquareStart = function (x: number, y: number) {
-      this.material.uniforms['u_highlightPosStart'].value.set(x, y);
+      uHighlightPosStart.value.set(x, y);
     };
 
     chessboard.highlightSquareEnd = function (x: number, y: number) {
-      this.material.uniforms['u_highlightPosEnd'].value.set(x, y);
+      uHighlightPosEnd.value.set(x, y);
     };
 
     chessboard.setHighlightColor = function (hex: string | number) {
+      uHighlightColor.value.set(new THREE.Color(hex));
+    };
+
+    chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
       const [r, g, b] = hexToRgb(hex);
-      this.material.uniforms['u_highlightColor'].value.set(r, g, b);
+      material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
     };
 
     chessboard.highlightSquareCursor = function (x: number, y: number) {
-      this.material.uniforms['u_highlightPosCursor'].value.set(x, y);
+      material.userData['u_highlightPosCursor'] = vec2(x, y);
     };
 
     chessboard.rotation.x = -Math.PI / 2;
-    chessboard.position.y = 0.0005;
+    chessboard.position.y = 0.00005;
 
     return chessboard as cf.ExtendedMesh;
   }

@@ -1,5 +1,6 @@
+import { type Mode, type Theme, type ThemeColors } from '../resource/chessfield.types.ts';
+
 import { Store } from './store.ts';
-import { Mode, Theme, ThemeColors } from '../resource/chessfield.types.ts';
 
 export class ThemeProvider {
   constructor(

@@ -1,16 +1,22 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { BufferGeometry, Group, Mesh, Object3D } from 'three';
-import { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import * as cg from '@lichess-org/chessground/types';
+import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
-import FenParser from '@chess-fu/fen-parser';
+import type * as cg from '@lichess-org/chessground/types';
+import { BehaviorSubject, type Observable } from 'rxjs';
+import * as THREE from 'three/webgpu';
+
 import { cm } from '../helper.ts';
-import * as cf from '../resource/chessfield.types.ts';
-import { Themes } from '../resource/chessfield.types.ts';
+import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
+import { type GameState } from '../resource/chessfield.state.ts';
+import type * as cf from '../resource/chessfield.types.ts';
+import type { Themes } from '../resource/chessfield.types.ts';
 
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
-  casesGroup: Group | null = null;
+  casesGroup: THREE.Group | null = null;
+  piecesGroup: THREE.Group | null = null;
+  shapesRing: THREE.InstancedMesh | null = null;
+  state: THREE.InstancedMesh | null = null;
+  gameOver: GameState | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
@@ -20,36 +26,42 @@ export class Store {
       light: '#f5f5f3',
       dark: '#eeebe8',
       highlight: '',
+      highlightStatusMate: '#aa0000',
       selected: '',
     },
     dark: {
       light: '#1D232A',
       dark: '#161512',
       highlight: '',
+      highlightStatusMate: '#aa0000',
       selected: '',
     },
     blue: {
       light: '#bfcfdd',
       dark: '#9dabb6',
       highlight: '#B1CC82',
+      highlightStatusMate: '#aa0000',
       selected: '',
     },
     brown: {
       light: '#efd9b5',
       dark: '#b58862',
       highlight: '#cdd16a',
+      highlightStatusMate: '#aa0000',
       selected: '',
     },
     green: {
       light: '#feffdd',
       dark: '#87a664',
       highlight: '#96d6d3',
+      highlightStatusMate: '#aa0000',
       selected: '',
     },
     bw: {
       light: '#e6e8e5',
       dark: '#505251',
       highlight: '#bdce82',
+      highlightStatusMate: '#aa0000',
       selected: '',
     },
   };
@@ -57,9 +69,9 @@ export class Store {
   private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
   // private loader: GLTFLoader;
-  private piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry> = new Map();
+  private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
 
-  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, BufferGeometry>) {
+  setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry>) {
     this.piecesGeometriesGltfMap = piecesGeometriesGltfMap;
   }
 
@@ -100,13 +112,12 @@ export class Store {
       const moves: cf.Moves = {
         moves: [
           {
-            fen: fen,
-            lastMove: lastMove,
+            fen,
+            lastMove,
           },
         ],
       };
 
-      // this.fenSubject.next(fen);
       this.movesSubject.next(moves);
     }
   };
@@ -125,13 +136,23 @@ export class Store {
     return this.boardPiecesObjectsMap;
   }
 
-  getBoardCases(): Mesh[] {
-    const cases: Mesh[] = [];
+  getBoardCases(): THREE.Mesh[] {
+    const cases: THREE.Mesh[] = [];
 
-    this.casesGroup?.traverse((child: Object3D) => {
-      if (child instanceof Mesh) cases.push(child);
+    this.casesGroup?.traverse((child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh) cases.push(child);
     });
 
     return cases;
+  }
+
+  getPieces(): THREE.Mesh[] {
+    const pieces: THREE.Mesh[] = [];
+
+    this.piecesGroup?.traverse((child: THREE.Object3D) => {
+      if (child instanceof THREE.Mesh) pieces.push(child);
+    });
+
+    return pieces;
   }
 }

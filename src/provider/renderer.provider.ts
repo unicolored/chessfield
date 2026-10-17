@@ -1,4 +1,4 @@
-import { WebGLRenderer } from 'three';
+import * as THREE from 'three/webgpu';
 
 export class RendererProvider {
   static enableAntialias = window.devicePixelRatio < 2;
@@ -10,11 +10,12 @@ export class RendererProvider {
   getRenderer(
     { width, height }: { width: number; height: number },
     canvas: HTMLCanvasElement,
-  ): WebGLRenderer {
-    const renderer = new WebGLRenderer({
-      canvas: canvas,
+  ): THREE.WebGPURenderer {
+    const renderer = new THREE.WebGPURenderer({
+      canvas,
       // powerPreference: 'high-performance',
       antialias: RendererProvider.enableAntialias,
+      forceWebGL: false,
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

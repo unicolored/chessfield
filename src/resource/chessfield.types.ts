@@ -1,5 +1,5 @@
-import { Group, InstancedMesh, Material, Mesh } from 'three';
-import * as cg from '@lichess-org/chessground/types';
+import type * as cg from '@lichess-org/chessground/types';
+import type * as THREE from 'three/webgpu';
 
 export type Mode = 'light' | 'dark';
 export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark' | string;
@@ -18,7 +18,7 @@ export interface Move {
 }
 
 export type ColorMaterial = {
-  [key in cg.Color]: Material | null;
+  [key in cg.Color]: THREE.Material | THREE.TextureNode | null;
 };
 
 export type PieceColorRole = 'white-knight' | `${cg.Color}-${cg.Role}`;
@@ -51,11 +51,15 @@ export interface ThemeColors {
   light: string | number;
   dark: string | number;
   highlight: string | number;
+  highlightStatusMate: string | number;
   selected: string | number;
 }
 
 export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
-export type ColorPieceNameObjectMap = Map<PieceColorRole, Mesh | InstancedMesh | Group | undefined>;
+export type ColorPieceNameObjectMap = Map<
+  PieceColorRole,
+  THREE.Mesh | THREE.InstancedMesh | THREE.Group | undefined
+>;
 
 export interface BoardPiece extends cg.Piece {
   coord: cg.Key | null;
@@ -63,18 +67,24 @@ export interface BoardPiece extends cg.Piece {
   count: number;
 }
 
-declare module 'three' {
+declare module 'three/webgpu' {
   interface Mesh {
     setSquareColors: (light: string | number, dark: string | number) => void;
     highlightSquareStart: (x: number, y: number) => void;
     highlightSquareEnd: (x: number, y: number) => void;
     highlightSquareSelected: (x: number, y: number) => void;
     setHighlightColor: (hex: string | number) => void;
+    setHighlightStatusMateColor: (hex: string | number) => void;
     highlightSquareCursor: (x: number, y: number) => void;
+    // setStatusMate: (x: number, y: number) => void;
+    setShape: (index: number, colorHex: string, show?: boolean) => void;
+    setShapeAt: (rank: number, file: number, colorHex: string, show?: boolean) => void;
+    clearShape: (index?: number) => void;
+    clearAllShapes: () => void;
   }
 }
 
-export type ExtendedMesh = Mesh;
+export type ExtendedMesh = THREE.Mesh;
 // export interface ExtendedMesh extends Mesh {
 // setSquareColors: (light: string | number, dark: string | number) => void;
 // highlightSquareStart: (x: number, y: number) => void;
