@@ -74,6 +74,8 @@ export class Chessfield implements ChessfieldApi {
   }
 
   public setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
+    this.store.gameOver = null;
+
     this.store.setFen(fen, lastMove);
   }
 
