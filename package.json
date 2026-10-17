@@ -13,15 +13,14 @@
     "./style.css": "./dist/chessfield.css"
   },
   "scripts": {
-    "prepare": "$npm_execpath run compile",
+    "prepareDisable": "$npm_execpath run compile",
     "compile": "tsc --project tsconfig.build.json --sourceMap --declaration",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "check-format": "oxfmt --check",
-    "dist": "$npm_execpath run bundle",
     "distEsbuild": "$npm_execpath run compile && $npm_execpath run bundle",
-    "bundle": "vite build --config vite.config.ts",
+    "dist": "vite build --config vite.config.ts",
     "bundleEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.min.js --minify --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/assets/ --sourcemap",
     "dev": "vite --config vite.config.ts",
     "devEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.js --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/dist/ --servedir=. --serve=8000 --watch --sourcemap",
