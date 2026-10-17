@@ -5,128 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chessfield Demo</title>
 
-    <style>
-      .demo-nav {
-        display: flex;
-        gap: 1rem;
-        width: 100%;
-        padding: 0.5rem 1rem;
-        background: #f5f5f5;
-        border-bottom: 1px solid #ddd;
-        font-family: system-ui, sans-serif;
-        font-size: 0.9rem;
-      }
-      .demo-nav a {
-        color: #333;
-        text-decoration: none;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-      }
-      .demo-nav a:hover {
-        background: #e0e0e0;
-      }
-      .demo-nav a.current {
-        font-weight: bold;
-        color: #000;
-      }
+    <link rel="stylesheet" href="demo.css" />
 
-      body {
-        display: flex;
-        flex-wrap: wrap;
-      }
-
-      body > div {
-        margin: 10px;
-      }
-
-      .chessfield {
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        border-radius: 10px;
-        /*width: 800px;*/
-        height: 740px;
-        aspect-ratio: 1;
-        border: 1px solid white;
-      }
-    </style>
-
-    <script type="module">
-      import { Chess, BLACK, WHITE, KING } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
-      import { Chessfield } from '/src/chessfield.ts';
-
-      const board1 = new Chessfield(document.getElementById('board-1'), {
-        orientation: 'white',
-        camera: 'white',
-        angle: 'right',
-        theme: 'green',
-      });
-
-      // board1.setShape(2, 5, '#0000ff');
-
-      // board1.setShape(7, 7, '#ff0000');
-
-      // Clear specific square
-      // board1.clearShape(3, 4);
-
-      // Clear all
-      // board1.clearShape();
-
-      const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
-      board1.setFen(fen, ['e2', 'e4']);
-
-      const chess = new Chess();
-
-      try {
-        // import { validateFen } from 'chess.js'
-        // validateFen('2n1r3/p1k2pp1/B1p3b1/P7/5bP1/2N1B3/1P2KP2/2R5 b - - 4 25')
-        // -> { ok: true }
-
-        // .load(fen: string, { skipValidation = false, preserveHeaders = false } = {})
-
-        chess.setHeader('White', 'Morphy'); // Retrieve the PGN headers.
-        chess.setHeader(WHITE, 'Morphy'); // Retrieve the PGN headers.
-        chess.setHeader('Black', 'Anderssen');
-        chess.setHeader(BLACK, 'Anderssen');
-        chess.setHeader('Date', '1858-??-??');
-
-        const headers = chess.getHeaders();
-
-        console.log(`${chess.getHeaders()[WHITE]} plays against ${chess.getHeaders()[BLACK]}`);
-
-        chess.load(fen, { skipValidation: false });
-
-        const castling = chess.getCastlingRights(BLACK); // black can castle queenside only
-        // -> { 'k': false, 'q': true }
-
-        const moveNumber = chess.moveNumber();
-
-        const turn = chess.turn(); // Returns the current side to move.
-
-        const isAttacked = chess.isAttacked('e4', WHITE); // .isAttacked(square, color)
-
-        // const gO = {
-        //   winner: 'b',
-        //   kings: {
-        //     white: 'e1',
-        //     black: 'e8',
-        //   },
-        // };
-        // console.log('board1 set gO', gO);
-        // board1.setGameOver(gO);
-
-        board1.setCheck({
-          kings: {
-            white: 'e1',
-          },
-        });
-
-        // Returns a list of legal moves from the current position.
-        // .moves({ piece?: Piece, square?: Square, verbose = false} = {})
-        const legalMoves = chess.moves({ square: 'e7', verbose: true });
-        // console.log(legalMoves);
-      } catch (e) {
-        console.error(e);
-      }
-    </script>
+    <script type="module" src="demo.js"></script>
   </head>
   <body>
     <nav class="demo-nav">
@@ -142,11 +23,6 @@
       </div>
     </div>
 
-    <!-- <script> -->
-    <!--   //   // Connect to esbuild's live reload event stream -->
-    <!--   //   new EventSource('/esbuild').addEventListener('change', () => location.reload()); -->
-    <!--   // -->
-    <!-- </script> -->
     <script type="module" src="/@vite/client"></script>
   </body>
 </html>
