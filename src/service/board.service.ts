@@ -8,9 +8,9 @@ import { cm, hexToRgb } from '../helper.ts';
 import { Store } from '../provider/store.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
+import { cbShader } from '../shader/cbShader.ts';
 
 import { ShapesService } from './shapes.service.ts';
-import { cbShader } from '../shader/cbShader.ts';
 
 export class BoardService {
   public decor(mode: ThemeColors): THREE.Group {
