@@ -163,6 +163,8 @@ export class BoardService {
       lightColor: uLightColor,
       darkColor: uDarkColor,
       highlightColor: uHighlightColor,
+      posStart: uHighlightPosStart,
+      posEnd: uHighlightPosEnd,
     };
 
     material.colorNode = vec4(cbShader(cbConfig), 1.0);
