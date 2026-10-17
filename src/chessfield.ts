@@ -63,7 +63,7 @@ export class Chessfield implements ChessfieldApi {
 
       const initialFen = this.store.getConfig().fen ?? Store.initialFen;
       const initialLastMove = this.store.getConfig().lastMove ?? [];
-      this.setFen(initialFen, initialLastMove);
+      this.setFen(initialFen, initialLastMove as cg.Key[]);
 
       this.cameraProvider = new CameraProvider(this.store.getConfig());
       this.controlsProvider = new ControlsProvider(this.store.getConfig());
@@ -132,6 +132,11 @@ export class Chessfield implements ChessfieldApi {
     controls: OrbitControls,
     font: Font | null,
   ): void {
+    if (!this.cfElement) {
+      console.error('Onload: Chessfield HtmlElement is missing.');
+      return;
+    }
+
     // setTimeout(() => {
     //   // fadeAlpha(loaderComponent.overlayMaterial.opacityNode, 500);
     //   loaderComponent.overlayMaterial.opacityNode = float(1);
@@ -207,6 +212,10 @@ export class Chessfield implements ChessfieldApi {
     this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
 
     this.eventsService.onResize = () => {
+      if (!this.cfElement) {
+        return;
+      }
+
       const rect = this.cfElement.getBoundingClientRect();
       const sizes = { width: rect.width, height: rect.height };
       camera.aspect = sizes.width / sizes.height;
@@ -231,6 +240,11 @@ export class Chessfield implements ChessfieldApi {
   }
 
   async start() {
+    if (!this.cfElement) {
+      console.error('Start: Chessfield HtmlElement is missing.');
+      return;
+    }
+
     this.cfElement.classList.add('cf-chessfield-container');
 
     const rect = this.cfElement.getBoundingClientRect();
