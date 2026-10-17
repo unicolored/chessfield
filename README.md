@@ -1,5 +1,7 @@
 # Chessfield
 
+[![Continuous Integration](https://github.com/unicolored/chessfield/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/unicolored/chessfield/actions/workflows/ci.yml)
+
 ![Chessfield views](https://raw.githubusercontent.com/unicolored/chessfield/main/screenshot/views.jpg)
 
 _Chessfield_ is a free/libre open source chess 3D board.
