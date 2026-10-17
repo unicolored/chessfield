@@ -33,9 +33,9 @@ git pull origin "${DEV_BRANCH}"
 
 # 5. Switch to next, update it, and merge develop into next
 echo "🔀 Preparing '${PUB_BRANCH}' for release..."
-git checkout "${PUB_BRANCH}"
-git pull origin "${PUB_BRANCH}"
-git merge "${DEV_BRANCH}" -m "chore: sync ${DEV_BRANCH} into ${PUB_BRANCH} for release"
+# git checkout "${PUB_BRANCH}"
+# git pull origin "${PUB_BRANCH}"
+# git merge "${DEV_BRANCH}" -m "chore: sync ${DEV_BRANCH} into ${PUB_BRANCH} for release"
 
 # 6. Read and prompt for new version
 CURRENT_VERSION=$(grep version < "$VERSION_FILE" | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
@@ -66,7 +66,7 @@ git push origin "${PUB_BRANCH}"
 git push origin "${GIT_TAG}"
 
 # 12. Switch back to develop so you're ready to code again
-git checkout "${DEV_BRANCH}"
+# git checkout "${DEV_BRANCH}"
 
 echo "✅ Release ${GIT_TAG} created on '${PUB_BRANCH}'!"
 echo "➡️  Next step: Create a Merge Request on GitLab from '${PUB_BRANCH}' into 'main'."
