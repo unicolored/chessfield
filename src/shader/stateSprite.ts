@@ -1,5 +1,5 @@
-import { Fn, bool, vec2, uv, color, If, and, not, Discard, select } from 'three/tsl';
 import * as THREE from 'three';
+import { Fn, bool, vec2, uv, color, If, and, not, Discard, select } from 'three/tsl';
 
 export const stateSprite = Fn(({ show = bool(false), lost = bool(false) }) => {
   const center = vec2(0.5);
