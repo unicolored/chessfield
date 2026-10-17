@@ -60,7 +60,7 @@ if (fenCheck) {
       black: chess.turn() === 'b' ? findCheckKing.pop() : null,
     },
   };
-  console.log('check', check);
+  console.log('board1 check', check);
   board1.setCheck(check);
 }
 

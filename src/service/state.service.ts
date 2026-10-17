@@ -48,10 +48,8 @@ export class StateService {
   private createState(shaderName: StateName): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
 
-    // const colors = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount * 3), 3);
     const visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
 
-    // geometry.setAttribute('instanceColor', colors);
     geometry.setAttribute('instanceVisible', visible);
 
     this.attributes.set(shaderName, { visible });
@@ -104,10 +102,12 @@ export class StateService {
     const attrs = this.attributes.get(shaderName)!;
     attrs.visible.setX(index, show ? 1 : 0);
     attrs.visible.needsUpdate = true;
+    console.log('attrs', attrs);
   }
 
   setStateAt(rank: number, file: number, show = true, shaderName: StateName = 'check'): void {
     const index = rank * 8 + file;
+    console.log('setStateAt', index);
     this.setState(index, show, shaderName);
   }
 

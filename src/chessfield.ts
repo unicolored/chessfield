@@ -104,15 +104,17 @@ export class Chessfield implements ChessfieldApi {
   // }
 
   public setCheck(state: GameState): void {
-    state.status = 'check';
+    this.store.gameOver = state;
+    let kingVec;
 
-    const gO = state;
-    if (gO.kings.white) {
-      const whiteVec2 = coordToVector2(gO.kings.white);
-      this.stateService.setStateAt(whiteVec2.x, whiteVec2.y);
-    } else if (gO.kings.black) {
-      const blackVec2 = coordToVector2(gO.kings.black);
-      this.stateService.setStateAt(blackVec2.x, blackVec2.y);
+    if (state.kings.white) {
+      kingVec = coordToVector2(state.kings.white);
+    } else if (state.kings.black) {
+      kingVec = coordToVector2(state.kings.black);
+    }
+
+    if (kingVec) {
+      this.stateService.setStateAt(kingVec.x, kingVec.y);
     }
   }
 
@@ -362,9 +364,12 @@ export class Chessfield implements ChessfieldApi {
         }
       }
 
-      this.stateService.clearAll(['check']);
-      if (this.store.gameOver) {
-        this.addShapes(this.store.gameOver);
+      if (this.store.gameOver?.status === 'mate') {
+        // this.addShapes(this.store.gameOver);
+      } else if (this.store.gameOver?.status === 'check') {
+        // ...
+      } else if (!this.store.gameOver) {
+        this.stateService.clearAll(['check']);
       }
 
       piecesGroup = this.pieceProvider.updateGamePositions();
