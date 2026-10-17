@@ -166,61 +166,35 @@ export class BoardService {
     };
 
     material.colorNode = vec4(cbShader(cbConfig), 1.0);
-    // material.vertexNode = chessboardShader.vertexShader;
-    // material.fragmentNode = chessboardShader.fragmentShader;
 
     const chessboard = new THREE.Mesh(geometry, material);
-
-    // material.uniforms['u_resolution'].value.set(0.08, 0.08);
-    // const material = this.material as THREE.MeshBasicNodeMaterial;
 
     // Add custom methods
     chessboard.setSquareColors = function (light: string | number, dark: string | number) {
       uLightColor.value.set(new THREE.Color(light));
       uDarkColor.value.set(new THREE.Color(dark));
-      // this.userData['u_resolution'] = vec2(0.08);
     };
 
     chessboard.highlightSquareStart = function (x: number, y: number) {
-      // this.userData['u_highlightPosStart'] = new THREE.Vector2(x, y);
       uHighlightPosStart.value.set(x, y);
     };
 
     chessboard.highlightSquareEnd = function (x: number, y: number) {
-      // this.material.uniforms['u_highlightPosEnd'].value.set(x, y);
       uHighlightPosEnd.value.set(x, y);
     };
 
     chessboard.setHighlightColor = function (hex: string | number) {
-      // const [r, g, b] = hexToRgb(hex);
-      // this.material.uniforms['u_highlightColor'].value.set(r, g, b);
-      // this.userData['u_highlightColor'] = vec3(r, g, b);
       uHighlightColor.value.set(new THREE.Color(hex));
     };
 
     chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
       const [r, g, b] = hexToRgb(hex);
-      // this.material.uniforms['u_highlightStatusMateColor'].value.set(r, g, b);
       material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
     };
 
     chessboard.highlightSquareCursor = function (x: number, y: number) {
-      // this.material.uniforms['u_highlightPosCursor'].value.set(x, y);
       material.userData['u_highlightPosCursor'] = vec2(x, y);
     };
-
-    // chessboard.setStatusMate = function (x: number, y: number) {
-    //   console.log('mate', x, y);
-    //   // this.material.uniforms['u_highlightStatusMate'].value.set(x, y);
-    //   material.userData['u_highlightStatusMate'] = vec2(x, y);
-    //   // this.traverse((child: Object3D) => {
-    //   //   // console.log('statusMate', child);
-    //   //
-    //   //   if (child.name === 'haha') {
-    //   //     console.log('child found', child);
-    //   //   }
-    //   // });
-    // };
 
     chessboard.rotation.x = -Math.PI / 2;
     chessboard.position.y = 0.00005;
