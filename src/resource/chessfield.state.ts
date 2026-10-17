@@ -4,7 +4,7 @@ import type * as cg from '@lichess-org/chessground/types';
 import type * as cf from './chessfield.types';
 
 export interface GameState {
-  status?: 'check' | 'mate' | 'draw';
+  status?: 'check' | 'mate' | 'draw' | 'resign' | 'timeout';
   kings: { white?: cg.Key; black?: cg.Key };
   winner?: 'w' | 'b';
 }
