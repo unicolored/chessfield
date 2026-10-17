@@ -1,5 +1,5 @@
 import type * as cg from '@lichess-org/chessground/types';
-import * as THREE from 'three/webgpu';
+import type * as THREE from 'three/webgpu';
 
 export type Mode = 'light' | 'dark';
 export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark' | string;

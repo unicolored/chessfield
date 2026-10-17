@@ -1,17 +1,4 @@
-import {
-  If,
-  bool,
-  EPSILON,
-  float,
-  Fn,
-  fwidth,
-  smoothstep,
-  uniform,
-  uv,
-  vec2,
-  vec3,
-  Discard,
-} from 'three/tsl';
+import { bool, Discard, EPSILON, float, Fn, If, uv, vec2, vec3 } from 'three/tsl';
 
 export const ring = Fn(
   ({

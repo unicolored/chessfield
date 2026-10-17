@@ -2,9 +2,9 @@ import type * as cg from '@lichess-org/chessground/types';
 import * as THREE from 'three/webgpu';
 
 import { lmToCoordinates, vector2ToCoord } from '../helper';
-import { Store } from '../provider/store';
+import { type Store } from '../provider/store';
 
-import { ShapesService } from './shapes.service';
+import { type ShapesService } from './shapes.service';
 
 export class EventsService {
   public readonly mouse = new THREE.Vector2();

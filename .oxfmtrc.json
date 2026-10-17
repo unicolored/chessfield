@@ -9,6 +9,9 @@
   "ignorePatterns": [],
   "sortPackageJson": false,
   "sortImports": {
+    "order": "asc",
+    "ignoreCase": true,
+    "newlinesBetween": true,
     "groups": [["side_effect"], ["builtin", "external"], ["internal"], ["parent"], ["sibling"], ["index"]]
   }
 }

@@ -1,7 +1,7 @@
 import * as cg from '@lichess-org/chessground/types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { color, float, floor, Fn, mix, select, uniform, uv, vec2, vec3, vec4 } from 'three/tsl';
+import { uniform, vec2, vec3, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm, hexToRgb } from '../helper.ts';

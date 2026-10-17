@@ -4,8 +4,8 @@ import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { tap } from 'rxjs';
 import { Inspector } from 'three/addons/inspector/Inspector.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
+import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
 import { coordToVector2, lmToCoordinates } from './helper.ts';
@@ -178,8 +178,8 @@ export class Chessfield implements ChessfieldApi {
     this.eventsService = new EventsService({
       cfElement: this.cfElement,
       canvas: this.canvas,
-      camera: camera,
-      scene: scene,
+      camera,
+      scene,
       store: this.store,
       shapesService: this.shapesService,
     });
@@ -315,7 +315,7 @@ export class Chessfield implements ChessfieldApi {
       if (mateKey) {
         console.log('mateKey', mateKey);
 
-        let squareVec2 = coordToVector2(mateKey);
+        const squareVec2 = coordToVector2(mateKey);
 
         this.stateService.setStateAt(squareVec2.x, squareVec2.y);
       }

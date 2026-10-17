@@ -1,4 +1,4 @@
-import { Chess, BLACK, WHITE, KING } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
+import { BLACK, Chess, KING, WHITE } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
 
 import { Chessfield } from '../../src/chessfield.ts';
 
@@ -73,7 +73,6 @@ const board2 = new Chessfield(document.getElementById('board-mate'), {
 const fenMate = fens.find(f => f.status === 'mate');
 board2.setFen(fenMate.fen, fenMate.lastMove);
 chess.load(fenMate.fen, { skipValidation: false });
-const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
 const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
 const gO = {
   state: 'mate',
