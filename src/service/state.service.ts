@@ -102,12 +102,10 @@ export class StateService {
     const attrs = this.attributes.get(shaderName)!;
     attrs.visible.setX(index, show ? 1 : 0);
     attrs.visible.needsUpdate = true;
-    console.log('attrs', attrs);
   }
 
   setStateAt(rank: number, file: number, show = true, shaderName: StateName = 'check'): void {
     const index = rank * 8 + file;
-    console.log('setStateAt', index);
     this.setState(index, show, shaderName);
   }
 

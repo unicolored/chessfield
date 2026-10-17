@@ -121,12 +121,9 @@ export class Chessfield implements ChessfieldApi {
   }
 
   public setGameOver(state: GameState): void {
-    console.log('setGameOver api', state);
     this.store.gameOver = state;
 
     this.addShapes(state);
-
-    // TODO: add/enable/show king sprites
   }
 
   private onLoad(
@@ -310,47 +307,6 @@ export class Chessfield implements ChessfieldApi {
     );
   }
 
-  private addShapes(state: GameState): void {
-    const gO = state;
-    /*if (gO.status === 'check') {
-      if (gO.kings.white) {
-        const whiteVec2 = coordToVector2(gO.kings.white);
-        console.log('whiteVec2', whiteVec2);
-        this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'ring');
-      } else if (gO.kings.black) {
-        const blackVec2 = coordToVector2(gO.kings.black);
-        console.log(blackVec2);
-        this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
-      }
-    } else*/ if (gO.winner) {
-      let mateKey;
-      if (gO.winner === 'w') {
-        mateKey = gO.kings.black;
-      } else {
-        // Black wins
-        mateKey = gO.kings.white;
-      }
-      if (mateKey) {
-        console.log('mateKey', mateKey);
-
-        const squareVec2 = coordToVector2(mateKey);
-
-        this.stateService.setStateAt(squareVec2.x, squareVec2.y);
-      }
-    } else {
-      // game is a draw
-      console.log('draw!', gO.kings);
-      // if (gO.kings.white) {
-      //   const whiteVec2 = coordToVector2(gO.kings.white);
-      //   // this.shapesService.setShapeAt(whiteVec2.x, whiteVec2.y, '#ff0000', true, 'ring');
-      // }
-      // if (gO.kings.black) {
-      //   const blackVec2 = coordToVector2(gO.kings.black);
-      //   // this.shapesService.setShapeAt(blackVec2.x, blackVec2.y, '#ff0000', true, 'ring');
-      // }
-    }
-  }
-
   private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
     let piecesGroup: THREE.Group;
 
@@ -366,17 +322,76 @@ export class Chessfield implements ChessfieldApi {
         }
       }
 
-      if (this.store.gameOver?.status === 'mate') {
-        // this.addShapes(this.store.gameOver);
+      piecesGroup = this.pieceProvider.updateGamePositions();
+      this.store.piecesGroup = piecesGroup;
+      scene.add(piecesGroup);
+
+      // Happen after pieces have been put in position
+      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameOver?.status)) {
+        this.addShapes(this.store.gameOver);
       } else if (this.store.gameOver?.status === 'check') {
         // ...
       } else if (!this.store.gameOver) {
         this.stateService.clearAll(['check']);
       }
-
-      piecesGroup = this.pieceProvider.updateGamePositions();
-      this.store.piecesGroup = piecesGroup;
-      scene.add(piecesGroup);
     });
+  }
+
+  private addShapes(state: GameState | null): void {
+    if (!state) {
+      return;
+    }
+
+    const findPieceOnMateKey = (mateKey: string) => {
+      return this.store.piecesGroup?.children.find(c => {
+        return c.userData['coord'] === mateKey;
+      });
+    };
+
+    const findStateSprite = (piece: THREE.Object3D) => {
+      return piece.children.find(c => {
+        return c.name === 'stateSprite';
+      });
+    };
+
+    if (state.winner) {
+      let mateKey;
+      if (state.winner === 'w') {
+        mateKey = state.kings.black;
+      } else {
+        // Black wins
+        mateKey = state.kings.white;
+      }
+      if (mateKey) {
+        const squareVec2 = coordToVector2(mateKey);
+
+        this.stateService.setStateAt(squareVec2.x, squareVec2.y);
+
+        const pieceFound = findPieceOnMateKey(mateKey);
+
+        if (pieceFound) {
+          const spriteFound = findStateSprite(pieceFound);
+          spriteFound.userData['showSprite'] = true;
+          spriteFound.userData['lostState'] = true;
+        }
+      }
+    } else {
+      // game is a draw
+      const pieceWhiteFound = findPieceOnMateKey(state.kings.white);
+
+      if (pieceWhiteFound) {
+        const spriteFound = findStateSprite(pieceWhiteFound);
+        spriteFound.userData['showSprite'] = true;
+        spriteFound.userData['lostState'] = false;
+      }
+
+      const pieceBlackFound = findPieceOnMateKey(state.kings.black);
+
+      if (pieceBlackFound) {
+        const spriteFound = findStateSprite(pieceBlackFound);
+        spriteFound.userData['showSprite'] = true;
+        spriteFound.userData['lostState'] = false;
+      }
+    }
   }
 }

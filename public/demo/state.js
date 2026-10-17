@@ -52,102 +52,97 @@ if (fenCheck) {
   chess.load(fenCheck.fen, { skipValidation: false });
   const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
   // -> ['e8']
-  console.log(`Check king ${chess.turn()} on:`, findCheckKing);
   const check = {
-    state: 'check',
+    status: 'check',
     kings: {
       white: chess.turn() === 'w' ? findCheckKing.pop() : null,
       black: chess.turn() === 'b' ? findCheckKing.pop() : null,
     },
   };
-  console.log('board1 check', check);
   board1.setCheck(check);
 }
 
 // MATE
-const board2 = new Chessfield(document.getElementById('board-mate'), {
-  orientation: 'white',
-  camera: 'black',
-  angle: 'left',
-  theme: 'brown',
-  mode: 'dark',
-});
 const fenMate = fens.find(f => f.status === 'mate');
-board2.setFen(fenMate.fen, fenMate.lastMove);
-chess.load(fenMate.fen, { skipValidation: false });
-const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
-const gO = {
-  state: 'mate',
-  winner: 'w',
-  kings: {
-    // white: findWhiteKing.pop(),
-    black: findBlackKing.pop(),
-  },
-};
-console.log('board2 set gO', gO);
-board2.setGameOver(gO);
+if (fenMate) {
+  const board2 = new Chessfield(document.getElementById('board-mate'), {
+    orientation: 'white',
+    camera: 'black',
+    angle: 'left',
+    theme: 'brown',
+    mode: 'dark',
+  });
+  board2.setFen(fenMate.fen, fenMate.lastMove);
+  chess.load(fenMate.fen, { skipValidation: false });
+  const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const gO = {
+    status: 'mate',
+    winner: 'w',
+    kings: {
+      // white: findWhiteKing.pop(),
+      black: findBlackKing.pop(),
+    },
+  };
+  board2.setGameOver(gO);
+}
 
 // DRAW
-const board3 = new Chessfield(document.getElementById('board-draw'), {
-  angle: 'right',
-  camera: 'black',
-  theme: 'green',
-  mode: 'light',
-});
-
 const fenDraw = fens.find(f => f.status === 'draw');
-
-board3.setFen(fenDraw.fen, fenDraw.lastMove);
-chess.load(fenDraw.fen, { skipValidation: false });
-const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-const findDrawBlackKing = chess.findPiece({ type: KING, color: BLACK });
-const gOdraw = {
-  state: 'draw',
-  kings: {
-    white: findDrawWhiteKing.pop(),
-    black: findDrawBlackKing.pop(),
-  },
-};
-console.log('board3 set gO', gOdraw);
-board3.setGameOver(gOdraw);
+if (fenDraw) {
+  const board3 = new Chessfield(document.getElementById('board-draw'), {
+    angle: 'right',
+    camera: 'black',
+    theme: 'green',
+    mode: 'light',
+  });
+  board3.setFen(fenDraw.fen, fenDraw.lastMove);
+  chess.load(fenDraw.fen, { skipValidation: false });
+  const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+  const findDrawBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const gOdraw = {
+    status: 'draw',
+    kings: {
+      white: findDrawWhiteKing.pop(),
+      black: findDrawBlackKing.pop(),
+    },
+  };
+  board3.setGameOver(gOdraw);
+}
 
 // RESIGN
-const board4 = new Chessfield(document.getElementById('board-resign'), {});
-
 const fenResign = fens.find(f => f.status === 'resign');
-
-board4.setFen(fenResign.fen, fenResign.lastMove);
-chess.load(fenResign.fen, { skipValidation: false });
-// const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-const findResignBlackKing = chess.findPiece({ type: KING, color: BLACK });
-const gOresign = {
-  state: 'resign',
-  winner: 'w',
-  kings: {
-    // white: findResignWhiteKing.pop(),
-    black: findResignBlackKing.pop(),
-  },
-};
-console.log('board4 set gO', gOdraw);
-board4.setGameOver(gOresign);
+if (fenResign) {
+  const board4 = new Chessfield(document.getElementById('board-resign'), {});
+  board4.setFen(fenResign.fen, fenResign.lastMove);
+  chess.load(fenResign.fen, { skipValidation: false });
+  // const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+  const findResignBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const gOresign = {
+    status: 'resign',
+    winner: 'w',
+    kings: {
+      // white: findResignWhiteKing.pop(),
+      black: findResignBlackKing.pop(),
+    },
+  };
+  board4.setGameOver(gOresign);
+}
 
 // LOST ON TIME
-const board5 = new Chessfield(document.getElementById('board-timeout'), {});
-
 const fenTime = fens.find(f => f.status === 'timeout');
 if (fenTime) {
+  const board5 = new Chessfield(document.getElementById('board-timeout'), {});
   board5.setFen(fenTime.fen, fenTime.lastMove);
   chess.load(fenTime.fen, { skipValidation: false });
   // const findTimeWhiteKing = chess.findPiece({ type: KING, color: WHITE });
   const findTimeBlackKing = chess.findPiece({ type: KING, color: BLACK });
   const gOtime = {
-    state: 'timeout',
+    status: 'timeout',
     winner: 'w',
     kings: {
       // white: findTimeWhiteKing.pop(),
       black: findTimeBlackKing.pop(),
     },
   };
-  console.log('board5 set gO', gOdraw);
   board5.setGameOver(gOtime);
 }

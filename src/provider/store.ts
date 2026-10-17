@@ -118,7 +118,6 @@ export class Store {
         ],
       };
 
-      // this.fenSubject.next(fen);
       this.movesSubject.next(moves);
     }
   };

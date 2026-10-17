@@ -109,8 +109,6 @@ export class GameProvider {
         const boundingBox = new THREE.Box3().setFromObject(mesh);
         const highestY = boundingBox.max.y;
         spriteMesh.position.set(0, highestY + cm(0.33), 0);
-        // spriteMesh.userData['showSprite'] = true;
-        // spriteMesh.userData['lostState'] = true;
         mesh.add(spriteMesh);
       }
 
