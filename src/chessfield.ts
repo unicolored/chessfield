@@ -52,12 +52,12 @@ export class Chessfield implements ChessfieldApi {
   private foundLastMove!: Move | null;
 
   constructor(
-    private cfElement: HTMLElement,
+    private cfElement: HTMLElement | null,
     config?: ChessfieldConfig,
   ) {
     this.store = new Store(config);
 
-    if (this.cfElement instanceof HTMLElement) {
+    if (this.cfElement && this.cfElement instanceof HTMLElement) {
       this.gameProvider = new GameProvider(this.store);
       this.pieceProvider = new PieceProvider(this.store);
 
