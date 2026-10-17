@@ -1,4 +1,4 @@
-import { Chess, BLACK, WHITE } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
+import { BLACK, Chess, WHITE } from 'https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm';
 import { Chessfield } from '../../src/chessfield.ts';
 
 const board1 = new Chessfield(document.getElementById('board-1'), {
