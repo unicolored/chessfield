@@ -99,9 +99,9 @@ export class Chessfield implements ChessfieldApi {
     }
   }
 
-  public getShapesMesh(shaderName: ShaderName): THREE.InstancedMesh {
-    return this.shapesService.getMesh(shaderName);
-  }
+  // public getShapesMesh(shaderName: ShaderName): THREE.InstancedMesh {
+  //   return this.shapesService.getMesh(shaderName);
+  // }
 
   public setCheck(state: GameState): void {
     state.status = 'check';

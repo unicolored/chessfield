@@ -11,7 +11,8 @@ import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts
 
 import { PieceProvider } from './piece.provider';
 import { Store } from './store.ts';
-import { If, bool, color, Fn, uv, userData, vec2 } from 'three/tsl';
+import { bool, userData } from 'three/tsl';
+import { kingState, stateSprite } from '../shader/stateSprite.ts';
 
 export class GameProvider {
   static readonly whiteKeys = Array.from('RNBQKP');
@@ -84,50 +85,38 @@ export class GameProvider {
       const baseGeometry: THREE.BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
       const geometry = baseGeometry ? baseGeometry.clone() : undefined;
       const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
-      const mesh =
-        value.count > 1
-          ? new THREE.InstancedMesh(geometry, material, value.count)
-          : new THREE.Mesh(geometry, material);
+
+      const spriteMaterial = new THREE.SpriteNodeMaterial({
+        transparent: true,
+      });
+
+      const userDataShow = userData('showSprite', 'bool');
+      const userDataWinner = userData('lostState', 'bool');
+      spriteMaterial.colorNode = stateSprite({ lost: userDataWinner, show: userDataShow });
+
+      let mesh;
+
+      if (value.count > 1) {
+        mesh = new THREE.InstancedMesh(geometry, material, value.count);
+      } else {
+        mesh = new THREE.Mesh(geometry, material);
+
+        const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
+
+        const spriteMesh = new THREE.Mesh(sprite, spriteMaterial);
+        spriteMesh.name = 'stateSprite';
+
+        const boundingBox = new THREE.Box3().setFromObject(mesh);
+        const highestY = boundingBox.max.y;
+        spriteMesh.position.set(0, highestY + cm(0.33), 0);
+        // spriteMesh.userData['showSprite'] = true;
+        // spriteMesh.userData['lostState'] = true;
+        mesh.add(spriteMesh);
+      }
 
       mesh.castShadow = false;
       mesh.receiveShadow = false;
       mesh.name = `${key}-${value.color}-${value.role}`;
-
-      if (value.role === 'king') {
-        const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
-
-        const kingState = Fn(({ show = bool(false), winner = bool(false) }) => {
-          const center = vec2(0.5);
-          // const circle = remap(sub(distance(uv(0), center), 0.5), 0, 0.01, 1, 0);
-          const distanceToCenter = uv().distance(center);
-          const lineSDF = distanceToCenter.sub(0.5);
-          const circle = lineSDF.remap(0, 0.0001, 1, 0);
-
-          const stateColor = color(new THREE.Color('#00ffff'));
-          If(show.and(winner), () => {
-            stateColor.assign(color(new THREE.Color('#ff0000')));
-          });
-
-          If(circle.lessThanEqual(0), () => {
-            circle.discard();
-          });
-
-          return circle.mul(stateColor);
-        });
-
-        const material = new THREE.SpriteNodeMaterial({
-          transparent: true,
-        });
-
-        const userDataShow = userData('show', 'bool', bool(false));
-        const userDataWinner = userData('winner', 'bool', bool(false));
-        material.colorNode = kingState({ show: userDataShow, winner: userDataWinner });
-        const spriteMesh = new THREE.Mesh(sprite, material);
-        spriteMesh.userData['show'] = bool(false);
-        spriteMesh.userData['winner'] = bool(false);
-        spriteMesh.position.set(0, cm(2.1), 0);
-        mesh.add(spriteMesh);
-      }
 
       boardPiecesObjectsMap.set(key, mesh);
     });
