@@ -1,6 +1,6 @@
 {
   "name": "chessfield",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A TypeScript+ThreeJS library to render a 3D chessboard",
   "main": "dist/chessfield.umd.js",
   "module": "dist/chessfield.js",
@@ -51,6 +51,18 @@
     "typescript": "^7.0.2",
     "vite": "^6.2.5",
     "vitest": "^4.1.11"
+  },
+  "peerDependencies": {
+    "three": ">=0.186.0",
+    "@lichess-org/chessground": ">=10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "three": {
+      "optional": false
+    },
+    "@lichess-org/chessground": {
+      "optional": false
+    }
   },
   "keywords": [
     "chess",
