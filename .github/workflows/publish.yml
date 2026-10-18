@@ -52,3 +52,5 @@ jobs:
 
       - name: Stage publish to npm (with provenance)
         run: npm publish --stage --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
