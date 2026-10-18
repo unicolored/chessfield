@@ -52,6 +52,18 @@
     "vite": "^6.2.5",
     "vitest": "^4.1.11"
   },
+  "peerDependencies": {
+    "three": ">=0.186.0",
+    "@lichess-org/chessground": ">=10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "three": {
+      "optional": false
+    },
+    "@lichess-org/chessground": {
+      "optional": false
+    }
+  },
   "keywords": [
     "chess",
     "chessboard",
