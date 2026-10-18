@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock Three.js Inspector to avoid localStorage access in jsdom
 vi.mock('three/addons/inspector/Inspector.js', () => {
