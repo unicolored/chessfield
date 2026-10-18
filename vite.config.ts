@@ -9,7 +9,7 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/chessfield.ts'),
       name: 'Chessfield',
-      fileName: (format) => (format === 'es' ? 'chessfield.js' : `chessfield.${format}.js`),
+      fileName: format => (format === 'es' ? 'chessfield.js' : `chessfield.${format}.js`),
       formats: ['es', 'umd'],
     },
     rollupOptions: {
