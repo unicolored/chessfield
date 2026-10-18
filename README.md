@@ -24,7 +24,7 @@ Please read more about GPL for JavaScript on [greendrake.info](https://greendrak
 
 ## Demos
 
-- [Chessfield docs](https://unicolo.red/chessfield/)
+- [Chessfield docs](https://unicolored.com/chessfield/)
 
 ## Features
 
