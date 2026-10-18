@@ -108,6 +108,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@lichess-org/chessground':
+        specifier: '>=10.2.0'
+        version: 10.2.0
+      three:
+        specifier: '>=0.186.1'
+        version: 0.186.1
     devDependencies:
       '@chess-fu/fen-parser':
         specifier: ^1.1.4
@@ -118,9 +125,6 @@ importers:
       '@eslint/js':
         specifier: ^9.23.0
         version: 9.39.5
-      '@lichess-org/chessground':
-        specifier: ^10.2.0
-        version: 10.2.0
       '@types/three':
         specifier: ^0.186.0
         version: 0.186.0
@@ -163,9 +167,6 @@ importers:
       terser:
         specifier: ^5.39.0
         version: 5.51.2
-      three:
-        specifier: ^0.186.1
-        version: 0.186.1
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
