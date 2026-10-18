@@ -38,11 +38,11 @@ jobs:
             exit 1
           fi
 
-      # - name: Run tests
-      #   run: pnpm test
+      - name: Run tests
+        run: pnpm test
 
       - name: Build package
         run: pnpm dist
 
       - name: Stage publish to npm (with provenance)
-        run: pnpm publish --stage --provenance --access public
+        run: npm publish --stage --provenance --access public
