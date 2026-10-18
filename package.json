@@ -50,11 +50,12 @@
     "three": "^0.186.1",
     "typescript": "^7.0.2",
     "vite": "^6.2.5",
+    "vite-plugin-dts": "^5.1.2",
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
-    "three": ">=0.186.0",
-    "@lichess-org/chessground": ">=10.0.0"
+    "@lichess-org/chessground": ">=10.0.0",
+    "three": ">=0.186.0"
   },
   "peerDependenciesMeta": {
     "three": {
