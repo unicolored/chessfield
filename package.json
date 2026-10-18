@@ -8,6 +8,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/chessfield.d.ts",
       "import": "./dist/chessfield.js",
       "require": "./dist/chessfield.umd.js"
     },
@@ -37,6 +38,7 @@
     "@types/three": "^0.186.0",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
+    "@typescript/typescript6": "^6.0.2",
     "esbuild": "^0.28.1",
     "globals": "^16.0.0",
     "jsdom": "^30.0.1",
