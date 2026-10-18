@@ -45,10 +45,10 @@ jobs:
       - name: Build package
         run: pnpm dist
 
-      # - name: Publish to npm (first publish to validate trusted publisher)
-      #   run: npm publish --access public --provenance
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm (first publish to validate trusted publisher)
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Stage publish to npm (with provenance)
         run: npm publish --stage --provenance --access public
