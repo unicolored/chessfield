@@ -30,7 +30,6 @@ export default defineConfig({
       fileName: format => (format === 'es' ? 'chessfield.js' : `chessfield.${format}.js`),
       formats: ['es', 'umd'],
     },
-    external,
     rollupOptions: {
       external,
       output: {
@@ -81,7 +80,7 @@ export default defineConfig({
   plugins: [
     dts({
       entryRoot: 'src',
-      outDir: 'dist',
+      outDirs: 'dist',
       tsconfigPath: 'tsconfig.build.json',
       insertTypesEntry: true,
     }),
