@@ -119,14 +119,14 @@ try {
 
   requestAnimationFrame(animate);
 
-  const castling = chess.getCastlingRights(BLACK); // black can castle queenside only
-  // -> { 'k': false, 'q': true }
-
-  const moveNumber = chess.moveNumber();
-
-  const turn = chess.turn(); // Returns the current side to move.
-
-  const isAttacked = chess.isAttacked('e4', WHITE); // .isAttacked(square, color)
+  // const castling = chess.getCastlingRights(BLACK); // black can castle queenside only
+  // // -> { 'k': false, 'q': true }
+  //
+  // const moveNumber = chess.moveNumber();
+  //
+  // const turn = chess.turn(); // Returns the current side to move.
+  //
+  // const isAttacked = chess.isAttacked('e4', WHITE); // .isAttacked(square, color)
 
   // if (chess.isGameOver()) {
   //   const isCheckmate = chess.isCheckmate(); // Returns true or false if the side to move has been checkmated.
@@ -145,7 +145,7 @@ try {
 
   // Returns a list of legal moves from the current position.
   // .moves({ piece?: Piece, square?: Square, verbose = false} = {})
-  const legalMoves = chess.moves({ square: 'e7', verbose: true });
+  // const legalMoves = chess.moves({ square: 'e7', verbose: true });
   // console.log(legalMoves);
 } catch (e) {
   console.error(e);

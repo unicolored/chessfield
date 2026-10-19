@@ -21,7 +21,7 @@ export class EventsService {
   private readonly RAYCAST_INTERVAL = 33;
 
   onSquareHover: ((rank: number, file: number) => void) | null = null;
-  onSquareRightClick: ((rank: number, file: number, color: string) => void) | null = null;
+  onSquareRightClick: ((rank: number, file: number, shape: string) => void) | null = null;
   onLeftClickClear: (() => void) | null = null;
   onResize: (() => void) | null = null;
 
@@ -132,12 +132,14 @@ export class EventsService {
 
     // TODO: move these colors to the brown theme in store.ts
     // And set alternative colors for each theme so it appears correctly on dark and light squares
-    let color = '#73a45d';
-    if (event.altKey && event.ctrlKey) color = '#f0b24d';
-    else if (event.altKey) color = '#66799f';
-    else if (event.ctrlKey) color = '#b86f60';
+    let shape = 'ring'; // '#73a45d';
+    if (event.altKey && event.ctrlKey)
+      shape = 'ringCtrlAlt'; // '#f0b24d';
+    else if (event.altKey)
+      shape = 'ringAlt'; // '#66799f';
+    else if (event.ctrlKey) shape = 'ringCtrl'; // '#b86f60';
 
-    this.onSquareRightClick?.(square.rank, square.file, color);
+    this.onSquareRightClick?.(square.rank, square.file, shape);
   };
 
   private getSquareFromMouse(mouse: THREE.Vector2): { rank: number; file: number } | null {

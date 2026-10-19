@@ -161,7 +161,7 @@ export class Chessfield implements ChessfieldApi {
     this.store.chessboard = this.boardService.createChessboard();
     this.store.chessboard.setSquareColors(themeColors.light, themeColors.dark);
     this.store.chessboard.setHighlightColor(themeColors.highlight);
-    this.store.chessboard.setHighlightStatusMateColor(themeColors.highlightStatusMate);
+    // this.store.chessboard.setStatusCheckColor(themeColors.statusCheck);
     chessboardGroup.add(this.store.chessboard);
 
     this.updatePieces(scene, this.store.chessboard);
@@ -194,9 +194,17 @@ export class Chessfield implements ChessfieldApi {
       this.store.chessboard?.highlightSquareCursor(rank, file);
     };
 
-    this.eventsService.onSquareRightClick = (rank, file, color) => {
+    this.eventsService.onSquareRightClick = (rank, file, shape) => {
       const index = rank * 8 + file;
       const isVisible = this.shapesService.getVisible(index, 'ring');
+
+      const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
+
+      console.log(theme);
+
+      const color = theme[shape]?.toString() ?? '#000000';
+
+      console.log(shape, color);
 
       if (!isVisible) {
         this.shapesService.setShapeAt(rank, file, color, true, 'ring');

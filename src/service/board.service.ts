@@ -1,10 +1,10 @@
 import * as cg from '@lichess-org/chessground/types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { uniform, vec2, vec3, vec4 } from 'three/tsl';
+import { uniform, vec2, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { cm, hexToRgb } from '../helper.ts';
+import { cm } from '../helper.ts';
 import { Store } from '../provider/store.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
@@ -189,10 +189,10 @@ export class BoardService {
       uHighlightColor.value.set(new THREE.Color(hex));
     };
 
-    chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
-      const [r, g, b] = hexToRgb(hex);
-      material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
-    };
+    // chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
+    //   const [r, g, b] = hexToRgb(hex);
+    //   material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
+    // };
 
     chessboard.highlightSquareCursor = function (x: number, y: number) {
       material.userData['u_highlightPosCursor'] = vec2(x, y);

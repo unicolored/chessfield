@@ -51,8 +51,12 @@ export interface ThemeColors {
   light: string | number;
   dark: string | number;
   highlight: string | number;
-  highlightStatusMate: string | number;
+  statusCheck: string | number;
   selected: string | number;
+  ring?: string | number;
+  ringCtrlAlt?: string | number;
+  ringAlt?: string | number;
+  ringCtrl?: string | number;
 }
 
 export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
@@ -74,7 +78,7 @@ declare module 'three/webgpu' {
     highlightSquareEnd: (x: number, y: number) => void;
     highlightSquareSelected: (x: number, y: number) => void;
     setHighlightColor: (hex: string | number) => void;
-    setHighlightStatusMateColor: (hex: string | number) => void;
+    setStatusCheckColor: (hex: string | number) => void;
     highlightSquareCursor: (x: number, y: number) => void;
     // setStatusMate: (x: number, y: number) => void;
     setShape: (index: number, colorHex: string, show?: boolean) => void;
