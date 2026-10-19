@@ -22,7 +22,7 @@ export class StateService {
     }
   }
 
-  public createShaderMaterial(shaderName: StateName, color: string = '#B0F'): THREE.MeshBasicNodeMaterial {
+  public createShaderMaterial(shaderName: StateName, color = '#B0F'): THREE.MeshBasicNodeMaterial {
     if (this.materials.has(shaderName)) {
       return this.materials.get(shaderName)!;
     }
@@ -45,7 +45,7 @@ export class StateService {
     return shaderMaterial;
   }
 
-  private createState(shaderName: StateName, color: string = '#B0F'): THREE.InstancedMesh {
+  private createState(shaderName: StateName, color = '#B0F'): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
 
     const visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
