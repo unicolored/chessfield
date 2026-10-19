@@ -1,15 +1,17 @@
-import { checkShader } from './check.shader';
-import { ringShader } from './ring.shader';
+// import { checkShader } from './check.shader';
+// import { ringShader } from './ring.shader';
+//
+// export { ringShader } from './ring.shader';
+// export { checkShader } from './check.shader';
 
-export { ringShader } from './ring.shader';
-export { checkShader } from './check.shader';
+import { ring } from './ringShader';
 
 export const shaderRegistry = {
-  ring: ringShader,
+  ring: ring,
 } as const;
 
 export const stateRegistry = {
-  check: checkShader,
+  check: ring,
 } as const;
 
 export type ShaderName = keyof typeof shaderRegistry;

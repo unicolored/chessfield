@@ -103,8 +103,7 @@ export class EventsService {
       const instanceId = intersect.instanceId;
       if (mesh instanceof THREE.InstancedMesh && instanceId !== undefined) {
         const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
-          | THREE.InstancedBufferAttribute
-          | undefined;
+          THREE.InstancedBufferAttribute | undefined;
         if (coordAttr) {
           const file = coordAttr.getX(instanceId);
           const rank = coordAttr.getY(instanceId);
@@ -128,7 +127,6 @@ export class EventsService {
     event.preventDefault();
 
     const square = this.getSquareFromMouse(this.mouse);
-    console.log(square);
     if (!square) return;
 
     // TODO: move these colors to the brown theme in store.ts

@@ -1,18 +1,12 @@
 import { color, float, floor, Fn, mix, select, uv, vec2, vec3 } from 'three/tsl';
 export const cbShader = Fn(
-  (args: {
-    lightColor?: ReturnType<typeof vec3>;
-    darkColor?: ReturnType<typeof vec3>;
-    highlightColor?: ReturnType<typeof vec3>;
-    posStart?: ReturnType<typeof vec2>;
-    posEnd?: ReturnType<typeof vec2>;
+  ({
+    lightColor = color('white'),
+    darkColor = color('black'),
+    highlightColor = color('yellow'),
+    posStart = vec2(-1, -1),
+    posEnd = vec2(-1, -1),
   }) => {
-    const lightColor = args.lightColor ?? color('white');
-    const darkColor = args.darkColor ?? color('black');
-    const highlightColor = args.highlightColor ?? color('yellow');
-    const posStart = args.posStart ?? vec2(-1, -1);
-    const posEnd = args.posEnd ?? vec2(-1, -1);
-
     // TSL Graph
     const squareSize = float(0.125);
     const coord = uv().div(squareSize);
@@ -39,13 +33,5 @@ export const cbShader = Fn(
     const mixStart = select(isStartSquare, highlightMix, baseMix);
 
     return vec3(select(isEndSquare, highlightMix, mixStart));
-  },
-  {
-    lightColor: 'vec3',
-    darkColor: 'vec3',
-    highlightColor: 'vec3',
-    posStart: 'vec2',
-    posEnd: 'vec2',
-    return: 'vec3',
   },
 );
