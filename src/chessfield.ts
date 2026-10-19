@@ -2,7 +2,6 @@ import './chessfield.css';
 
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
-import { Inspector } from 'three/addons/inspector/Inspector.js';
 import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
@@ -32,6 +31,8 @@ import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
+
+export type { ChessfieldApi, ChessfieldConfig, GameState };
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
@@ -266,7 +267,11 @@ export class Chessfield implements ChessfieldApi {
     this.canvas = this.rendererProvider.getCanvas();
     const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
     this.cfElement.appendChild(renderer.domElement);
-    renderer.inspector = new Inspector(); // for debug
+    console.log('prod?', import.meta.env.PROD);
+    if (!import.meta.env.PROD) {
+      const { Inspector } = await import('three/addons/inspector/Inspector.js');
+      renderer.inspector = new Inspector();
+    }
     await renderer.init();
 
     // Controls
