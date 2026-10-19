@@ -2,8 +2,6 @@ import './chessfield.css';
 
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
-import { tap } from 'rxjs';
-import { Inspector } from 'three/addons/inspector/Inspector.js';
 import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
@@ -34,10 +32,12 @@ import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
 
+export type { ChessfieldApi, ChessfieldConfig, GameState };
+export * from './resource/chessfield.types';
+
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
   private readonly shapesService = new ShapesService(['ring']);
-  private readonly stateService = new StateService(['check']);
   private readonly rendererProvider = new RendererProvider();
   private readonly sceneProvider = new SceneProvider();
   private readonly store: Store;
@@ -45,6 +45,7 @@ export class Chessfield implements ChessfieldApi {
   private controlsProvider!: ControlsProvider;
   private readonly gameProvider!: GameProvider;
   private readonly pieceProvider!: PieceProvider;
+  private stateService!: StateService;
   private themeProvider!: ThemeProvider;
 
   private canvas!: HTMLCanvasElement;
@@ -68,13 +69,15 @@ export class Chessfield implements ChessfieldApi {
       this.cameraProvider = new CameraProvider(this.store.getConfig());
       this.controlsProvider = new ControlsProvider(this.store.getConfig());
       this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
+      const theme = this.themeProvider.getThemeColors();
+      this.stateService = new StateService([['check', theme.statusCheck]]);
 
       this.start();
     }
   }
 
   public setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
-    this.store.gameOver = null;
+    this.store.gameState = null;
 
     this.store.setFen(fen, lastMove);
   }
@@ -106,7 +109,7 @@ export class Chessfield implements ChessfieldApi {
   // }
 
   public setCheck(state: GameState): void {
-    this.store.gameOver = state;
+    this.store.gameState = state;
     let kingVec;
 
     if (state.kings.white) {
@@ -121,7 +124,7 @@ export class Chessfield implements ChessfieldApi {
   }
 
   public setGameOver(state: GameState): void {
-    this.store.gameOver = state;
+    this.store.gameState = state;
 
     this.addShapes(state);
   }
@@ -161,7 +164,7 @@ export class Chessfield implements ChessfieldApi {
     this.store.chessboard = this.boardService.createChessboard();
     this.store.chessboard.setSquareColors(themeColors.light, themeColors.dark);
     this.store.chessboard.setHighlightColor(themeColors.highlight);
-    this.store.chessboard.setHighlightStatusMateColor(themeColors.highlightStatusMate);
+    // this.store.chessboard.setStatusCheckColor(themeColors.statusCheck);
     chessboardGroup.add(this.store.chessboard);
 
     this.updatePieces(scene, this.store.chessboard);
@@ -194,9 +197,17 @@ export class Chessfield implements ChessfieldApi {
       this.store.chessboard?.highlightSquareCursor(rank, file);
     };
 
-    this.eventsService.onSquareRightClick = (rank, file, color) => {
+    this.eventsService.onSquareRightClick = (rank, file, shape) => {
       const index = rank * 8 + file;
       const isVisible = this.shapesService.getVisible(index, 'ring');
+
+      const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
+
+      console.log(theme);
+
+      const color = theme[shape]?.toString() ?? '#000000';
+
+      console.log(shape, color);
 
       if (!isVisible) {
         this.shapesService.setShapeAt(rank, file, color, true, 'ring');
@@ -267,7 +278,12 @@ export class Chessfield implements ChessfieldApi {
     this.canvas = this.rendererProvider.getCanvas();
     const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
     this.cfElement.appendChild(renderer.domElement);
-    renderer.inspector = new Inspector(); // for debug
+    console.log('prod?', import.meta.env.PROD);
+    if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
+      console.log('load Inspector', import.meta.env);
+      const { Inspector } = await import('three/addons/inspector/Inspector.js');
+      renderer.inspector = new Inspector();
+    }
     await renderer.init();
 
     // Controls
@@ -310,7 +326,8 @@ export class Chessfield implements ChessfieldApi {
   private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
     let piecesGroup: THREE.Group;
 
-    this.store.movesSubject$.pipe(tap(() => scene.remove(piecesGroup))).subscribe((moves: Moves) => {
+    this.store.movesSubject$.subscribe((moves: Moves) => {
+      scene.remove(piecesGroup);
       this.foundLastMove = GameProvider.findLastMove(moves.moves);
       if (this.foundLastMove) {
         this.gameProvider.initGamePieces(this.foundLastMove);
@@ -327,11 +344,11 @@ export class Chessfield implements ChessfieldApi {
       scene.add(piecesGroup);
 
       // Happen after pieces have been put in position
-      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameOver?.status)) {
-        this.addShapes(this.store.gameOver);
-      } else if (this.store.gameOver?.status === 'check') {
+      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameState?.status)) {
+        this.addShapes(this.store.gameState);
+      } else if (this.store.gameState?.status === 'check') {
         // ...
-      } else if (!this.store.gameOver) {
+      } else if (!this.store.gameState) {
         this.stateService.clearAll(['check']);
       }
     });

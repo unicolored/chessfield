@@ -9,7 +9,8 @@ export class ThemeProvider {
   ) {}
 
   getThemeColors(): ThemeColors {
-    return Store.themes[this.theme];
+    const mergeTheme = { ...Store.themes['default'], ...Store.themes[this.theme] };
+    return mergeTheme;
   }
 
   getModeColors(): ThemeColors {
