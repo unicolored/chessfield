@@ -1,7 +1,6 @@
 import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
 import type * as cg from '@lichess-org/chessground/types';
-import { BehaviorSubject, type Observable } from 'rxjs';
 import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
@@ -9,6 +8,7 @@ import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { type GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { Themes } from '../resource/chessfield.types.ts';
+import { SimpleSubject, SimpleObservable } from './observable.ts';
 
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
@@ -95,7 +95,7 @@ export class Store {
     this.config = config;
   }
 
-  private movesSubject = new BehaviorSubject<cf.Moves>({
+  private movesSubject = new SimpleSubject<cf.Moves>({
     moves: [
       {
         fen: Store.initialFen,
@@ -103,7 +103,7 @@ export class Store {
       },
     ],
   });
-  movesSubject$: Observable<cf.Moves> = this.movesSubject.asObservable();
+  movesSubject$ = new SimpleObservable(this.movesSubject);
 
   // private fenSubject = new BehaviorSubject<cg.FEN>(Store.initialFen);
   // fenSubject$: Observable<cg.FEN> = this.fenSubject.asObservable();
@@ -122,8 +122,8 @@ export class Store {
     }
   };
 
-  private gamePiecesSubject = new BehaviorSubject<cf.BoardPiece[]>([]);
-  gamePiecesSubject$: Observable<cf.BoardPiece[]> = this.gamePiecesSubject.asObservable();
+  private gamePiecesSubject = new SimpleSubject<cf.BoardPiece[]>([]);
+  gamePiecesSubject$ = new SimpleObservable(this.gamePiecesSubject);
   updategamePieces = (list: cf.BoardPiece[]) => {
     this.gamePiecesSubject.next(list);
   };

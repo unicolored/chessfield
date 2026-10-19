@@ -2,7 +2,6 @@ import './chessfield.css';
 
 import type * as cg from '@lichess-org/chessground/types';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
-import { tap } from 'rxjs';
 import { Inspector } from 'three/addons/inspector/Inspector.js';
 import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -310,7 +309,8 @@ export class Chessfield implements ChessfieldApi {
   private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
     let piecesGroup: THREE.Group;
 
-    this.store.movesSubject$.pipe(tap(() => scene.remove(piecesGroup))).subscribe((moves: Moves) => {
+    this.store.movesSubject$.subscribe((moves: Moves) => {
+      scene.remove(piecesGroup);
       this.foundLastMove = GameProvider.findLastMove(moves.moves);
       if (this.foundLastMove) {
         this.gameProvider.initGamePieces(this.foundLastMove);

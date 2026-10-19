@@ -1,5 +1,4 @@
 import * as cg from '@lichess-org/chessground/types';
-import { tap } from 'rxjs';
 import * as THREE from 'three/webgpu';
 
 import { cm, coordToVector2 } from '../helper.ts';
@@ -24,9 +23,7 @@ export class PieceProvider {
     const squaresVector3: Map<string, THREE.Vector3> = this.getSquaresVector3();
     const piecesObjects: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
-    this.store.gamePiecesSubject$
-      .pipe(
-        tap((list: cf.BoardPiece[]) => {
+    this.store.gamePiecesSubject$.subscribe((list: cf.BoardPiece[]) => {
           const matrixes: Map<string, { mesh: THREE.InstancedMesh; pos: THREE.Vector3; coord: string }[]> =
             new Map();
 
@@ -111,9 +108,7 @@ export class PieceProvider {
               }
             }
           });
-        }),
-      )
-      .subscribe();
+        });
 
     return piecesGroup;
   }
