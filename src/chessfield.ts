@@ -33,6 +33,7 @@ import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
+export * from './resource/chessfield.types';
 
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
