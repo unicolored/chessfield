@@ -10,7 +10,7 @@ const external = [
   'three',
   'three/webgpu',
   'three/tsl',
-  'three/addons/inspector/Inspector.js',
+  //'three/addons/inspector/Inspector.js',
   'three/examples/jsm/controls/OrbitControls.js',
   'three/examples/jsm/loaders/DRACOLoader.js',
   'three/examples/jsm/loaders/GLTFLoader.js',
