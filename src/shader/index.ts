@@ -7,7 +7,7 @@
 import { ring } from './ringShader';
 
 export const shaderRegistry = {
-  ring: ring,
+  ring,
 } as const;
 
 export const stateRegistry = {
