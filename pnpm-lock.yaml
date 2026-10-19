@@ -109,6 +109,9 @@ importers:
 
   .:
     dependencies:
+      '@chess-fu/fen-parser':
+        specifier: ^1.1.4
+        version: 1.1.4
       '@lichess-org/chessground':
         specifier: '>=10.4.0'
         version: 10.4.2
@@ -116,12 +119,6 @@ importers:
         specifier: 0.186.1
         version: 0.186.1
     devDependencies:
-      '@chess-fu/fen-parser':
-        specifier: ^1.1.4
-        version: 1.1.4
-      '@eslint/js':
-        specifier: ^9.39.5
-        version: 9.39.5
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -538,10 +535,6 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
-
-  '@eslint/js@9.39.5':
-    resolution: {integrity: sha512-QywQuszQh77pIXCsq998c8hbhSTI/azTty1Z6N53dmAudKHhy573j3yvRLsX2BSp8YpLtoCEG8E9DJe+8zUh4A==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@exodus/bytes@1.16.0':
     resolution: {integrity: sha512-IcpW84uEn3N7ETtNZMlxKhfl6Pec8rUNGOTBtWbK1FKhJxIFAptZyVrvVRVBimAJxJCgc3PxepxkdWWG4DVzfA==}
@@ -1893,8 +1886,6 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
-
-  '@eslint/js@9.39.5': {}
 
   '@exodus/bytes@1.16.0': {}
 

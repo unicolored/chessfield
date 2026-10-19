@@ -22,7 +22,8 @@
     "format": "oxfmt",
     "check-format": "oxfmt --check",
     "distEsbuild": "$npm_execpath run compile && $npm_execpath run bundle",
-    "dist": "vite build --config vite.config.ts",
+    "dist": "vite build --config vite.config.ts --mode production",
+    "dist:dev": "vite build --config vite.config.ts --mode development",
     "bundleEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.min.js --minify --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/assets/ --sourcemap",
     "dev": "vite --config vite.config.ts",
     "devEsbuild": "esbuild src/chessfield.ts --bundle --format=esm --outfile=dist/chessfield.js --loader:.jpg=file --loader:.glb=file --loader:.json=file --public-path=/dist/ --servedir=. --serve=8000 --watch --sourcemap",
@@ -31,8 +32,6 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@chess-fu/fen-parser": "^1.1.4",
-    "@eslint/js": "^9.39.5",
     "@types/node": "^26.6.5",
     "@types/three": "^0.186.0",
     "@typescript/typescript6": "^6.0.2",
@@ -80,5 +79,8 @@
   "engines": {
     "node": ">=24",
     "pnpm": ">=12"
+  },
+  "dependencies": {
+    "@chess-fu/fen-parser": "^1.1.4"
   }
 }
