@@ -26,6 +26,7 @@ git fetch origin
 
 # 3.5 Run tests on pre-production code
 # mise run test
+bash script/test.sh
 
 # 4. Switch to develop and pull
 git checkout "${DEV_BRANCH}"

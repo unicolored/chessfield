@@ -1,7 +1,6 @@
 import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
 import type * as cg from '@lichess-org/chessground/types';
-import { BehaviorSubject, type Observable } from 'rxjs';
 import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
@@ -10,58 +9,75 @@ import { type GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { Themes } from '../resource/chessfield.types.ts';
 
+import { SimpleObservable, SimpleSubject } from './observable.ts';
+
 export class Store {
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: THREE.Group | null = null;
   piecesGroup: THREE.Group | null = null;
   shapesRing: THREE.InstancedMesh | null = null;
   state: THREE.InstancedMesh | null = null;
-  gameOver: GameState | null = null;
+  gameState: GameState | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
   static readonly initialFen = `${initial} w KQkq - 0 1`;
   static themes: Themes = {
+    default: {
+      light: '#efd9b5',
+      dark: '#b58862',
+      highlight: '#cdd16a',
+      statusCheck: '#aa0000',
+      selected: '',
+      ring: '#73a45d',
+      ringCtrlAlt: '#f0b24d',
+      ringAlt: '#66799f',
+      ringCtrl: '#b86f60',
+    },
     light: {
       light: '#f5f5f3',
       dark: '#eeebe8',
       highlight: '',
-      highlightStatusMate: '#aa0000',
+      statusCheck: '#aa0000',
       selected: '',
     },
     dark: {
       light: '#1D232A',
       dark: '#161512',
       highlight: '',
-      highlightStatusMate: '#aa0000',
+      statusCheck: '#aa0000',
       selected: '',
     },
     blue: {
       light: '#bfcfdd',
       dark: '#9dabb6',
       highlight: '#B1CC82',
-      highlightStatusMate: '#aa0000',
+      statusCheck: '#aa0000',
       selected: '',
     },
     brown: {
       light: '#efd9b5',
       dark: '#b58862',
       highlight: '#cdd16a',
-      highlightStatusMate: '#aa0000',
+      statusCheck: '#aa0000',
       selected: '',
     },
     green: {
       light: '#feffdd',
       dark: '#87a664',
       highlight: '#96d6d3',
-      highlightStatusMate: '#aa0000',
+      statusCheck: '#aa0000',
       selected: '',
+      ring: '#73a45d',
+      ringCtrlAlt: '#f0b24d',
+      ringAlt: '#66799f',
+      ringCtrl: '#b86f60',
     },
     bw: {
       light: '#e6e8e5',
       dark: '#505251',
       highlight: '#bdce82',
-      highlightStatusMate: '#aa0000',
+      statusCheck: '#aa0000',
       selected: '',
     },
   };
@@ -95,7 +111,7 @@ export class Store {
     this.config = config;
   }
 
-  private movesSubject = new BehaviorSubject<cf.Moves>({
+  private movesSubject = new SimpleSubject<cf.Moves>({
     moves: [
       {
         fen: Store.initialFen,
@@ -103,7 +119,7 @@ export class Store {
       },
     ],
   });
-  movesSubject$: Observable<cf.Moves> = this.movesSubject.asObservable();
+  movesSubject$ = new SimpleObservable(this.movesSubject);
 
   // private fenSubject = new BehaviorSubject<cg.FEN>(Store.initialFen);
   // fenSubject$: Observable<cg.FEN> = this.fenSubject.asObservable();
@@ -122,8 +138,8 @@ export class Store {
     }
   };
 
-  private gamePiecesSubject = new BehaviorSubject<cf.BoardPiece[]>([]);
-  gamePiecesSubject$: Observable<cf.BoardPiece[]> = this.gamePiecesSubject.asObservable();
+  private gamePiecesSubject = new SimpleSubject<cf.BoardPiece[]>([]);
+  gamePiecesSubject$ = new SimpleObservable(this.gamePiecesSubject);
   updategamePieces = (list: cf.BoardPiece[]) => {
     this.gamePiecesSubject.next(list);
   };
