@@ -1,24 +1,34 @@
 import * as THREE from 'three';
 import { bool, color, Discard, Fn, select, uv, vec2 } from 'three/tsl';
 
-export const stateSprite = Fn(({ show = bool(false), lost = bool(false) }) => {
-  const center = vec2(0.5);
-  const distanceToCenter = uv().distance(center);
+export const stateSprite = Fn(
+  (args: { show?: ReturnType<typeof bool>; lost?: ReturnType<typeof bool> }) => {
+    const show = args.show ?? bool(false);
+    const lost = args.lost ?? bool(false);
 
-  // Clean circle mask: 1 at the center, smoothly drops to 0 at radius 0.5 (anti-aliased)
-  const circle = distanceToCenter.smoothstep(0.5, 0.495);
+    const center = vec2(0.5);
+    const distanceToCenter = uv().distance(center);
 
-  // Discard pixels outside the circle
-  distanceToCenter.greaterThan(0.49).discard();
+    // Clean circle mask: 1 at the center, smoothly drops to 0 at radius 0.5 (anti-aliased)
+    const circle = distanceToCenter.smoothstep(0.5, 0.495);
 
-  // If 'show' is false, discard the whole sprite
-  Discard(show.not());
+    // Discard pixels outside the circle
+    distanceToCenter.greaterThan(0.49).discard();
 
-  const drawColor = color(new THREE.Color('#87c9f8'));
-  const lostColor = color(new THREE.Color('#e75656'));
+    // If 'show' is false, discard the whole sprite
+    Discard(show.not());
 
-  // Pick color based on 'lost' status
-  const stateColor = select(lost, lostColor, drawColor);
+    const drawColor = color(new THREE.Color('#87c9f8'));
+    const lostColor = color(new THREE.Color('#e75656'));
 
-  return circle.mul(stateColor);
-});
+    // Pick color based on 'lost' status
+    const stateColor = select(lost, lostColor, drawColor);
+
+    return circle.mul(stateColor);
+  },
+  {
+    show: 'bool',
+    lost: 'bool',
+    return: 'vec3',
+  },
+);
