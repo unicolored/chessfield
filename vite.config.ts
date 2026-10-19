@@ -37,7 +37,7 @@ export default defineConfig({
           three: 'THREE',
           'three/webgpu': 'THREE',
           'three/tsl': 'THREE',
-          'three/addons/inspector/Inspector.js': 'THREE.Inspector',
+          // 'three/addons/inspector/Inspector.js': 'THREE.Inspector',
           'three/examples/jsm/controls/OrbitControls.js': 'THREE.OrbitControls',
           'three/examples/jsm/loaders/DRACOLoader.js': 'THREE.DRACOLoader',
           'three/examples/jsm/loaders/GLTFLoader.js': 'THREE.GLTFLoader',

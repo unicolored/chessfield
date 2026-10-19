@@ -268,7 +268,8 @@ export class Chessfield implements ChessfieldApi {
     const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
     this.cfElement.appendChild(renderer.domElement);
     console.log('prod?', import.meta.env.PROD);
-    if (!import.meta.env.PROD) {
+    if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
+      console.log('load Inspector', import.meta.env);
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
       renderer.inspector = new Inspector();
     }
