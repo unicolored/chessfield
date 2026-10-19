@@ -43,11 +43,29 @@ if (fenCheck) {
     orientation: 'white',
     camera: 'white',
     angle: 'right',
-    theme: 'green',
+    theme: 'custom',
     fen: fenCheck.fen,
     lastMove: fenCheck.lastMove,
     zoomMinDistance: 5,
     zoomMaxDistance: 30,
+    plugins: {
+      themes: {
+        custom: {
+          light: '#e3dbc9',
+          dark: '#cb4444',
+          highlight: '#c99a39',
+          statusCheck: '#ffff00',
+          selected: 'orange',
+        },
+        chesspop: {
+          light: '#e3dbc9',
+          dark: '#cb4444',
+          highlight: '#c99a39',
+          statusCheck: '#ffff00',
+          selected: 'orange',
+        },
+      },
+    },
   });
   chess.load(fenCheck.fen, { skipValidation: false });
   const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
@@ -131,7 +149,27 @@ if (fenResign) {
 // LOST ON TIME
 const fenTime = fens.find(f => f.status === 'timeout');
 if (fenTime) {
-  const board5 = new Chessfield(document.getElementById('board-timeout'), {});
+  const board5 = new Chessfield(document.getElementById('board-timeout'), {
+    theme: 'custom',
+    plugins: {
+      themes: {
+        custom: {
+          light: '#e3dbc9',
+          dark: '#cb4444',
+          highlight: '#c99a39',
+          statusCheck: '#0000ff',
+          selected: 'orange',
+        },
+        chesspop: {
+          light: '#e3dbc9',
+          dark: '#cb4444',
+          highlight: '#c99a39',
+          statusCheck: '#ffff00',
+          selected: 'orange',
+        },
+      },
+    },
+  });
   board5.setFen(fenTime.fen, fenTime.lastMove);
   chess.load(fenTime.fen, { skipValidation: false });
   // const findTimeWhiteKing = chess.findPiece({ type: KING, color: WHITE });

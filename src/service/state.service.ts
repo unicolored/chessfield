@@ -16,13 +16,13 @@ export class StateService {
   > = new Map();
   private readonly instanceCount = 64;
 
-  constructor(shaderNames: StateName[] = ['check']) {
-    for (const name of shaderNames) {
-      this.meshes.set(name, this.createState(name));
+  constructor(shaderNames: [StateName, string][] = [['check', '#00ff00']]) {
+    for (const [name, color] of shaderNames) {
+      this.meshes.set(name, this.createState(name, color));
     }
   }
 
-  public createShaderMaterial(shaderName: StateName): THREE.MeshBasicNodeMaterial {
+  public createShaderMaterial(shaderName: StateName, color: string = '#B0F'): THREE.MeshBasicNodeMaterial {
     if (this.materials.has(shaderName)) {
       return this.materials.get(shaderName)!;
     }
@@ -35,7 +35,7 @@ export class StateService {
     // const instanceColor = attribute('instanceColor', 'vec3');
     const instanceVisible = attribute('instanceVisible', 'float');
 
-    const shader = new THREE.Color('crimson');
+    const shader = new THREE.Color(color);
     const pattern = uv().sub(0.5).length().smoothstep(0.68, 0.33);
     shaderMaterial.opacityNode = float(pattern);
     shaderMaterial.colorNode = vec4(shader, instanceVisible);
@@ -45,7 +45,7 @@ export class StateService {
     return shaderMaterial;
   }
 
-  private createState(shaderName: StateName): THREE.InstancedMesh {
+  private createState(shaderName: StateName, color: string = '#B0F'): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
 
     const visible = new THREE.InstancedBufferAttribute(new Float32Array(this.instanceCount), 1);
@@ -54,7 +54,7 @@ export class StateService {
 
     this.attributes.set(shaderName, { visible });
 
-    const material = this.createShaderMaterial(shaderName);
+    const material = this.createShaderMaterial(shaderName, color);
 
     const mesh = new THREE.InstancedMesh(geometry, material, this.instanceCount);
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage as THREE.Usage);

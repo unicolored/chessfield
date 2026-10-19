@@ -17,7 +17,7 @@ export class Store {
   piecesGroup: THREE.Group | null = null;
   shapesRing: THREE.InstancedMesh | null = null;
   state: THREE.InstancedMesh | null = null;
-  gameOver: GameState | null = null;
+  gameState: GameState | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);

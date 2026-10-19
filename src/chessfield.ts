@@ -37,7 +37,6 @@ export type { ChessfieldApi, ChessfieldConfig, GameState };
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
   private readonly shapesService = new ShapesService(['ring']);
-  private readonly stateService = new StateService(['check']);
   private readonly rendererProvider = new RendererProvider();
   private readonly sceneProvider = new SceneProvider();
   private readonly store: Store;
@@ -45,6 +44,7 @@ export class Chessfield implements ChessfieldApi {
   private controlsProvider!: ControlsProvider;
   private readonly gameProvider!: GameProvider;
   private readonly pieceProvider!: PieceProvider;
+  private stateService!: StateService;
   private themeProvider!: ThemeProvider;
 
   private canvas!: HTMLCanvasElement;
@@ -68,13 +68,15 @@ export class Chessfield implements ChessfieldApi {
       this.cameraProvider = new CameraProvider(this.store.getConfig());
       this.controlsProvider = new ControlsProvider(this.store.getConfig());
       this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
+      const theme = this.themeProvider.getThemeColors();
+      this.stateService = new StateService([['check', theme.statusCheck]]);
 
       this.start();
     }
   }
 
   public setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
-    this.store.gameOver = null;
+    this.store.gameState = null;
 
     this.store.setFen(fen, lastMove);
   }
@@ -106,7 +108,7 @@ export class Chessfield implements ChessfieldApi {
   // }
 
   public setCheck(state: GameState): void {
-    this.store.gameOver = state;
+    this.store.gameState = state;
     let kingVec;
 
     if (state.kings.white) {
@@ -121,7 +123,7 @@ export class Chessfield implements ChessfieldApi {
   }
 
   public setGameOver(state: GameState): void {
-    this.store.gameOver = state;
+    this.store.gameState = state;
 
     this.addShapes(state);
   }
@@ -341,11 +343,11 @@ export class Chessfield implements ChessfieldApi {
       scene.add(piecesGroup);
 
       // Happen after pieces have been put in position
-      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameOver?.status)) {
-        this.addShapes(this.store.gameOver);
-      } else if (this.store.gameOver?.status === 'check') {
+      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameState?.status)) {
+        this.addShapes(this.store.gameState);
+      } else if (this.store.gameState?.status === 'check') {
         // ...
-      } else if (!this.store.gameOver) {
+      } else if (!this.store.gameState) {
         this.stateService.clearAll(['check']);
       }
     });
