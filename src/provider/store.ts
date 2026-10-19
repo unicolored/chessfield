@@ -8,6 +8,7 @@ import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { type GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { Themes } from '../resource/chessfield.types.ts';
+
 import { SimpleObservable, SimpleSubject } from './observable.ts';
 
 export class Store {

@@ -14,14 +14,14 @@ export class SimpleSubject<T> {
 
   next(value: T): void {
     this.currentValue = value;
-    this.listeners.forEach((fn) => fn(value));
+    this.listeners.forEach(fn => fn(value));
   }
 
   subscribe(fn: Listener<T>): () => void {
     this.listeners.push(fn);
     fn(this.currentValue);
     return () => {
-      this.listeners = this.listeners.filter((l) => l !== fn);
+      this.listeners = this.listeners.filter(l => l !== fn);
     };
   }
 }

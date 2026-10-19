@@ -103,7 +103,8 @@ export class EventsService {
       const instanceId = intersect.instanceId;
       if (mesh instanceof THREE.InstancedMesh && instanceId !== undefined) {
         const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
-          THREE.InstancedBufferAttribute | undefined;
+          | THREE.InstancedBufferAttribute
+          | undefined;
         if (coordAttr) {
           const file = coordAttr.getX(instanceId);
           const rank = coordAttr.getY(instanceId);
