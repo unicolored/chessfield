@@ -168,17 +168,17 @@ export class Chessfield implements ChessfieldApi {
     this.updatePieces();
   }
 
-  /** @deprecated Use setState instead */
-  public setCheck(state: GameState): void {
-    this.store.gameState = state;
-    this.updatePieces();
-  }
-
-  /** @deprecated Use setState instead */
-  public setGameOver(state: GameState): void {
-    this.store.gameState = state;
-    this.updatePieces();
-  }
+  // /** @deprecated Use setState instead */
+  // public setCheck(state: GameState): void {
+  //   this.store.gameState = state;
+  //   this.updatePieces();
+  // }
+  //
+  // /** @deprecated Use setState instead */
+  // public setGameOver(state: GameState): void {
+  //   this.store.gameState = state;
+  //   this.updatePieces();
+  // }
 
   private onLoad(
     camera: THREE.PerspectiveCamera,
@@ -186,7 +186,7 @@ export class Chessfield implements ChessfieldApi {
     renderer: THREE.Renderer,
     controls: OrbitControls,
     font: Font | null,
-    loaderComponent: LoaderComponent,
+    // loaderComponent: LoaderComponent,
   ): void {
     if (!this.cfElement) {
       console.error('Onload: Chessfield HtmlElement is missing.');
@@ -194,8 +194,8 @@ export class Chessfield implements ChessfieldApi {
     }
 
     // Trigger overlay fade via loader component
-    loaderComponent.startFade();
-    this.loadingCompleted = true;
+    // loaderComponent.startFade();
+    // this.loadingCompleted = true;
 
     const chessboardGroup = new THREE.Group();
     chessboardGroup.name = '🟣 Chessboard Group';
@@ -216,8 +216,6 @@ export class Chessfield implements ChessfieldApi {
     this.store.chessboard.setHighlightColor(themeColors.highlight);
     // this.store.chessboard.setStatusCheckColor(themeColors.statusCheck);
     chessboardGroup.add(this.store.chessboard);
-
-    this.updatePieces();
 
     // Cases
     this.store.casesGroup = this.boardService.createCases(font);
@@ -279,6 +277,8 @@ export class Chessfield implements ChessfieldApi {
     };
 
     renderer.setAnimationLoop(tick);
+
+    this.updatePieces();
   }
 
   async start() {
@@ -364,7 +364,7 @@ export class Chessfield implements ChessfieldApi {
       renderer,
       controls,
       font,
-      loaderComponent,
+      // loaderComponent,
     );
   }
 
