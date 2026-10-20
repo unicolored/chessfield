@@ -39,6 +39,9 @@ export * from './resource/chessfield.types';
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
 
+export type { ChessfieldApi, ChessfieldConfig, GameState };
+export * from './resource/chessfield.types';
+
 export class Chessfield implements ChessfieldApi {
   private readonly boardService = new BoardService();
   private readonly shapesService = new ShapesService(['ring']);
