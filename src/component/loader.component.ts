@@ -1,94 +1,104 @@
-import { cameraViewMatrix, positionLocal, vec3 } from 'three/tsl';
+import { cameraViewMatrix, float, positionLocal, uniform, vec3, time, smoothstep, sub, div } from 'three/tsl';
+import UniformNode from 'three/src/nodes/core/UniformNode.js';
 import * as THREE from 'three/webgpu';
 
 import { hexToRgb } from '../helper.ts';
 
-export class LoaderComponent {
-  overlayMaterial: THREE.MeshBasicNodeMaterial;
-  progressMaterial: THREE.MeshBasicNodeMaterial;
+export interface LoaderOptions {
+  overlayFadeDuration?: number; // milliseconds
+  progressBarHeight?: number; // world units
+  onLoadingComplete?: () => void;
+}
 
-  constructor(overlayColor: string | number, barColor: string | number) {
-    // this.overlayMaterial = new THREE.ShaderMaterial({
-    //   transparent: true,
-    //   uniforms: {
-    //     uAlpha: { value: 1 },
-    //     uColor: { value: hexToRgb(overlayColor) },
-    //   },
-    //   vertexShader: `
-    //     void main()
-    //     {
-    //       gl_Position = vec4(position, 1.0);
-    //     }
-    // `,
-    //   fragmentShader: `
-    //   uniform float uAlpha;
-    //   uniform vec3 uColor;
-    //
-    //     void main()
-    //     {
-    //       gl_FragColor = vec4(uColor, uAlpha);
-    //     }
-    //   `,
-    // });
-    this.overlayMaterial = new THREE.MeshBasicNodeMaterial({
+export class LoaderComponent {
+  private onCompleteCallback?: () => void;
+  private fadeStartTimeUniform: UniformNode<'float', number>;
+  private fadeDurationUniform: UniformNode<'float', number>;
+  private progressScaleUniform: UniformNode<'float', number>;
+
+  constructor(options?: LoaderOptions) {
+    this.onCompleteCallback = options?.onLoadingComplete;
+
+    // Create uniforms for GPU-driven animations with explicit float type
+    this.fadeStartTimeUniform = uniform(-1.0, 'float'); // -1 means not started
+    this.fadeDurationUniform = uniform((options?.overlayFadeDuration ?? 500) / 1000, 'float');
+    this.progressScaleUniform = uniform(0.0, 'float');
+  }
+
+  getOverlay(overlayColor: string | number, fadeDurationMs: number = 500): THREE.Mesh {
+    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+    const overlayMaterial = new THREE.MeshBasicNodeMaterial({
       color: 0xff_00_00,
       transparent: true,
-      opacity: 1,
+      opacity: 0.5,
+      depthTest: false,
+      depthWrite: false,
     });
     const colors = hexToRgb(overlayColor);
-    this.overlayMaterial.colorNode = vec3(colors[0], colors[1], colors[2]);
-    this.overlayMaterial.positionNode = positionLocal.mul(cameraViewMatrix);
+    overlayMaterial.colorNode = vec3(colors[0], colors[1], colors[2]);
+    overlayMaterial.positionNode = positionLocal.mul(cameraViewMatrix);
 
-    // this.progressMaterial = new THREE.ShaderMaterial({
-    //   transparent: true,
-    //   uniforms: {
-    //     uColor: { value: hexToRgb(barColor) },
-    //     uPosition: { value: new THREE.Vector3(0, 0, 0) },
-    //     uTime: { value: -1 },
-    //     uAlpha: { value: 1 },
-    //   },
-    //   vertexShader: `
-    //     uniform vec3 uPosition;
-    //     uniform float uTime;
-    //
-    //     void main()
-    //     {
-    //         // Add the vertex position to see the actual geometry
-    //         vec3 animatedPosition = position + uPosition;
-    //         animatedPosition.x += uTime * 20.0 * 0.1;
-    //
-    //         gl_Position = vec4(animatedPosition, 1.0);
-    //     }
-    // `,
-    //   fragmentShader: `
-    //     uniform vec3 uColor;
-    //     uniform float uAlpha;
-    //
-    //     void main()
-    //     {
-    //         gl_FragColor = vec4(uColor, uAlpha);
-    //     }
-    // `,
-    // });
-    this.progressMaterial = new THREE.MeshBasicNodeMaterial({
+    // Update fade duration uniform if provided
+    this.fadeDurationUniform.value = fadeDurationMs / 1000;
+
+    // GPU-driven fade: opacity = 1 - smoothstep(0, 1, (time - fadeStartTime) / fadeDuration)
+    const elapsed = sub(time, this.fadeStartTimeUniform);
+    const progress = smoothstep(float(0), float(1), div(elapsed, this.fadeDurationUniform));
+    overlayMaterial.opacityNode = sub(float(1), progress);
+
+    const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
+    overlay.renderOrder = 1;
+    overlay.userData['fadeStartTimeUniform'] = this.fadeStartTimeUniform;
+    overlay.userData['fadeDurationUniform'] = this.fadeDurationUniform;
+    overlay.userData['onFadeComplete'] = this.onCompleteCallback;
+
+    return overlay;
+  }
+
+  getProgressBar(barColor: string | number, height: number = 0.01): THREE.Mesh {
+    // Create a 1x1 plane (local coordinates 0 to 1 in X), easier to reason about
+    const progressGeometry = new THREE.PlaneGeometry(1, height, 1, 1);
+    const progressMaterial = new THREE.MeshBasicNodeMaterial({
       color: 0xff_00_00,
       transparent: true,
-      opacity: 1,
+      opacity: 1.0,
+      depthTest: false,
+      depthWrite: false,
+      side: THREE.DoubleSide,
     });
     const colors2 = hexToRgb(barColor);
-    this.progressMaterial.colorNode = vec3(colors2[0], colors2[1], colors2[2]);
-    this.progressMaterial.positionNode = positionLocal.mul(cameraViewMatrix).mul(0.15);
+    progressMaterial.colorNode = vec3(colors2[0], colors2[1], colors2[2]);
+
+    // Position at bottom of screen in camera-relative coordinates
+    // Y = -1 + height/2 (bottom edge), Z = 0 (in front of everything)
+    // X position: scale positionLocal.x (0 to 1) by progressScale (0 to 1)
+    // This grows the bar from left (X=0) to right (X=1) as progressScale increases
+    const yOffset = float(-1).add(float(height / 2));
+    const scaleX = this.progressScaleUniform;
+    progressMaterial.positionNode = vec3(positionLocal.x.mul(scaleX), yOffset, float(0)).mul(
+      cameraViewMatrix,
+    );
+
+    const progress = new THREE.Mesh(progressGeometry, progressMaterial);
+    progress.renderOrder = 1;
+    progress.userData['progressScaleUniform'] = this.progressScaleUniform;
+
+    return progress;
   }
 
-  getOverlay(): THREE.Mesh {
-    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
-
-    return new THREE.Mesh(overlayGeometry, this.overlayMaterial);
+  startFade(): void {
+    this.fadeStartTimeUniform.value = performance.now() / 1000;
   }
 
-  getProgressBar(): THREE.Mesh {
-    const progressGeometry = new THREE.PlaneGeometry(2, 0.01, 1, 1);
+  setProgress(value: number): void {
+    this.progressScaleUniform.value = Math.max(0, Math.min(1, value));
+  }
 
-    return new THREE.Mesh(progressGeometry, this.progressMaterial);
+  getFadeStartTimeUniform(): UniformNode<'float', number> {
+    return this.fadeStartTimeUniform;
+  }
+
+  getFadeDurationUniform(): UniformNode<'float', number> {
+    return this.fadeDurationUniform;
   }
 }

@@ -146,10 +146,9 @@ export class EventsService {
     if (!this.scene || !this.camera) return null;
 
     this.raycaster.setFromCamera(mouse, this.camera);
-    const intersects = this.raycaster.intersectObjects(
-      [...this.store.getPieces(), ...this.store.getBoardCases()],
-      false,
-    );
+    const intersects = this.raycaster
+      .intersectObjects([...this.store.getPieces(), ...this.store.getBoardCases()], false)
+      .filter((m: THREE.Intersection) => m.object.name !== 'stateSprite');
 
     if (intersects.length === 0) return null;
     return this.getSquareFromIntersect(intersects[0]);

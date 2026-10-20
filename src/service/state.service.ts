@@ -45,6 +45,16 @@ export class StateService {
     return shaderMaterial;
   }
 
+  public updateCheckColor(color: string | number): void {
+    const material = this.materials.get('check');
+    // if (material) {
+    //   const shader = new THREE.Color(color);
+    //   const pattern = uv().sub(0.5).length().smoothstep(0.68, 0.33);
+    //   material.opacityNode = float(pattern);
+    //   material.colorNode = vec4(shader, material.opacityNode as any);
+    // }
+  }
+
   private createState(shaderName: StateName, color = '#B0F'): THREE.InstancedMesh {
     const geometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
 

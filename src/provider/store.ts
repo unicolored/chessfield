@@ -12,6 +12,7 @@ import type { Themes } from '../resource/chessfield.types.ts';
 import { SimpleObservable, SimpleSubject } from './observable.ts';
 
 export class Store {
+  scene: THREE.Scene | null = null;
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: THREE.Group | null = null;
   piecesGroup: THREE.Group | null = null;
@@ -136,12 +137,6 @@ export class Store {
 
       this.movesSubject.next(moves);
     }
-  };
-
-  private gamePiecesSubject = new SimpleSubject<cf.BoardPiece[]>([]);
-  gamePiecesSubject$ = new SimpleObservable(this.gamePiecesSubject);
-  updategamePieces = (list: cf.BoardPiece[]) => {
-    this.gamePiecesSubject.next(list);
   };
 
   setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap) {

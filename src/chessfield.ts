@@ -25,12 +25,16 @@ import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
 import type * as cf from './resource/chessfield.types';
-import { type Move, type Moves } from './resource/chessfield.types';
+import { type Move, type Moves, type ThemeColors } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
+import { LoaderComponent, LoaderOptions } from './component/loader.component.ts';
+
+export type { ChessfieldApi, ChessfieldConfig, GameState };
+export * from './resource/chessfield.types';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
@@ -51,6 +55,8 @@ export class Chessfield implements ChessfieldApi {
   private canvas!: HTMLCanvasElement;
   private eventsService!: EventsService;
   private foundLastMove!: Move | null;
+  private movesSubscription: (() => void) | null = null;
+  // private loadingCompleted = false;
 
   constructor(
     private cfElement: HTMLElement | null,
@@ -70,7 +76,7 @@ export class Chessfield implements ChessfieldApi {
       this.controlsProvider = new ControlsProvider(this.store.getConfig());
       this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
       const theme = this.themeProvider.getThemeColors();
-      this.stateService = new StateService([['check', theme.statusCheck]]);
+      this.stateService = new StateService([['check', String(theme.statusCheck)]]);
 
       this.start();
     }
@@ -87,14 +93,79 @@ export class Chessfield implements ChessfieldApi {
     const updatedConfig = { ...currentConfig, ...partialConfig };
     this.store.setConfig(updatedConfig);
 
+    // Clean up moves subscription before restarting
+    if (this.movesSubscription) {
+      this.movesSubscription();
+      this.movesSubscription = null;
+    }
+
+    // Clean up pieces group from current scene
+    if (this.store.piecesGroup && this.store.scene) {
+      this.store.scene.remove(this.store.piecesGroup);
+      this.store.piecesGroup.clear();
+    }
+
     this.eventsService?.dispose();
     this.canvas.remove();
     this.start();
   }
 
-  public setShape(rank: number, file: number, color: string, shaderName: ShaderName = 'ring'): void {
-    this.shapesService.setShapeAt(rank, file, color, true, shaderName);
+  public switchTheme(theme?: string): void {
+    // Resolve theme: use provided theme or cycle to next
+    let targetTheme: string;
+    if (theme) {
+      // Validate theme exists in Store.themes
+      if (!Store.themes[theme]) {
+        console.warn(`Theme "${theme}" not found. Available themes: ${Object.keys(Store.themes).join(', ')}`);
+        return;
+      }
+      targetTheme = theme;
+    } else {
+      // Cycle to next theme
+      targetTheme = this.themeProvider.getNextTheme();
+    }
+
+    // Update ThemeProvider
+    this.themeProvider.setTheme(targetTheme as any);
+
+    // Update store config for persistence
+    const currentConfig = this.store.getConfig();
+    this.store.setConfig({ ...currentConfig, theme: targetTheme });
+
+    // Apply visual updates
+    this.applyThemeColors();
   }
+
+  public getThemeColors(): ThemeColors {
+    return this.themeProvider.getThemeColors();
+  }
+
+  private applyThemeColors(): void {
+    const themeColors = this.themeProvider.getThemeColors();
+    const modeColors = this.themeProvider.getModeColors();
+
+    // 1. Chessboard colors (TSL uniforms)
+    this.store.chessboard?.setSquareColors(themeColors.light, themeColors.dark);
+    this.store.chessboard?.setHighlightColor(themeColors.highlight);
+
+    // 2. Scene background
+    const bgColor = this.themeProvider.getBackgroundColor();
+    this.sceneProvider.updateBackground(this.store.scene!, bgColor);
+
+    // 3. Decor (frame, player indicators) - update via TSL userData
+    this.boardService.updateDecorColors(modeColors);
+
+    // 4. State/Check color
+    this.stateService.updateCheckColor(themeColors.statusCheck);
+  }
+
+  public addRing(rank: number, file: number, shape: string): void {
+    this.addRingAt(rank, file, shape);
+  }
+
+  // private setShape(rank: number, file: number, color: string, shaderName: ShaderName = 'ring'): void {
+  //   this.shapesService.setShapeAt(rank, file, color, true, shaderName);
+  // }
 
   public clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
     if (rank !== undefined && file !== undefined) {
@@ -108,26 +179,22 @@ export class Chessfield implements ChessfieldApi {
   //   return this.shapesService.getMesh(shaderName);
   // }
 
-  public setCheck(state: GameState): void {
+  public setState(state: GameState): void {
     this.store.gameState = state;
-    let kingVec;
-
-    if (state.kings.white) {
-      kingVec = coordToVector2(state.kings.white);
-    } else if (state.kings.black) {
-      kingVec = coordToVector2(state.kings.black);
-    }
-
-    if (kingVec) {
-      this.stateService.setStateAt(kingVec.x, kingVec.y);
-    }
+    this.updatePieces();
   }
 
-  public setGameOver(state: GameState): void {
-    this.store.gameState = state;
-
-    this.addShapes(state);
-  }
+  // /** @deprecated Use setState instead */
+  // public setCheck(state: GameState): void {
+  //   this.store.gameState = state;
+  //   this.updatePieces();
+  // }
+  //
+  // /** @deprecated Use setState instead */
+  // public setGameOver(state: GameState): void {
+  //   this.store.gameState = state;
+  //   this.updatePieces();
+  // }
 
   private onLoad(
     camera: THREE.PerspectiveCamera,
@@ -135,17 +202,16 @@ export class Chessfield implements ChessfieldApi {
     renderer: THREE.Renderer,
     controls: OrbitControls,
     font: Font | null,
+    // loaderComponent: LoaderComponent,
   ): void {
     if (!this.cfElement) {
       console.error('Onload: Chessfield HtmlElement is missing.');
       return;
     }
 
-    // setTimeout(() => {
-    //   // fadeAlpha(loaderComponent.overlayMaterial.opacityNode, 500);
-    //   loaderComponent.overlayMaterial.opacityNode = float(1);
-    //   // loaderComponent.progressMaterial.opacityNode = { value: 0 };
-    // }, 200);
+    // Trigger overlay fade via loader component
+    // loaderComponent.startFade();
+    // this.loadingCompleted = true;
 
     const chessboardGroup = new THREE.Group();
     chessboardGroup.name = '🟣 Chessboard Group';
@@ -166,8 +232,6 @@ export class Chessfield implements ChessfieldApi {
     this.store.chessboard.setHighlightColor(themeColors.highlight);
     // this.store.chessboard.setStatusCheckColor(themeColors.statusCheck);
     chessboardGroup.add(this.store.chessboard);
-
-    this.updatePieces(scene, this.store.chessboard);
 
     // Cases
     this.store.casesGroup = this.boardService.createCases(font);
@@ -197,42 +261,20 @@ export class Chessfield implements ChessfieldApi {
       this.store.chessboard?.highlightSquareCursor(rank, file);
     };
 
-    this.eventsService.onSquareRightClick = (rank, file, shape) => {
-      const index = rank * 8 + file;
-      const isVisible = this.shapesService.getVisible(index, 'ring');
-
-      const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
-
-      console.log(theme);
-
-      const color = theme[shape]?.toString() ?? '#000000';
-
-      console.log(shape, color);
-
-      if (!isVisible) {
-        this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-      } else {
-        const currentColor = this.shapesService.getColor(index, 'ring');
-        if (currentColor.toLowerCase() === color.toLowerCase()) {
-          this.shapesService.clearShape(index, 'ring');
-        } else {
-          this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-        }
-      }
-    };
+    this.eventsService.onSquareRightClick = this.addRingAt.bind(this);
 
     this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
 
-    this.eventsService.onResize = () => {
+    this.eventsService.onResize = async () => {
       if (!this.cfElement) {
         return;
       }
 
       const rect = this.cfElement.getBoundingClientRect();
       const sizes = { width: rect.width, height: rect.height };
+      renderer.setSize(sizes.width, sizes.height);
       camera.aspect = sizes.width / sizes.height;
       camera.updateProjectionMatrix();
-      renderer.setSize(sizes.width, sizes.height);
     };
 
     this.eventsService.init();
@@ -245,10 +287,13 @@ export class Chessfield implements ChessfieldApi {
       timer.update();
 
       controls.update();
+      // await renderer.init();
       renderer.render(scene, camera);
     };
 
     renderer.setAnimationLoop(tick);
+
+    this.updatePieces();
   }
 
   async start() {
@@ -267,37 +312,48 @@ export class Chessfield implements ChessfieldApi {
 
     // Scene
     const backgroundColor = this.themeProvider.getBackgroundColor();
-    const scene = this.sceneProvider.getScene(backgroundColor);
+    this.store.scene = this.sceneProvider.getScene(backgroundColor);
 
     // Camera
     const camera = this.cameraProvider.getCamera(sizes);
     const camGroup = this.cameraProvider.getCameraGroup(camera);
-    scene.add(camGroup);
+    this.store.scene.add(camGroup);
 
     // Canvas & Renderer
     this.canvas = this.rendererProvider.getCanvas();
     const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
     this.cfElement.appendChild(renderer.domElement);
-    console.log('prod?', import.meta.env.PROD);
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
-      console.log('load Inspector', import.meta.env);
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
       renderer.inspector = new Inspector();
     }
-    await renderer.init();
+    // await renderer.init();
 
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
 
-    // Overlay
-    // const loaderComponent = new LoaderComponent(backgroundColor, this.themeProvider.getInvertColor());
-    // scene.add(loaderComponent.getOverlay());
-    // scene.add(loaderComponent.getProgressBar());
+    // Overlay - configure from config
+    const config = this.store.getConfig();
+    const loadingOptions: LoaderOptions = {
+      overlayFadeDuration: config.loading?.overlayFadeDuration ?? 200,
+      progressBarHeight: config.loading?.progressBarHeight ?? 10,
+      onLoadingComplete: config.loading?.onLoadingComplete,
+    };
+    const loaderComponent = new LoaderComponent(loadingOptions);
+    const loaderGroup = new THREE.Group();
+    this.store.scene.add(loaderGroup);
+    // const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
+    // const progress = loaderComponent.getProgressBar(
+    //   this.themeProvider.getInvertColor(),
+    //   loadingOptions.progressBarHeight,
+    // );
+    // loaderGroup.add(overlay);
+    // loaderGroup.add(progress);
 
     // Décor
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
-    scene.add(decorGroup);
+    this.store.scene.add(decorGroup);
 
     /**
      * LOADING MANAGEMENT
@@ -309,46 +365,71 @@ export class Chessfield implements ChessfieldApi {
     };
 
     // loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
-    //   // loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
+    //   const progressValue = itemsNumber / itemsTotal;
+    //   console.log('[Loader] Progress:', progressValue);
+    //   loaderComponent.setProgress(progressValue);
     // };
 
     const font = loadingManagerProvider.font;
+    // this.loadingCompleted = false;
     loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
       this,
       camera,
-      scene,
+      this.store.scene,
       renderer,
       controls,
       font,
+      // loaderComponent,
     );
   }
 
-  private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
-    let piecesGroup: THREE.Group;
+  private updatePieces() {
+    if (this.movesSubscription) {
+      this.movesSubscription();
+    }
+    this.movesSubscription = this.store.movesSubject$.subscribe((moves: Moves) => {
+      // Robust cleanup: remove previous pieces group from scene
+      if (this.store.piecesGroup) {
+        this.store.scene?.remove(this.store.piecesGroup);
+        // Clear children references to help GC
+        this.store.piecesGroup.clear();
+      }
 
-    this.store.movesSubject$.subscribe((moves: Moves) => {
-      scene.remove(piecesGroup);
       this.foundLastMove = GameProvider.findLastMove(moves.moves);
+
+      let boardPieces: cf.BoardPiece[] = [];
+
       if (this.foundLastMove) {
-        this.gameProvider.initGamePieces(this.foundLastMove);
+        boardPieces = this.gameProvider.initGamePieces(this.foundLastMove);
 
         const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
         if (lastMoveToCoordinates.length > 1) {
-          chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-          chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+          this.store.chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+          this.store.chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
         }
       }
 
-      piecesGroup = this.pieceProvider.updateGamePositions();
+      const piecesGroup = this.pieceProvider.updateGamePositions(boardPieces);
       this.store.piecesGroup = piecesGroup;
-      scene.add(piecesGroup);
+      this.store.scene?.add(piecesGroup);
 
       // Happen after pieces have been put in position
-      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameState?.status)) {
-        this.addShapes(this.store.gameState);
-      } else if (this.store.gameState?.status === 'check') {
-        // ...
-      } else if (!this.store.gameState) {
+      if (this.store.gameState) {
+        if (this.store.gameState.mate || this.store.gameState.draw) {
+          this.addShapes(this.store.gameState);
+        }
+        if (this.store.gameState.check) {
+          let kingVec;
+
+          // NOTE: for debugging purpose,
+          // both kings can be checked at the same time.
+
+          this.store.gameState.check.forEach((key: cg.Key) => {
+            kingVec = coordToVector2(key);
+            this.stateService.setStateAt(kingVec.x, kingVec.y);
+          });
+        }
+      } else {
         this.stateService.clearAll(['check']);
       }
     });
@@ -392,22 +473,38 @@ export class Chessfield implements ChessfieldApi {
           spriteFound.userData['lostState'] = true;
         }
       }
-    } else {
+    }
+    if (state.draw) {
       // game is a draw
-      const pieceWhiteFound = findPieceOnMateKey(state.kings.white);
+      state.draw.forEach((key: cg.Key) => {
+        const pieceFound = findPieceOnMateKey(key);
 
-      if (pieceWhiteFound) {
-        const spriteFound = findStateSprite(pieceWhiteFound);
-        spriteFound.userData['showSprite'] = true;
-        spriteFound.userData['lostState'] = false;
-      }
+        if (pieceFound) {
+          const spriteFound = findStateSprite(pieceFound);
+          spriteFound.userData['showSprite'] = true;
+          spriteFound.userData['lostState'] = false;
+        }
+      });
+    }
+  }
 
-      const pieceBlackFound = findPieceOnMateKey(state.kings.black);
+  public addRingAt(rank: number, file: number, shape: string): void {
+    const index = rank * 8 + file;
+    const isVisible = this.shapesService.getVisible(index, 'ring');
 
-      if (pieceBlackFound) {
-        const spriteFound = findStateSprite(pieceBlackFound);
-        spriteFound.userData['showSprite'] = true;
-        spriteFound.userData['lostState'] = false;
+    const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
+
+    const color =
+      (theme as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
+
+    if (!isVisible) {
+      this.shapesService.setShapeAt(rank, file, color, true, 'ring');
+    } else {
+      const currentColor = this.shapesService.getColor(index, 'ring');
+      if (currentColor.toLowerCase() === color.toLowerCase()) {
+        this.shapesService.clearShape(index, 'ring');
+      } else {
+        this.shapesService.setShapeAt(rank, file, color, true, 'ring');
       }
     }
   }

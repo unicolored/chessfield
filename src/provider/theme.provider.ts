@@ -4,8 +4,8 @@ import { Store } from './store.ts';
 
 export class ThemeProvider {
   constructor(
-    private readonly mode: Mode = 'light',
-    private readonly theme: Theme = 'blue',
+    private mode: Mode = 'light',
+    private theme: Theme = 'blue',
   ) {}
 
   getThemeColors(): ThemeColors {
@@ -24,5 +24,36 @@ export class ThemeProvider {
   getInvertColor(): string | number {
     const invertMode = this.mode === 'light' ? 'dark' : 'light';
     return Store.themes[invertMode].light ?? '#bfcfdd';
+  }
+
+  getCurrentTheme(): Theme {
+    return this.theme;
+  }
+
+  getCurrentMode(): Mode {
+    return this.mode;
+  }
+
+  setTheme(theme: Theme): void {
+    if (Store.themes[theme]) {
+      this.theme = theme;
+    }
+  }
+
+  setMode(mode: Mode): void {
+    this.mode = mode;
+  }
+
+  getAvailableThemes(): string[] {
+    return Object.keys(Store.themes).filter(
+      (k) => !['light', 'dark', 'default'].includes(k),
+    );
+  }
+
+  getNextTheme(): Theme {
+    const themes = this.getAvailableThemes();
+    const currentIndex = themes.indexOf(this.theme as string);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    return themes[nextIndex] as Theme;
   }
 }
