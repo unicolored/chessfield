@@ -139,12 +139,6 @@ export class Store {
     }
   };
 
-  private gamePiecesSubject = new SimpleSubject<cf.BoardPiece[]>([]);
-  gamePiecesSubject$ = new SimpleObservable(this.gamePiecesSubject);
-  updategamePieces = (list: cf.BoardPiece[]) => {
-    this.gamePiecesSubject.next(list);
-  };
-
   setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap) {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
   }

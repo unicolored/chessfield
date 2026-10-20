@@ -52,6 +52,7 @@ export class Chessfield implements ChessfieldApi {
   private canvas!: HTMLCanvasElement;
   private eventsService!: EventsService;
   private foundLastMove!: Move | null;
+  private movesSubscription: (() => void) | null = null;
   // private loadingCompleted = false;
 
   constructor(
@@ -88,6 +89,18 @@ export class Chessfield implements ChessfieldApi {
     const currentConfig = this.store.getConfig();
     const updatedConfig = { ...currentConfig, ...partialConfig };
     this.store.setConfig(updatedConfig);
+
+    // Clean up moves subscription before restarting
+    if (this.movesSubscription) {
+      this.movesSubscription();
+      this.movesSubscription = null;
+    }
+
+    // Clean up pieces group from current scene
+    if (this.store.piecesGroup && this.store.scene) {
+      this.store.scene.remove(this.store.piecesGroup);
+      this.store.piecesGroup.clear();
+    }
 
     this.eventsService?.dispose();
     this.canvas.remove();
@@ -257,7 +270,6 @@ export class Chessfield implements ChessfieldApi {
       const rect = this.cfElement.getBoundingClientRect();
       const sizes = { width: rect.width, height: rect.height };
       renderer.setSize(sizes.width, sizes.height);
-      await renderer.init();
       camera.aspect = sizes.width / sizes.height;
       camera.updateProjectionMatrix();
     };
@@ -268,11 +280,11 @@ export class Chessfield implements ChessfieldApi {
     const timer = new THREE.Timer();
     timer.connect(document);
 
-    const tick = async () => {
+    const tick = () => {
       timer.update();
 
       controls.update();
-      await renderer.init();
+      // await renderer.init();
       renderer.render(scene, camera);
     };
 
@@ -306,13 +318,13 @@ export class Chessfield implements ChessfieldApi {
 
     // Canvas & Renderer
     this.canvas = this.rendererProvider.getCanvas();
-    const renderer = await this.rendererProvider.getRenderer(sizes, this.canvas);
+    const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
     this.cfElement.appendChild(renderer.domElement);
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
       renderer.inspector = new Inspector();
     }
-    await renderer.init();
+    // await renderer.init();
 
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
@@ -369,13 +381,23 @@ export class Chessfield implements ChessfieldApi {
   }
 
   private updatePieces() {
-    let piecesGroup: THREE.Group;
+    if (this.movesSubscription) {
+      this.movesSubscription();
+    }
+    this.movesSubscription = this.store.movesSubject$.subscribe((moves: Moves) => {
+      // Robust cleanup: remove previous pieces group from scene
+      if (this.store.piecesGroup) {
+        this.store.scene?.remove(this.store.piecesGroup);
+        // Clear children references to help GC
+        this.store.piecesGroup.clear();
+      }
 
-    this.store.movesSubject$.subscribe((moves: Moves) => {
-      this.store.scene?.remove(piecesGroup);
       this.foundLastMove = GameProvider.findLastMove(moves.moves);
+
+      let boardPieces: cf.BoardPiece[] = [];
+
       if (this.foundLastMove) {
-        this.gameProvider.initGamePieces(this.foundLastMove);
+        boardPieces = this.gameProvider.initGamePieces(this.foundLastMove);
 
         const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
         if (lastMoveToCoordinates.length > 1) {
@@ -384,7 +406,7 @@ export class Chessfield implements ChessfieldApi {
         }
       }
 
-      piecesGroup = this.pieceProvider.updateGamePositions();
+      const piecesGroup = this.pieceProvider.updateGamePositions(boardPieces);
       this.store.piecesGroup = piecesGroup;
       this.store.scene?.add(piecesGroup);
 
