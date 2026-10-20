@@ -7,6 +7,21 @@ const board1 = new Chessfield(document.getElementById('board-1'), {
   camera: 'white',
   angle: 'right',
   theme: 'green',
+  plugins: {
+    themes: {
+      custom: {
+        light: '#e8d5ff',
+        dark: '#b388ff',
+        highlight: '#ffd700',
+        statusCheck: '#ff4444',
+        selected: '',
+        ring: '#9b59b6',
+        ringCtrlAlt: '#e74c3c',
+        ringAlt: '#3498db',
+        ringCtrl: '#e67e22',
+      },
+    },
+  },
 });
 
 board1.addRing(6, 2, 'ring');
@@ -53,11 +68,18 @@ try {
   // const turn = chess.turn(); // Returns the current side to move.
   //
   // const isAttacked = chess.isAttacked('e4', WHITE); // .isAttacked(square, color)
-
+  //
   // Returns a list of legal moves from the current position.
   // .moves({ piece?: Piece, square?: Square, verbose = false} = {})
   // const legalMoves = chess.moves({ square: 'e7', verbose: true });
   // console.log(legalMoves);
 } catch (e) {
   console.error(e);
+}
+
+const switchThemeBtn = document.getElementById('switch-theme-btn');
+if (switchThemeBtn) {
+  switchThemeBtn.addEventListener('click', () => {
+    board1.switchTheme();
+  });
 }
