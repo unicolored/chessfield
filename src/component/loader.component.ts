@@ -1,94 +1,51 @@
-import { cameraViewMatrix, positionLocal, vec3 } from 'three/tsl';
+import { cameraViewMatrix, float, positionLocal, positionWorld, userData, vec3 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { hexToRgb } from '../helper.ts';
 
 export class LoaderComponent {
-  overlayMaterial: THREE.MeshBasicNodeMaterial;
-  progressMaterial: THREE.MeshBasicNodeMaterial;
+  // overlayMaterial: THREE.MeshBasicNodeMaterial;
+  // progressMaterial: THREE.MeshBasicNodeMaterial;
 
-  constructor(overlayColor: string | number, barColor: string | number) {
-    // this.overlayMaterial = new THREE.ShaderMaterial({
-    //   transparent: true,
-    //   uniforms: {
-    //     uAlpha: { value: 1 },
-    //     uColor: { value: hexToRgb(overlayColor) },
-    //   },
-    //   vertexShader: `
-    //     void main()
-    //     {
-    //       gl_Position = vec4(position, 1.0);
-    //     }
-    // `,
-    //   fragmentShader: `
-    //   uniform float uAlpha;
-    //   uniform vec3 uColor;
-    //
-    //     void main()
-    //     {
-    //       gl_FragColor = vec4(uColor, uAlpha);
-    //     }
-    //   `,
-    // });
-    this.overlayMaterial = new THREE.MeshBasicNodeMaterial({
+  getOverlay(overlayColor: string | number): THREE.Mesh {
+    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+    const overlayMaterial = new THREE.MeshBasicNodeMaterial({
       color: 0xff_00_00,
       transparent: true,
-      opacity: 1,
+      opacity: 1.0,
+      depthTest: false,
+      depthWrite: false,
     });
     const colors = hexToRgb(overlayColor);
-    this.overlayMaterial.colorNode = vec3(colors[0], colors[1], colors[2]);
-    this.overlayMaterial.positionNode = positionLocal.mul(cameraViewMatrix);
+    overlayMaterial.colorNode = vec3(colors[0], colors[1], colors[2]);
+    overlayMaterial.positionNode = positionLocal.mul(cameraViewMatrix);
+    const opacity = userData('overlayOpacity', 'float');
+    overlayMaterial.opacityNode = opacity;
 
-    // this.progressMaterial = new THREE.ShaderMaterial({
-    //   transparent: true,
-    //   uniforms: {
-    //     uColor: { value: hexToRgb(barColor) },
-    //     uPosition: { value: new THREE.Vector3(0, 0, 0) },
-    //     uTime: { value: -1 },
-    //     uAlpha: { value: 1 },
-    //   },
-    //   vertexShader: `
-    //     uniform vec3 uPosition;
-    //     uniform float uTime;
-    //
-    //     void main()
-    //     {
-    //         // Add the vertex position to see the actual geometry
-    //         vec3 animatedPosition = position + uPosition;
-    //         animatedPosition.x += uTime * 20.0 * 0.1;
-    //
-    //         gl_Position = vec4(animatedPosition, 1.0);
-    //     }
-    // `,
-    //   fragmentShader: `
-    //     uniform vec3 uColor;
-    //     uniform float uAlpha;
-    //
-    //     void main()
-    //     {
-    //         gl_FragColor = vec4(uColor, uAlpha);
-    //     }
-    // `,
-    // });
-    this.progressMaterial = new THREE.MeshBasicNodeMaterial({
+    const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
+    overlay.renderOrder = 1;
+    overlay.userData['overlayOpacity'] = 1.0;
+
+    return overlay;
+  }
+
+  getProgressBar(barColor: string | number): THREE.Mesh {
+    const progressGeometry = new THREE.PlaneGeometry(2, 0.01, 1, 1);
+    const progressMaterial = new THREE.MeshBasicNodeMaterial({
       color: 0xff_00_00,
       transparent: true,
-      opacity: 1,
+      opacity: 1.0,
+      depthTest: false,
+      depthWrite: false,
     });
     const colors2 = hexToRgb(barColor);
-    this.progressMaterial.colorNode = vec3(colors2[0], colors2[1], colors2[2]);
-    this.progressMaterial.positionNode = positionLocal.mul(cameraViewMatrix).mul(0.15);
-  }
+    progressMaterial.colorNode = vec3(colors2[0], colors2[1], colors2[2]);
+    progressMaterial.positionNode = vec3(positionLocal.mul(cameraViewMatrix).mul(0.15));
 
-  getOverlay(): THREE.Mesh {
-    const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+    const progress = new THREE.Mesh(progressGeometry, progressMaterial);
+    progress.renderOrder = 1;
+    progress.userData['completion'] = 1.0;
 
-    return new THREE.Mesh(overlayGeometry, this.overlayMaterial);
-  }
-
-  getProgressBar(): THREE.Mesh {
-    const progressGeometry = new THREE.PlaneGeometry(2, 0.01, 1, 1);
-
-    return new THREE.Mesh(progressGeometry, this.progressMaterial);
+    return progress;
   }
 }

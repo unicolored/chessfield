@@ -31,6 +31,8 @@ import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
+import { LoaderComponent } from './component/loader.component.ts';
+import { float, time } from 'three/tsl';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
@@ -51,6 +53,7 @@ export class Chessfield implements ChessfieldApi {
   private canvas!: HTMLCanvasElement;
   private eventsService!: EventsService;
   private foundLastMove!: Move | null;
+  private loadingCompleted = false;
 
   constructor(
     private cfElement: HTMLElement | null,
@@ -131,6 +134,7 @@ export class Chessfield implements ChessfieldApi {
 
   private onLoad(
     camera: THREE.PerspectiveCamera,
+    loaderGroup: THREE.Group,
     scene: THREE.Scene,
     renderer: THREE.Renderer,
     controls: OrbitControls,
@@ -141,11 +145,13 @@ export class Chessfield implements ChessfieldApi {
       return;
     }
 
-    // setTimeout(() => {
-    //   // fadeAlpha(loaderComponent.overlayMaterial.opacityNode, 500);
-    //   loaderComponent.overlayMaterial.opacityNode = float(1);
-    //   // loaderComponent.progressMaterial.opacityNode = { value: 0 };
-    // }, 200);
+    setTimeout(() => {
+      this.loadingCompleted = true;
+      // fadeAlpha(loaderGroup.children[0].userData['overlayOpacity'], 500);
+      // loaderComponent.overlayMaterial.opacityNode = float(1);
+      // loaderComponent.progressMaterial.opacityNode = { value: 0 };
+      // loaderGroup.children[0].userData['overlayOpacity'] = 0;
+    }, 100);
 
     const chessboardGroup = new THREE.Group();
     chessboardGroup.name = '🟣 Chessboard Group';
@@ -220,8 +226,14 @@ export class Chessfield implements ChessfieldApi {
     const timer = new THREE.Timer();
     timer.connect(document);
 
+    const overlayOpacity = 1.0;
     const tick = async () => {
       timer.update();
+
+      if (overlayOpacity === 1.0 && this.loadingCompleted) {
+        const opacity: number = 1.0 - timer.getElapsed() * 0.75;
+        loaderGroup.children[0].userData['overlayOpacity'] = opacity;
+      }
 
       controls.update();
       await renderer.init();
@@ -268,9 +280,13 @@ export class Chessfield implements ChessfieldApi {
     const controls = this.controlsProvider.getControls(camera, this.canvas);
 
     // Overlay
-    // const loaderComponent = new LoaderComponent(backgroundColor, this.themeProvider.getInvertColor());
-    // scene.add(loaderComponent.getOverlay());
-    // scene.add(loaderComponent.getProgressBar());
+    const loaderComponent = new LoaderComponent();
+    const loaderGroup = new THREE.Group();
+    this.store.scene.add(loaderGroup);
+    const overlay = loaderComponent.getOverlay(backgroundColor);
+    const progress = loaderComponent.getProgressBar(this.themeProvider.getInvertColor());
+    loaderGroup.add(overlay);
+    loaderGroup.add(progress);
 
     // Décor
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
@@ -286,14 +302,16 @@ export class Chessfield implements ChessfieldApi {
       console.error('error', e);
     };
 
-    // loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
-    //   // loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
-    // };
+    loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
+      // loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
+    };
 
     const font = loadingManagerProvider.font;
+    this.loadingCompleted = false;
     loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
       this,
       camera,
+      loaderGroup,
       this.store.scene,
       renderer,
       controls,

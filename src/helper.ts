@@ -56,23 +56,23 @@ export function lmToCoordinates(lastMove: cg.Key[] | undefined): { x: number; y:
   return coords;
 }
 
-export function fadeAlpha(uAlpha: number, duration = 1000) {
-  const startTime = Date.now();
-
-  const animate = () => {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1); // Clamps between 0 and 1
-    if (uAlpha) {
-      uAlpha = 1 - progress; // Update uAlpha directly
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    }
-  };
-
-  requestAnimationFrame(animate);
-}
+// export function fadeAlpha(uAlpha: number, duration = 1000) {
+//   const startTime = Date.now();
+//
+//   const animate = () => {
+//     const elapsed = Date.now() - startTime;
+//     const progress = Math.min(elapsed / duration, 1); // Clamps between 0 and 1
+//     if (uAlpha) {
+//       uAlpha = 1 - progress; // Update uAlpha directly
+//
+//       if (progress < 1) {
+//         requestAnimationFrame(animate);
+//       }
+//     }
+//   };
+//
+//   requestAnimationFrame(animate);
+// }
 
 export function coordToVector2(coord: string): THREE.Vector2 {
   const file = coord.charCodeAt(0) - 97;
