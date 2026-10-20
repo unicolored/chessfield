@@ -37,16 +37,9 @@ export class PieceProvider {
               const instanceMesh = mesh as THREE.Mesh as THREE.InstancedMesh;
               piecesGroup.add(instanceMesh);
               if (instanceMesh.count) {
-                // .. instancedMesh
                 const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
                 updateMatrix.push({ mesh: instanceMesh, pos, coord: boardPiece.coord });
                 matrixes.set(boardPiece.objectKey, updateMatrix);
-                // } else {
-                //   // mesh.userData['coord'] = boardPiece.coord;
-                //   mesh.position.copy(pos);
-                //   if (mesh.name.startsWith('black')) {
-                //     mesh.rotateY(Math.PI);
-                //   }
               }
             }
           }
