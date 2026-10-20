@@ -7,4 +7,8 @@ export class SceneProvider {
 
     return scene;
   }
+
+  updateBackground(scene: THREE.Scene, backgroundColor: string | number): void {
+    scene.background = new THREE.Color(backgroundColor);
+  }
 }
