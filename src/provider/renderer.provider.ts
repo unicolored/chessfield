@@ -7,10 +7,10 @@ export class RendererProvider {
     return document.createElement('canvas') as HTMLCanvasElement;
   }
 
-  async getRenderer(
+  getRenderer(
     { width, height }: { width: number; height: number },
     canvas: HTMLCanvasElement,
-  ): Promise<THREE.WebGPURenderer> {
+  ): THREE.WebGPURenderer {
     const renderer = new THREE.WebGPURenderer({
       canvas,
       // powerPreference: 'high-performance',
@@ -19,7 +19,7 @@ export class RendererProvider {
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    await renderer.init();
+    // await renderer.init();
 
     return renderer;
   }
