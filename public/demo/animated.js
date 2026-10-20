@@ -78,7 +78,7 @@ try {
               black: findBlackKing.pop(),
             },
           };
-          board1.setGameOver(gO);
+          board1.setState(gO);
         } else if (chess.isDraw()) {
           // It's a draw - check specific reason
           console.log('Draw!');
@@ -97,7 +97,7 @@ try {
               black: findBlackKing.pop(),
             },
           };
-          board1.setGameOver(gO);
+          board1.setState(gO);
         }
       } else if (chess.inCheck()) {
         // Find king in check
@@ -111,7 +111,7 @@ try {
             black: chess.turn() === 'b' ? findCheckKing.pop() : null,
           },
         };
-        board1.setCheck(check);
+        board1.setState(check);
       }
     }
     if (!chess.isGameOver()) requestAnimationFrame(animate);
