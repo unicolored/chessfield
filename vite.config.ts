@@ -56,7 +56,7 @@ export default defineConfig({
   },
 
   server: {
-    port: 8000,
+    port: 0,
     https: {
       key: path.resolve(__dirname, 'localhost-key.pem'),
       cert: path.resolve(__dirname, 'localhost.pem'),
@@ -64,7 +64,7 @@ export default defineConfig({
     hmr: {
       protocol: 'wss',
       host: 'localhost',
-      port: 8000,
+      port: 0,
     },
   },
 
