@@ -1,0 +1,98 @@
+import { Chessfield } from '../../src/chessfield.ts';
+
+let controlsEnabled = true;
+const board1 = new Chessfield(document.getElementById('board-1'), {
+  orientation: 'white',
+  camera: 'white',
+  angle: 'right',
+  theme: 'green',
+  fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
+  lastMove: ['e2', 'e4'],
+  zoomMinDistance: 5,
+  zoomMaxDistance: 30,
+});
+
+const toggleControls = document.querySelector('.js-mode-toggle-controls');
+
+if (toggleControls) {
+  toggleControls.addEventListener('click', () => {
+    controlsEnabled = !controlsEnabled;
+    board1.configUpdate({
+      controlsEnabled: controlsEnabled,
+    });
+  });
+}
+
+const board2 = new Chessfield(document.getElementById('board-2'), {
+  orientation: 'white',
+  camera: 'black',
+  angle: 'left',
+  theme: 'brown',
+  mode: 'dark',
+});
+board2.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+
+const toggleMode = document.querySelector('.js-mode-toggle');
+
+if (toggleMode) {
+  toggleMode.addEventListener('click', () => {
+    const randomMode = Math.random() > 0.5 ? 'light' : 'dark';
+    const randomTheme = Math.random() > 0.5 ? 'brown' : 'blue';
+    const randomCamera = Math.random() > 0.5 ? 'white' : 'black';
+    const randomAngle = Math.random() > 0.5 ? 'left' : 'right';
+    board2.configUpdate({
+      mode: randomMode,
+      theme: randomTheme,
+      camera: randomCamera,
+      angle: randomAngle,
+    });
+  });
+}
+
+const board3 = new Chessfield(document.getElementById('board-3'), {
+  angle: 'right',
+  camera: 'black',
+  theme: 'green',
+  mode: 'light',
+  controlsEnabled: true,
+});
+
+const randomFens = [
+  {
+    fen: '8/8/4kpp1/3p4/p6P/2B4b/6P1/6K1 w - - 1 48',
+    lastMove: ['f5', 'h3'],
+  },
+  {
+    fen: '2rq2kb/pbQr3p/2n1R1pB/1pp2pN1/3p4/P1PP2P1/1P3PBP/4R1K1 b - - 1 1',
+    lastMove: ['f4', 'c7'],
+  },
+  {
+    fen: '5rk1/pp4pp/4p3/2R3Q1/3n4/6qr/P1P2PPP/5RK1 w - - 2 24',
+    lastMove: ['c3', 'g3'],
+  },
+  {
+    fen: 'r4k1r/1b2bPR1/p4n1B/3p4/4P2P/1q5B/PpP5/1K4R1 b - - 1 26',
+    lastMove: ['e3', 'h6'],
+  },
+  {
+    fen: '8/6kp/6p1/4p3/p3rPRP/3K2P1/8/8 w - - 2 44',
+    lastMove: ['f6', 'g7'],
+  },
+];
+
+const fenRandom = document.querySelector('.js-tv-random');
+
+if (fenRandom) {
+  let previousId = -1;
+  fenRandom.addEventListener('click', () => {
+    let id;
+    do {
+      id = Math.floor(Math.random() * randomFens.length);
+    } while (id === previousId);
+
+    previousId = id;
+
+    const { fen, lastMove } = randomFens[id];
+    board3.setFen(fen, lastMove);
+  });
+}
