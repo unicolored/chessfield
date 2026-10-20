@@ -13,18 +13,25 @@ import { cbShader } from '../shader/cbShader.ts';
 import { ShapesService } from './shapes.service.ts';
 
 export class BoardService {
+  private decorGroup: THREE.Group | null = null;
+  private decorMeshes: THREE.Mesh[] = [];
+
   public decor(mode: ThemeColors): THREE.Group {
     const decorGroup = new THREE.Group();
+    this.decorGroup = decorGroup;
+    this.decorMeshes = [];
 
     // Create a box geometry and material
     const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
     const frameColor = mode.dark;
     const frameMaterial = new THREE.MeshBasicNodeMaterial({ color: frameColor });
     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    frame.userData['decorType'] = 'frame';
     // Position the box in the scene
     frame.position.set(0, cm(-0.1), cm(0));
     // Add the box to the scene
     decorGroup.add(frame);
+    this.decorMeshes.push(frame);
 
     // const gridHelper = new GridHelper(0.1, 10, gridColor, gridColor);
     // gridHelper.position.y = cm(0.045);
@@ -35,20 +42,46 @@ export class BoardService {
 
     const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['light'].dark });
     const player1 = new THREE.Mesh(playerGeometry, player1Material);
+    player1.userData['decorType'] = 'player1';
     // Position the box in the scene
     player1.position.set(0, cm(0), cm(4.5));
     // Add the box to the scene
     decorGroup.add(player1);
+    this.decorMeshes.push(player1);
 
     // Create a box geometry and material
     const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['dark'].dark });
     const player2 = new THREE.Mesh(playerGeometry, player2Material);
+    player2.userData['decorType'] = 'player2';
     // Position the box in the scene
     player2.position.set(0, cm(0), cm(-4.5));
     // Add the box to the scene
     decorGroup.add(player2);
+    this.decorMeshes.push(player2);
 
     return decorGroup;
+  }
+
+  public updateDecorColors(modeColors: ThemeColors): void {
+    if (!this.decorGroup) return;
+
+    for (const mesh of this.decorMeshes) {
+      const material = mesh.material as THREE.MeshBasicNodeMaterial;
+      if (!material) continue;
+
+      const decorType = mesh.userData['decorType'] as string | undefined;
+      switch (decorType) {
+        case 'frame':
+          material.colorNode = vec4(new THREE.Color(modeColors.dark), 1.0);
+          break;
+        case 'player1':
+          material.colorNode = vec4(new THREE.Color(Store.themes['light'].dark), 1.0);
+          break;
+        case 'player2':
+          material.colorNode = vec4(new THREE.Color(Store.themes['dark'].dark), 1.0);
+          break;
+      }
+    }
   }
 
   public createCases(font: Font | null): THREE.Group {

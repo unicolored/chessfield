@@ -5,20 +5,20 @@ import * as THREE from 'three/webgpu';
 import { hexToRgb } from '../helper.ts';
 
 export interface LoaderOptions {
-  overlayFadeDuration?: number;  // milliseconds
-  progressBarHeight?: number;    // world units
+  overlayFadeDuration?: number; // milliseconds
+  progressBarHeight?: number; // world units
   onLoadingComplete?: () => void;
 }
 
 export class LoaderComponent {
   private onCompleteCallback?: () => void;
-  private fadeStartTimeUniform: UniformNode<"float", number>;
-  private fadeDurationUniform: UniformNode<"float", number>;
-  private progressScaleUniform: UniformNode<"float", number>;
+  private fadeStartTimeUniform: UniformNode<'float', number>;
+  private fadeDurationUniform: UniformNode<'float', number>;
+  private progressScaleUniform: UniformNode<'float', number>;
 
   constructor(options?: LoaderOptions) {
     this.onCompleteCallback = options?.onLoadingComplete;
-    
+
     // Create uniforms for GPU-driven animations with explicit float type
     this.fadeStartTimeUniform = uniform(-1.0, 'float'); // -1 means not started
     this.fadeDurationUniform = uniform((options?.overlayFadeDuration ?? 500) / 1000, 'float');
@@ -30,7 +30,7 @@ export class LoaderComponent {
     const overlayMaterial = new THREE.MeshBasicNodeMaterial({
       color: 0xff_00_00,
       transparent: true,
-      opacity: 1.0,
+      opacity: 0.5,
       depthTest: false,
       depthWrite: false,
     });
@@ -75,11 +75,9 @@ export class LoaderComponent {
     // This grows the bar from left (X=0) to right (X=1) as progressScale increases
     const yOffset = float(-1).add(float(height / 2));
     const scaleX = this.progressScaleUniform;
-    progressMaterial.positionNode = vec3(
-      positionLocal.x.mul(scaleX),
-      yOffset,
-      float(0)
-    ).mul(cameraViewMatrix);
+    progressMaterial.positionNode = vec3(positionLocal.x.mul(scaleX), yOffset, float(0)).mul(
+      cameraViewMatrix,
+    );
 
     const progress = new THREE.Mesh(progressGeometry, progressMaterial);
     progress.renderOrder = 1;
@@ -96,11 +94,11 @@ export class LoaderComponent {
     this.progressScaleUniform.value = Math.max(0, Math.min(1, value));
   }
 
-  getFadeStartTimeUniform(): UniformNode<"float", number> {
+  getFadeStartTimeUniform(): UniformNode<'float', number> {
     return this.fadeStartTimeUniform;
   }
 
-  getFadeDurationUniform(): UniformNode<"float", number> {
+  getFadeDurationUniform(): UniformNode<'float', number> {
     return this.fadeDurationUniform;
   }
 }
