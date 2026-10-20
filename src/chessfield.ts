@@ -237,6 +237,9 @@ export class Chessfield implements ChessfieldApi {
     this.store.casesGroup = this.boardService.createCases(font);
     chessboardGroup.add(this.store.casesGroup);
 
+    // Pieces
+    this.updatePieces();
+
     // Shapes / Rings
     this.store.shapesRing = this.shapesService.getMesh('ring');
     this.store.shapesRing.name = '🟢 Shapes (ring)';
@@ -292,8 +295,6 @@ export class Chessfield implements ChessfieldApi {
     };
 
     renderer.setAnimationLoop(tick);
-
-    this.updatePieces();
   }
 
   async start() {
@@ -411,6 +412,8 @@ export class Chessfield implements ChessfieldApi {
 
       const piecesGroup = this.pieceProvider.updateGamePositions(boardPieces);
       this.store.piecesGroup = piecesGroup;
+      this.store.boardPieces = boardPieces;
+      this.store.piecesObjects = this.store.getBoardPiecesObjectsMap();
       this.store.scene?.add(piecesGroup);
 
       // Happen after pieces have been put in position
@@ -419,14 +422,17 @@ export class Chessfield implements ChessfieldApi {
           this.addShapes(this.store.gameState);
         }
         if (this.store.gameState.check) {
+          console.log('Check!!!');
           let kingVec;
 
           // NOTE: for debugging purpose,
           // both kings can be checked at the same time.
 
           this.store.gameState.check.forEach((key: cg.Key) => {
-            kingVec = coordToVector2(key);
-            this.stateService.setStateAt(kingVec.x, kingVec.y);
+            if (key) {
+              kingVec = coordToVector2(key);
+              this.stateService.setStateAt(kingVec.x, kingVec.y);
+            }
           });
         }
       } else {
@@ -440,10 +446,14 @@ export class Chessfield implements ChessfieldApi {
       return;
     }
 
-    const findPieceOnMateKey = (mateKey: string) => {
-      return this.store.piecesGroup?.children.find(c => {
-        return c.userData['coord'] === mateKey;
-      });
+    const boardPieces = this.store.boardPieces ?? [];
+    const piecesObjects = this.store.piecesObjects;
+
+    const findPieceMesh = (mateKey: string): THREE.Object3D | null => {
+      if (!piecesObjects) return null;
+      const boardPiece = boardPieces.find(bp => bp.coord === mateKey);
+      if (!boardPiece || !boardPiece.objectKey) return null;
+      return piecesObjects.get(boardPiece.objectKey) ?? null;
     };
 
     const findStateSprite = (piece: THREE.Object3D) => {
@@ -465,24 +475,34 @@ export class Chessfield implements ChessfieldApi {
 
         this.stateService.setStateAt(squareVec2.x, squareVec2.y);
 
-        const pieceFound = findPieceOnMateKey(mateKey);
+        const pieceFound = findPieceMesh(mateKey);
+        console.log(pieceFound);
 
         if (pieceFound) {
           const spriteFound = findStateSprite(pieceFound);
-          spriteFound.userData['showSprite'] = true;
-          spriteFound.userData['lostState'] = true;
+          if (spriteFound) {
+            spriteFound.userData['showSprite'] = true;
+            spriteFound.userData['lostState'] = true;
+          }
         }
       }
     }
+    console.log('state!', state);
     if (state.draw) {
+      console.log('draw!');
       // game is a draw
       state.draw.forEach((key: cg.Key) => {
-        const pieceFound = findPieceOnMateKey(key);
+        if (key) {
+          const pieceFound = findPieceMesh(key);
+          console.log(pieceFound);
 
-        if (pieceFound) {
-          const spriteFound = findStateSprite(pieceFound);
-          spriteFound.userData['showSprite'] = true;
-          spriteFound.userData['lostState'] = false;
+          if (pieceFound) {
+            const spriteFound = findStateSprite(pieceFound);
+            if (spriteFound) {
+              spriteFound.userData['showSprite'] = true;
+              spriteFound.userData['lostState'] = false;
+            }
+          }
         }
       });
     }

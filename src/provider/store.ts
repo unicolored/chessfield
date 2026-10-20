@@ -19,6 +19,8 @@ export class Store {
   shapesRing: THREE.InstancedMesh | null = null;
   state: THREE.InstancedMesh | null = null;
   gameState: GameState | null = null;
+  boardPieces: cf.BoardPiece[] = [];
+  piecesObjects: cf.ColorPieceNameObjectMap | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
