@@ -92,9 +92,13 @@ export class Chessfield implements ChessfieldApi {
     this.start();
   }
 
-  public setShape(rank: number, file: number, color: string, shaderName: ShaderName = 'ring'): void {
-    this.shapesService.setShapeAt(rank, file, color, true, shaderName);
+  public addRing(rank: number, file: number, shape: string): void {
+    this.addRingAt(rank, file, shape);
   }
+
+  // private setShape(rank: number, file: number, color: string, shaderName: ShaderName = 'ring'): void {
+  //   this.shapesService.setShapeAt(rank, file, color, true, shaderName);
+  // }
 
   public clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
     if (rank !== undefined && file !== undefined) {
@@ -108,25 +112,21 @@ export class Chessfield implements ChessfieldApi {
   //   return this.shapesService.getMesh(shaderName);
   // }
 
-  public setCheck(state: GameState): void {
+  public setState(state: GameState): void {
     this.store.gameState = state;
-    let kingVec;
-
-    if (state.kings.white) {
-      kingVec = coordToVector2(state.kings.white);
-    } else if (state.kings.black) {
-      kingVec = coordToVector2(state.kings.black);
-    }
-
-    if (kingVec) {
-      this.stateService.setStateAt(kingVec.x, kingVec.y);
-    }
+    this.updatePieces();
   }
 
+  /** @deprecated Use setState instead */
+  public setCheck(state: GameState): void {
+    this.store.gameState = state;
+    this.updatePieces();
+  }
+
+  /** @deprecated Use setState instead */
   public setGameOver(state: GameState): void {
     this.store.gameState = state;
-
-    this.addShapes(state);
+    this.updatePieces();
   }
 
   private onLoad(
@@ -167,7 +167,7 @@ export class Chessfield implements ChessfieldApi {
     // this.store.chessboard.setStatusCheckColor(themeColors.statusCheck);
     chessboardGroup.add(this.store.chessboard);
 
-    this.updatePieces(scene, this.store.chessboard);
+    this.updatePieces();
 
     // Cases
     this.store.casesGroup = this.boardService.createCases(font);
@@ -197,42 +197,21 @@ export class Chessfield implements ChessfieldApi {
       this.store.chessboard?.highlightSquareCursor(rank, file);
     };
 
-    this.eventsService.onSquareRightClick = (rank, file, shape) => {
-      const index = rank * 8 + file;
-      const isVisible = this.shapesService.getVisible(index, 'ring');
-
-      const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
-
-      console.log(theme);
-
-      const color = theme[shape]?.toString() ?? '#000000';
-
-      console.log(shape, color);
-
-      if (!isVisible) {
-        this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-      } else {
-        const currentColor = this.shapesService.getColor(index, 'ring');
-        if (currentColor.toLowerCase() === color.toLowerCase()) {
-          this.shapesService.clearShape(index, 'ring');
-        } else {
-          this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-        }
-      }
-    };
+    this.eventsService.onSquareRightClick = this.addRingAt.bind(this);
 
     this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
 
-    this.eventsService.onResize = () => {
+    this.eventsService.onResize = async () => {
       if (!this.cfElement) {
         return;
       }
 
       const rect = this.cfElement.getBoundingClientRect();
       const sizes = { width: rect.width, height: rect.height };
+      renderer.setSize(sizes.width, sizes.height);
+      await renderer.init();
       camera.aspect = sizes.width / sizes.height;
       camera.updateProjectionMatrix();
-      renderer.setSize(sizes.width, sizes.height);
     };
 
     this.eventsService.init();
@@ -241,10 +220,11 @@ export class Chessfield implements ChessfieldApi {
     const timer = new THREE.Timer();
     timer.connect(document);
 
-    const tick = () => {
+    const tick = async () => {
       timer.update();
 
       controls.update();
+      await renderer.init();
       renderer.render(scene, camera);
     };
 
@@ -267,20 +247,18 @@ export class Chessfield implements ChessfieldApi {
 
     // Scene
     const backgroundColor = this.themeProvider.getBackgroundColor();
-    const scene = this.sceneProvider.getScene(backgroundColor);
+    this.store.scene = this.sceneProvider.getScene(backgroundColor);
 
     // Camera
     const camera = this.cameraProvider.getCamera(sizes);
     const camGroup = this.cameraProvider.getCameraGroup(camera);
-    scene.add(camGroup);
+    this.store.scene.add(camGroup);
 
     // Canvas & Renderer
     this.canvas = this.rendererProvider.getCanvas();
-    const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
+    const renderer = await this.rendererProvider.getRenderer(sizes, this.canvas);
     this.cfElement.appendChild(renderer.domElement);
-    console.log('prod?', import.meta.env.PROD);
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
-      console.log('load Inspector', import.meta.env);
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
       renderer.inspector = new Inspector();
     }
@@ -297,7 +275,7 @@ export class Chessfield implements ChessfieldApi {
     // Décor
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
     decorGroup.name = '🔵 Décor';
-    scene.add(decorGroup);
+    this.store.scene.add(decorGroup);
 
     /**
      * LOADING MANAGEMENT
@@ -316,39 +294,50 @@ export class Chessfield implements ChessfieldApi {
     loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
       this,
       camera,
-      scene,
+      this.store.scene,
       renderer,
       controls,
       font,
     );
   }
 
-  private updatePieces(scene: THREE.Scene, chessboard: cf.ExtendedMesh) {
+  private updatePieces() {
     let piecesGroup: THREE.Group;
 
     this.store.movesSubject$.subscribe((moves: Moves) => {
-      scene.remove(piecesGroup);
+      this.store.scene?.remove(piecesGroup);
       this.foundLastMove = GameProvider.findLastMove(moves.moves);
       if (this.foundLastMove) {
         this.gameProvider.initGamePieces(this.foundLastMove);
 
         const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
         if (lastMoveToCoordinates.length > 1) {
-          chessboard.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-          chessboard.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+          this.store.chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+          this.store.chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
         }
       }
 
       piecesGroup = this.pieceProvider.updateGamePositions();
       this.store.piecesGroup = piecesGroup;
-      scene.add(piecesGroup);
+      this.store.scene?.add(piecesGroup);
 
       // Happen after pieces have been put in position
-      if (['mate', 'resign', 'timeout', 'draw'].includes(this.store.gameState?.status)) {
-        this.addShapes(this.store.gameState);
-      } else if (this.store.gameState?.status === 'check') {
-        // ...
-      } else if (!this.store.gameState) {
+      if (this.store.gameState) {
+        if (this.store.gameState.mate || this.store.gameState.draw) {
+          this.addShapes(this.store.gameState);
+        }
+        if (this.store.gameState.check) {
+          let kingVec;
+
+          // NOTE: for debugging purpose,
+          // both kings can be checked at the same time.
+
+          this.store.gameState.check.forEach((key: cg.Key) => {
+            kingVec = coordToVector2(key);
+            this.stateService.setStateAt(kingVec.x, kingVec.y);
+          });
+        }
+      } else {
         this.stateService.clearAll(['check']);
       }
     });
@@ -392,22 +381,37 @@ export class Chessfield implements ChessfieldApi {
           spriteFound.userData['lostState'] = true;
         }
       }
-    } else {
+    }
+    if (state.draw) {
       // game is a draw
-      const pieceWhiteFound = findPieceOnMateKey(state.kings.white);
+      state.draw.forEach((key: cg.Key) => {
+        const pieceFound = findPieceOnMateKey(key);
 
-      if (pieceWhiteFound) {
-        const spriteFound = findStateSprite(pieceWhiteFound);
-        spriteFound.userData['showSprite'] = true;
-        spriteFound.userData['lostState'] = false;
-      }
+        if (pieceFound) {
+          const spriteFound = findStateSprite(pieceFound);
+          spriteFound.userData['showSprite'] = true;
+          spriteFound.userData['lostState'] = false;
+        }
+      });
+    }
+  }
 
-      const pieceBlackFound = findPieceOnMateKey(state.kings.black);
+  public addRingAt(rank: number, file: number, shape: string): void {
+    const index = rank * 8 + file;
+    const isVisible = this.shapesService.getVisible(index, 'ring');
 
-      if (pieceBlackFound) {
-        const spriteFound = findStateSprite(pieceBlackFound);
-        spriteFound.userData['showSprite'] = true;
-        spriteFound.userData['lostState'] = false;
+    const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
+
+    const color = theme[shape]?.toString() ?? '#000000';
+
+    if (!isVisible) {
+      this.shapesService.setShapeAt(rank, file, color, true, 'ring');
+    } else {
+      const currentColor = this.shapesService.getColor(index, 'ring');
+      if (currentColor.toLowerCase() === color.toLowerCase()) {
+        this.shapesService.clearShape(index, 'ring');
+      } else {
+        this.shapesService.setShapeAt(rank, file, color, true, 'ring');
       }
     }
   }
