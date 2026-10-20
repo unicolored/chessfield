@@ -31,8 +31,7 @@ import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
-import { LoaderComponent } from './component/loader.component.ts';
-import { float, time } from 'three/tsl';
+import { LoaderComponent, LoaderOptions } from './component/loader.component.ts';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
@@ -139,19 +138,16 @@ export class Chessfield implements ChessfieldApi {
     renderer: THREE.Renderer,
     controls: OrbitControls,
     font: Font | null,
+    loaderComponent: LoaderComponent,
   ): void {
     if (!this.cfElement) {
       console.error('Onload: Chessfield HtmlElement is missing.');
       return;
     }
 
-    setTimeout(() => {
-      this.loadingCompleted = true;
-      // fadeAlpha(loaderGroup.children[0].userData['overlayOpacity'], 500);
-      // loaderComponent.overlayMaterial.opacityNode = float(1);
-      // loaderComponent.progressMaterial.opacityNode = { value: 0 };
-      // loaderGroup.children[0].userData['overlayOpacity'] = 0;
-    }, 100);
+    // Trigger overlay fade via loader component
+    loaderComponent.startFade();
+    this.loadingCompleted = true;
 
     const chessboardGroup = new THREE.Group();
     chessboardGroup.name = '🟣 Chessboard Group';
@@ -226,14 +222,8 @@ export class Chessfield implements ChessfieldApi {
     const timer = new THREE.Timer();
     timer.connect(document);
 
-    const overlayOpacity = 1.0;
     const tick = async () => {
       timer.update();
-
-      if (overlayOpacity === 1.0 && this.loadingCompleted) {
-        const opacity: number = 1.0 - timer.getElapsed() * 0.75;
-        loaderGroup.children[0].userData['overlayOpacity'] = opacity;
-      }
 
       controls.update();
       await renderer.init();
@@ -279,12 +269,21 @@ export class Chessfield implements ChessfieldApi {
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
 
-    // Overlay
-    const loaderComponent = new LoaderComponent();
+    // Overlay - configure from config
+    const config = this.store.getConfig();
+    const loadingOptions: LoaderOptions = {
+      overlayFadeDuration: config.loading?.overlayFadeDuration ?? 1000,
+      progressBarHeight: config.loading?.progressBarHeight ?? 10,
+      onLoadingComplete: config.loading?.onLoadingComplete,
+    };
+    const loaderComponent = new LoaderComponent(loadingOptions);
     const loaderGroup = new THREE.Group();
     this.store.scene.add(loaderGroup);
-    const overlay = loaderComponent.getOverlay(backgroundColor);
-    const progress = loaderComponent.getProgressBar(this.themeProvider.getInvertColor());
+    const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
+    const progress = loaderComponent.getProgressBar(
+      this.themeProvider.getInvertColor(),
+      loadingOptions.progressBarHeight,
+    );
     loaderGroup.add(overlay);
     loaderGroup.add(progress);
 
@@ -303,7 +302,9 @@ export class Chessfield implements ChessfieldApi {
     };
 
     loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
-      // loaderComponent.progressMaterial.uniforms['uTime'] = { value: itemsNumber / itemsTotal };
+      const progressValue = itemsNumber / itemsTotal;
+      console.log('[Loader] Progress:', progressValue);
+      loaderComponent.setProgress(progressValue);
     };
 
     const font = loadingManagerProvider.font;
@@ -316,6 +317,7 @@ export class Chessfield implements ChessfieldApi {
       renderer,
       controls,
       font,
+      loaderComponent,
     );
   }
 
