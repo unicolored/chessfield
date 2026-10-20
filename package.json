@@ -61,30 +61,6 @@
       "optional": false
     }
   },
-  "peerDependencies": {
-    "three": ">=0.186.0",
-    "@lichess-org/chessground": ">=10.0.0"
-  },
-  "peerDependenciesMeta": {
-    "three": {
-      "optional": false
-    },
-    "@lichess-org/chessground": {
-      "optional": false
-    }
-  },
-  "peerDependencies": {
-    "three": ">=0.186.0",
-    "@lichess-org/chessground": ">=10.0.0"
-  },
-  "peerDependenciesMeta": {
-    "three": {
-      "optional": false
-    },
-    "@lichess-org/chessground": {
-      "optional": false
-    }
-  },
   "keywords": [
     "chess",
     "chessboard",
