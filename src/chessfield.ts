@@ -25,7 +25,7 @@ import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
 import type * as cf from './resource/chessfield.types';
-import { type Move, type Moves } from './resource/chessfield.types';
+import { type Move, type Moves, type ThemeColors } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
@@ -118,6 +118,10 @@ export class Chessfield implements ChessfieldApi {
 
     // Apply visual updates
     this.applyThemeColors();
+  }
+
+  public getThemeColors(): ThemeColors {
+    return this.themeProvider.getThemeColors();
   }
 
   private applyThemeColors(): void {
