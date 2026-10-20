@@ -18,7 +18,7 @@ if (toggleControls) {
   toggleControls.addEventListener('click', () => {
     controlsEnabled = !controlsEnabled;
     board1.configUpdate({
-      controlsEnabled: controlsEnabled,
+      controlsEnabled,
     });
   });
 }
