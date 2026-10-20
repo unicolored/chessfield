@@ -72,7 +72,7 @@ export class Chessfield implements ChessfieldApi {
       this.controlsProvider = new ControlsProvider(this.store.getConfig());
       this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
       const theme = this.themeProvider.getThemeColors();
-      this.stateService = new StateService([['check', theme.statusCheck]]);
+      this.stateService = new StateService([['check', String(theme.statusCheck)]]);
 
       this.start();
     }
@@ -92,6 +92,51 @@ export class Chessfield implements ChessfieldApi {
     this.eventsService?.dispose();
     this.canvas.remove();
     this.start();
+  }
+
+  public switchTheme(theme?: string): void {
+    // Resolve theme: use provided theme or cycle to next
+    let targetTheme: string;
+    if (theme) {
+      // Validate theme exists in Store.themes
+      if (!Store.themes[theme]) {
+        console.warn(`Theme "${theme}" not found. Available themes: ${Object.keys(Store.themes).join(', ')}`);
+        return;
+      }
+      targetTheme = theme;
+    } else {
+      // Cycle to next theme
+      targetTheme = this.themeProvider.getNextTheme();
+    }
+
+    // Update ThemeProvider
+    this.themeProvider.setTheme(targetTheme as any);
+
+    // Update store config for persistence
+    const currentConfig = this.store.getConfig();
+    this.store.setConfig({ ...currentConfig, theme: targetTheme });
+
+    // Apply visual updates
+    this.applyThemeColors();
+  }
+
+  private applyThemeColors(): void {
+    const themeColors = this.themeProvider.getThemeColors();
+    const modeColors = this.themeProvider.getModeColors();
+
+    // 1. Chessboard colors (TSL uniforms)
+    this.store.chessboard?.setSquareColors(themeColors.light, themeColors.dark);
+    this.store.chessboard?.setHighlightColor(themeColors.highlight);
+
+    // 2. Scene background
+    const bgColor = this.themeProvider.getBackgroundColor();
+    this.sceneProvider.updateBackground(this.store.scene!, bgColor);
+
+    // 3. Decor (frame, player indicators) - update via TSL userData
+    this.boardService.updateDecorColors(modeColors);
+
+    // 4. State/Check color
+    this.stateService.updateCheckColor(themeColors.statusCheck);
   }
 
   public addRing(rank: number, file: number, shape: string): void {
@@ -278,12 +323,12 @@ export class Chessfield implements ChessfieldApi {
     const loaderComponent = new LoaderComponent(loadingOptions);
     const loaderGroup = new THREE.Group();
     this.store.scene.add(loaderGroup);
-    const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
+    // const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
     // const progress = loaderComponent.getProgressBar(
     //   this.themeProvider.getInvertColor(),
     //   loadingOptions.progressBarHeight,
     // );
-    loaderGroup.add(overlay);
+    // loaderGroup.add(overlay);
     // loaderGroup.add(progress);
 
     // Décor
@@ -420,7 +465,8 @@ export class Chessfield implements ChessfieldApi {
 
     const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
 
-    const color = theme[shape]?.toString() ?? '#000000';
+    const color =
+      (theme as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
 
     if (!isVisible) {
       this.shapesService.setShapeAt(rank, file, color, true, 'ring');

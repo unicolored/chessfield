@@ -10,6 +10,9 @@ export interface ChessfieldApi {
   // set a fen with flags, and optionally squares part of the last move
   configUpdate(partialConfig: Partial<ChessfieldConfig>): void;
 
+  // switch theme (cycle if no theme provided)
+  switchTheme(theme?: string): void;
+
   setCheck(state: GameState): void;
   setGameOver(state: GameState): void;
 
