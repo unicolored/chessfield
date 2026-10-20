@@ -52,7 +52,7 @@ export class Chessfield implements ChessfieldApi {
   private canvas!: HTMLCanvasElement;
   private eventsService!: EventsService;
   private foundLastMove!: Move | null;
-  private loadingCompleted = false;
+  // private loadingCompleted = false;
 
   constructor(
     private cfElement: HTMLElement | null,
@@ -133,7 +133,6 @@ export class Chessfield implements ChessfieldApi {
 
   private onLoad(
     camera: THREE.PerspectiveCamera,
-    loaderGroup: THREE.Group,
     scene: THREE.Scene,
     renderer: THREE.Renderer,
     controls: OrbitControls,
@@ -272,7 +271,7 @@ export class Chessfield implements ChessfieldApi {
     // Overlay - configure from config
     const config = this.store.getConfig();
     const loadingOptions: LoaderOptions = {
-      overlayFadeDuration: config.loading?.overlayFadeDuration ?? 1000,
+      overlayFadeDuration: config.loading?.overlayFadeDuration ?? 200,
       progressBarHeight: config.loading?.progressBarHeight ?? 10,
       onLoadingComplete: config.loading?.onLoadingComplete,
     };
@@ -280,12 +279,12 @@ export class Chessfield implements ChessfieldApi {
     const loaderGroup = new THREE.Group();
     this.store.scene.add(loaderGroup);
     const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
-    const progress = loaderComponent.getProgressBar(
-      this.themeProvider.getInvertColor(),
-      loadingOptions.progressBarHeight,
-    );
+    // const progress = loaderComponent.getProgressBar(
+    //   this.themeProvider.getInvertColor(),
+    //   loadingOptions.progressBarHeight,
+    // );
     loaderGroup.add(overlay);
-    loaderGroup.add(progress);
+    // loaderGroup.add(progress);
 
     // Décor
     const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
@@ -301,18 +300,17 @@ export class Chessfield implements ChessfieldApi {
       console.error('error', e);
     };
 
-    loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
-      const progressValue = itemsNumber / itemsTotal;
-      console.log('[Loader] Progress:', progressValue);
-      loaderComponent.setProgress(progressValue);
-    };
+    // loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
+    //   const progressValue = itemsNumber / itemsTotal;
+    //   console.log('[Loader] Progress:', progressValue);
+    //   loaderComponent.setProgress(progressValue);
+    // };
 
     const font = loadingManagerProvider.font;
-    this.loadingCompleted = false;
+    // this.loadingCompleted = false;
     loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
       this,
       camera,
-      loaderGroup,
       this.store.scene,
       renderer,
       controls,
