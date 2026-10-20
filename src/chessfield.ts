@@ -6,6 +6,7 @@ import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
+import { LoaderComponent, type LoaderOptions } from './component/loader.component.ts';
 import { coordToVector2, lmToCoordinates } from './helper.ts';
 // import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -31,7 +32,6 @@ import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { type ShaderName } from './shader';
-import { LoaderComponent, LoaderOptions } from './component/loader.component.ts';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';

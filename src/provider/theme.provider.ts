@@ -45,9 +45,7 @@ export class ThemeProvider {
   }
 
   getAvailableThemes(): string[] {
-    return Object.keys(Store.themes).filter(
-      (k) => !['light', 'dark', 'default'].includes(k),
-    );
+    return Object.keys(Store.themes).filter(k => !['light', 'dark', 'default'].includes(k));
   }
 
   getNextTheme(): Theme {

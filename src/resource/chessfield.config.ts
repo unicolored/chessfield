@@ -22,8 +22,8 @@ export interface ChessfieldConfig {
   zoomMinDistance?: number;
   zoomMaxDistance?: number;
   loading?: {
-    overlayFadeDuration?: number;  // milliseconds
-    progressBarHeight?: number;    // world units
+    overlayFadeDuration?: number; // milliseconds
+    progressBarHeight?: number; // world units
     onLoadingComplete?: () => void;
   };
 }

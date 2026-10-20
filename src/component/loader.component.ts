@@ -1,5 +1,5 @@
-import { cameraViewMatrix, float, positionLocal, uniform, vec3, time, smoothstep, sub, div } from 'three/tsl';
-import UniformNode from 'three/src/nodes/core/UniformNode.js';
+import type UniformNode from 'three/src/nodes/core/UniformNode.js';
+import { cameraViewMatrix, div, float, positionLocal, smoothstep, sub, time, uniform, vec3 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { hexToRgb } from '../helper.ts';
