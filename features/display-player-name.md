@@ -1,6 +1,7 @@
 # Feature: Display Player Names on Chessboard
 
 ## Overview
+
 Display player names on opposite sides of the 3D chessboard (one per side), with support for two rendering backends that can be switched at runtime.
 
 ---
@@ -8,33 +9,39 @@ Display player names on opposite sides of the 3D chessboard (one per side), with
 ## User Stories
 
 ### US-1: Show Player Names
+
 **As a** chess application user  
 **I want** to see player names displayed on each side of the board  
 **So that** I can identify who is playing white and black
 
 **Acceptance Criteria:**
+
 - White player name appears on the south side (bottom) of the board
 - Black player name appears on the north side (top) of the board
 - Names are readable from the default camera angle
 - Names update when configuration changes
 
 ### US-2: Switch Text Rendering Backend
+
 **As a** developer  
 **I want** to choose between canvas-sprite and troika-three-text rendering  
 **So that** I can optimize for performance vs visual quality per deployment
 
 **Acceptance Criteria:**
+
 - Default backend is `canvas-sprite` (zero dependencies)
 - Can switch to `troika-text` via config or runtime API
 - Switching re-renders existing text with new backend
 - No memory leaks when switching
 
 ### US-3: Configure Appearance
+
 **As a** developer  
 **I want** to customize font, size, color, and position  
 **So that** names match the application theme
 
 **Acceptance Criteria:**
+
 - Configurable via `ChessfieldConfig.text` object
 - Supports font family, size (world units), color, offset from board
 - Respects theme colors when not explicitly overridden
@@ -49,8 +56,8 @@ interface ChessfieldConfig {
 
   /** Player names to display */
   playerNames?: {
-    white?: string;  // Default: "White"
-    black?: string;  // Default: "Black"
+    white?: string; // Default: "White"
+    black?: string; // Default: "Black"
   };
 
   /** Text rendering configuration */
@@ -59,19 +66,19 @@ interface ChessfieldConfig {
     backend?: TextBackendType;
 
     /** Font size in world units (centimeters) */
-    fontSize?: number;  // Default: cm(0.4)
+    fontSize?: number; // Default: cm(0.4)
 
     /** CSS font family */
-    fontFamily?: string;  // Default: 'system-ui, sans-serif'
+    fontFamily?: string; // Default: 'system-ui, sans-serif'
 
     /** Font weight */
-    fontWeight?: string | number;  // Default: '400'
+    fontWeight?: string | number; // Default: '400'
 
     /** Text color (CSS color or hex) */
-    color?: string | number;  // Default: theme foreground
+    color?: string | number; // Default: theme foreground
 
     /** Distance from board edge along Z axis */
-    offset?: number;  // Default: cm(5.5)
+    offset?: number; // Default: cm(5.5)
 
     /** Maximum width for text wrapping (troika only) */
     maxWidth?: number;
@@ -86,6 +93,7 @@ interface ChessfieldConfig {
 ```
 
 ### Default Configuration
+
 ```typescript
 const defaults = {
   playerNames: {
@@ -194,24 +202,27 @@ interface TextBackend {
 **Approach:** Render text to offscreen `<canvas>` → `THREE.CanvasTexture` → `THREE.Sprite`
 
 **Characteristics:**
-| Aspect | Detail |
-|--------|--------|
-| Dependencies | None (native Canvas API) |
-| Bundle impact | ~0 KB |
-| Rendering | CPU (canvas 2D context) |
-| Sharpness | Good at 1x, pixelates at high zoom |
-| Text layout | Manual (measureText, fillText) |
-| Wrapping | Not supported |
-| RTL/BiDi | Not supported |
-| Emoji | Limited (system font dependent) |
-| Outlines/Shadows | Manual implementation |
+
+| Aspect           | Detail                             |
+| ---------------- | ---------------------------------- |
+| Dependencies     | None (native Canvas API)           |
+| Bundle impact    | ~0 KB                              |
+| Rendering        | CPU (canvas 2D context)            |
+| Sharpness        | Good at 1x, pixelates at high zoom |
+| Text layout      | Manual (measureText, fillText)     |
+| Wrapping         | Not supported                      |
+| RTL/BiDi         | Not supported                      |
+| Emoji            | Limited (system font dependent)    |
+| Outlines/Shadows | Manual implementation              |
 
 **Positioning:**
+
 - Uses `THREE.Sprite` — always faces camera (billboard)
 - Scale computed from canvas dimensions × world unit ratio
 - Position = world coordinates from config
 
 **Lifecycle:**
+
 ```typescript
 create(options): TextInstance {
   const canvas = renderToCanvas(options);      // Draw text
@@ -240,24 +251,27 @@ create(options): TextInstance {
 **Dependency:** `troika-three-text` (~15 KB gzipped)
 
 **Characteristics:**
-| Aspect | Detail |
-|--------|--------|
-| Dependencies | `troika-three-text` |
-| Bundle impact | +15 KB gz |
-| Rendering | GPU (SDF + fragment shader) |
-| Sharpness | Perfect at any distance/zoom |
-| Text layout | Full (wrapping, alignment, line height) |
-| Wrapping | Supported via `maxWidth` |
-| RTL/BiDi | Full support |
-| Emoji | Full color emoji support |
+
+| Aspect           | Detail                                    |
+| ---------------- | ----------------------------------------- |
+| Dependencies     | `troika-three-text`                       |
+| Bundle impact    | +15 KB gz                                 |
+| Rendering        | GPU (SDF + fragment shader)               |
+| Sharpness        | Perfect at any distance/zoom              |
+| Text layout      | Full (wrapping, alignment, line height)   |
+| Wrapping         | Supported via `maxWidth`                  |
+| RTL/BiDi         | Full support                              |
+| Emoji            | Full color emoji support                  |
 | Outlines/Shadows | Built-in (`outlineWidth`, `outlineColor`) |
 
 **Positioning:**
+
 - Uses `TroikaText` (extends `THREE.Object3D`)
 - `anchorX`, `anchorY` control alignment relative to position
 - Rotation applied directly to object
 
 **Lifecycle:**
+
 ```typescript
 create(options): TextInstance {
   const text = new TroikaText();
@@ -288,6 +302,7 @@ create(options): TextInstance {
 ## Integration Points
 
 ### 1. BoardService Extension
+
 ```typescript
 // src/service/board.service.ts
 class BoardService {
@@ -298,17 +313,19 @@ class BoardService {
     scene: THREE.Scene,
     textService: TextService,
     names: { white: string; black: string },
-    textConfig: TextConfig
+    textConfig: TextConfig,
   ): void;
 }
 ```
 
 **Placement:**
+
 - White (south): `position.set(0, cm(0.5), +offset)`, rotation `Math.PI` on Y
 - Black (north): `position.set(0, cm(0.5), -offset)`, rotation `0` on Y
 - Y offset `cm(0.5)` lifts slightly above board surface
 
 ### 2. Chessfield Integration
+
 ```typescript
 // src/chessfield.ts
 class Chessfield implements ChessfieldApi {
@@ -316,10 +333,7 @@ class Chessfield implements ChessfieldApi {
 
   constructor(element, config) {
     // ... existing
-    this.textService = new TextService(
-      config.text?.backend ?? 'canvas-sprite',
-      this.store
-    );
+    this.textService = new TextService(config.text?.backend ?? 'canvas-sprite', this.store);
   }
 
   private onLoad(camera, scene, renderer, controls, font) {
@@ -327,12 +341,7 @@ class Chessfield implements ChessfieldApi {
     this.textService.setScene(scene);
 
     if (config.playerNames) {
-      this.boardService.addPlayerNames(
-        scene,
-        this.textService,
-        config.playerNames,
-        config.text ?? {}
-      );
+      this.boardService.addPlayerNames(scene, this.textService, config.playerNames, config.text ?? {});
     }
   }
 
@@ -343,12 +352,10 @@ class Chessfield implements ChessfieldApi {
     }
     if (partialConfig.playerNames) {
       this.textService.removeAll();
-      this.boardService.addPlayerNames(
-        this.store.scene!,
-        this.textService,
-        partialConfig.playerNames,
-        { ...this.store.getConfig().text, ...partialConfig.text }
-      );
+      this.boardService.addPlayerNames(this.store.scene!, this.textService, partialConfig.playerNames, {
+        ...this.store.getConfig().text,
+        ...partialConfig.text,
+      });
     }
   }
 }
@@ -383,21 +390,22 @@ src/
   }
 }
 ```
-*Only required when using `troika-text` backend. Tree-shaking should exclude if unused.*
+
+_Only required when using `troika-text` backend. Tree-shaking should exclude if unused._
 
 ---
 
 ## Testing Scenarios
 
-| Scenario | Expected Behavior |
-|----------|-------------------|
-| Default config | Names "White"/"Black" appear on correct sides |
-| Custom names | `playerNames: { white: 'Alice', black: 'Bob' }` shows custom names |
-| Switch backend | `configUpdate({ text: { backend: 'troika-text' } })` re-renders |
-| Theme change | Text color updates if not explicitly set |
-| Resize | Text maintains position relative to board |
-| Dispose | No memory leaks (textures, materials, canvases cleaned) |
-| WebGPU renderer | Both backends work with `three/webgpu` |
+| Scenario        | Expected Behavior                                                  |
+| --------------- | ------------------------------------------------------------------ |
+| Default config  | Names "White"/"Black" appear on correct sides                      |
+| Custom names    | `playerNames: { white: 'Alice', black: 'Bob' }` shows custom names |
+| Switch backend  | `configUpdate({ text: { backend: 'troika-text' } })` re-renders    |
+| Theme change    | Text color updates if not explicitly set                           |
+| Resize          | Text maintains position relative to board                          |
+| Dispose         | No memory leaks (textures, materials, canvases cleaned)            |
+| WebGPU renderer | Both backends work with `three/webgpu`                             |
 
 ---
 
