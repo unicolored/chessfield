@@ -1,6 +1,11 @@
 import './chessfield.css';
 
 import type * as cg from '@lichess-org/chessground/types';
+// import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+// import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+// import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+// import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+// import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 // import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -8,11 +13,6 @@ import * as THREE from 'three/webgpu';
 
 import { LoaderComponent, type LoaderOptions } from './component/loader.component.ts';
 import { coordToVector2, lmToCoordinates } from './helper.ts';
-// import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-// import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-// import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-// import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-// import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 import { CameraProvider } from './provider/camera.provider.ts';
 import { ControlsProvider } from './provider/controls.provider.ts';
 import { GameProvider } from './provider/game.provider.ts';
@@ -290,7 +290,6 @@ export class Chessfield implements ChessfieldApi {
       timer.update();
 
       controls.update();
-      // await renderer.init();
       renderer.render(scene, camera);
     };
 
@@ -328,7 +327,6 @@ export class Chessfield implements ChessfieldApi {
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
       renderer.inspector = new Inspector();
     }
-    // await renderer.init();
 
     // Controls
     const controls = this.controlsProvider.getControls(camera, this.canvas);
