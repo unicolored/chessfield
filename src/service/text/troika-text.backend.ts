@@ -1,12 +1,13 @@
 import * as THREE from 'three/webgpu';
 
 import { BaseTextBackend } from './text-backend.ts';
-import { TextBackendType, TextInstance, TextOptions } from './types.ts';
+import { type TextBackendType, type TextInstance, type TextOptions } from './types.ts';
 
 let TroikaText: (new () => any) | null = null;
 
 // Default font URL (Inter from Google Fonts - reliable CDN)
-const DEFAULT_FONT_URL = 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2';
+const DEFAULT_FONT_URL =
+  'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2';
 
 function isFontUrl(fontFamily: string): boolean {
   return fontFamily.startsWith('http://') || fontFamily.startsWith('https://') || fontFamily.startsWith('/');

@@ -2,7 +2,12 @@ import * as THREE from 'three/webgpu';
 
 import { CanvasSpriteBackend } from './canvas-sprite.backend.ts';
 import { TroikaTextBackend } from './troika-text.backend.ts';
-import { TextService as ITextService, TextBackendType, TextInstance, TextOptions } from './types.ts';
+import {
+  type TextService as ITextService,
+  type TextBackendType,
+  type TextInstance,
+  type TextOptions,
+} from './types.ts';
 
 export class TextService implements ITextService {
   private scene: THREE.Scene | null = null;

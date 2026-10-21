@@ -1,4 +1,3 @@
-import * as THREE from 'three/webgpu';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TextService } from './text.service.ts';
@@ -56,12 +55,10 @@ class MockSpriteMaterial {
 class MockCanvasTexture {
   dispose = vi.fn();
   needsUpdate = false;
-  constructor(_canvas: any) {}
 }
 
 class MockColor {
   getHex = () => 0xff_ff_ff;
-  constructor(_color: any) {}
 }
 
 // Apply mocks using vi.doMock to avoid hoisting issues

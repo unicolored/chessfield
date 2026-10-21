@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 
 import { BaseTextBackend } from './text-backend.ts';
-import { TextBackendType, TextInstance, TextOptions } from './types.ts';
+import { type TextBackendType, type TextInstance, type TextOptions } from './types.ts';
 
 interface CacheEntry {
   canvas: HTMLCanvasElement;
@@ -44,7 +44,7 @@ export class CanvasSpriteBackend extends BaseTextBackend {
 
     // Render at higher DPI for crisp text
     // fontSize is in meters (world units). 1 meter = 100cm. At 100px/cm = 10000px/meter
-    const renderFontSize = Math.round(fontSize * 10000 * pixelRatio);
+    const renderFontSize = Math.round(fontSize * 10_000 * pixelRatio);
     const fontString = `${fontWeight} ${renderFontSize}px ${fontFamily}`;
     ctx.font = fontString;
 

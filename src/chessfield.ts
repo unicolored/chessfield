@@ -11,7 +11,7 @@ import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
-import { LoaderComponent, type LoaderOptions } from './component/loader.component.ts';
+// import { LoaderComponent, type LoaderOptions } from './component/loader.component.ts';
 import { coordToVector2, lmToCoordinates } from './helper.ts';
 import { CameraProvider } from './provider/camera.provider.ts';
 import { ControlsProvider } from './provider/controls.provider.ts';
@@ -241,7 +241,7 @@ export class Chessfield implements ChessfieldApi {
     this.boardService.updateDecorColors(modeColors);
 
     // 4. State/Check color
-    this.stateService.updateCheckColor(themeColors.statusCheck);
+    // this.stateService.updateCheckColor(themeColors.statusCheck);
   }
 
   public addRing(rank: number, file: number, shape: string): void {
@@ -432,12 +432,12 @@ export class Chessfield implements ChessfieldApi {
     const controls = this.controlsProvider.getControls(camera, this.canvas);
 
     // Overlay - configure from config
-    const config = this.store.getConfig();
-    const loadingOptions: LoaderOptions = {
-      overlayFadeDuration: config.loading?.overlayFadeDuration ?? 200,
-      progressBarHeight: config.loading?.progressBarHeight ?? 10,
-      onLoadingComplete: config.loading?.onLoadingComplete,
-    };
+    // const config = this.store.getConfig();
+    // const loadingOptions: LoaderOptions = {
+    //   overlayFadeDuration: config.loading?.overlayFadeDuration ?? 200,
+    //   progressBarHeight: config.loading?.progressBarHeight ?? 10,
+    //   onLoadingComplete: config.loading?.onLoadingComplete,
+    // };
     // const _loaderComponent = new LoaderComponent(loadingOptions);
     const loaderGroup = new THREE.Group();
     this.store.scene.add(loaderGroup);

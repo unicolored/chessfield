@@ -51,7 +51,7 @@ describe('CanvasSpriteBackend', () => {
   });
 
   it('should dispose cleanly', () => {
-    const instance = backend.create({
+    backend.create({
       text: 'Test',
       position: new THREE.Vector3(0, 0, 5),
     });

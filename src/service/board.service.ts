@@ -11,7 +11,7 @@ import { type ThemeColors } from '../resource/chessfield.types.ts';
 import { cbShader } from '../shader/cbShader.ts';
 
 import { ShapesService } from './shapes.service.ts';
-import { type TextService, type TextConfig } from './text/text.service.ts';
+import { type TextConfig, type TextService } from './text/text.service.ts';
 
 export class BoardService {
   private decorGroup: THREE.Group | null = null;

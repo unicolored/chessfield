@@ -1,6 +1,6 @@
 import type * as THREE from 'three/webgpu';
 
-import { TextBackend, TextBackendType, TextInstance, TextOptions } from './types.ts';
+import { type TextBackend, type TextBackendType, type TextInstance, type TextOptions } from './types.ts';
 
 export abstract class BaseTextBackend implements TextBackend {
   abstract readonly type: TextBackendType;

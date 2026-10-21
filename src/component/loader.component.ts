@@ -25,7 +25,7 @@ export class LoaderComponent {
     this.progressScaleUniform = uniform(0.0, 'float');
   }
 
-  getOverlay(overlayColor: string | number, fadeDurationMs: number = 500): THREE.Mesh {
+  getOverlay(overlayColor: string | number, fadeDurationMs = 500): THREE.Mesh {
     const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
     const overlayMaterial = new THREE.MeshBasicNodeMaterial({
       color: 0xff_00_00,
@@ -55,7 +55,7 @@ export class LoaderComponent {
     return overlay;
   }
 
-  getProgressBar(barColor: string | number, height: number = 0.01): THREE.Mesh {
+  getProgressBar(barColor: string | number, height = 0.01): THREE.Mesh {
     // Create a 1x1 plane (local coordinates 0 to 1 in X), easier to reason about
     const progressGeometry = new THREE.PlaneGeometry(1, height, 1, 1);
     const progressMaterial = new THREE.MeshBasicNodeMaterial({
