@@ -39,13 +39,15 @@ if (toggleMode) {
     const randomMode = Math.random() > 0.5 ? 'light' : 'dark';
     const randomCamera = Math.random() > 0.5 ? 'white' : 'black';
     const randomAngle = Math.random() > 0.5 ? 'left' : 'right';
+    console.log(randomMode);
     // Use new switchTheme API for theme-only changes
     // const randomTheme = Math.random() > 0.5 ? 'brown' : 'blue';
     // board2.switchTheme(randomTheme);
     board2.switchTheme();
+    board2.switchMode(randomMode);
     // For mode/camera/angle, still use configUpdate
     board2.configUpdate({
-      mode: randomMode,
+      // mode: randomMode,
       camera: randomCamera,
       angle: randomAngle,
     });

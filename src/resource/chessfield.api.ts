@@ -4,7 +4,7 @@ import { type TextService } from '../service/text/types.ts';
 
 import { type ChessfieldConfig } from './chessfield.config.ts';
 import { type GameState } from './chessfield.state.ts';
-import { type Camera, type ThemeColors } from './chessfield.types.ts';
+import { type Camera, type Mode, type ThemeColors } from './chessfield.types.ts';
 
 export interface ChessfieldApi {
   // set a fen with flags, and optionally squares part of the last move
@@ -19,8 +19,14 @@ export interface ChessfieldApi {
   // switch camera position (cycle if no camera provided)
   switchCamera(camera?: string): void;
 
+  // switch mode (light/dark) - toggles if no mode provided
+  switchMode(mode?: Mode): void;
+
   // get current camera position
   getCurrentCamera(): Camera;
+
+  // get current mode (light/dark)
+  getCurrentMode(): Mode;
 
   // get current theme colors (light, dark, highlight, etc.)
   getThemeColors(): ThemeColors;

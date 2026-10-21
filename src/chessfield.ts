@@ -168,6 +168,27 @@ export class Chessfield implements ChessfieldApi {
     return this.store.getConfig().camera ?? 'white';
   }
 
+  public getCurrentMode(): cf.Mode {
+    return this.store.getConfig().mode ?? 'light';
+  }
+
+  public switchMode(mode?: cf.Mode): void {
+    console.log('current Mode before', this.themeProvider.getCurrentMode());
+    const currentMode = this.store.getConfig().mode ?? 'light';
+    const targetMode = mode ?? (currentMode === 'light' ? 'dark' : 'light');
+
+    // Update ThemeProvider
+    this.themeProvider.setMode(targetMode);
+    console.log('current Mode after', this.themeProvider.getCurrentMode());
+
+    // Update store config for persistence
+    const currentConfig = this.store.getConfig();
+    this.store.setConfig({ ...currentConfig, mode: targetMode });
+
+    // Apply visual updates (instant, no reload)
+    this.applyThemeColors();
+  }
+
   public switchCamera(camera?: string): void {
     const cameras: cf.Camera[] = ['white', 'right', 'black', 'left', 'top'];
     const currentCamera = this.store.getConfig().camera ?? 'white';
@@ -186,7 +207,7 @@ export class Chessfield implements ChessfieldApi {
     }
 
     // When camera is white or black, set angle to 'center'
-    const angle = (targetCamera === 'white' || targetCamera === 'black') ? 'center' : undefined;
+    const angle = targetCamera === 'white' || targetCamera === 'black' ? 'center' : undefined;
 
     // Update camera provider config
     this.cameraProvider.setConfig({ ...this.store.getConfig(), camera: targetCamera as cf.Camera, angle });
@@ -213,6 +234,7 @@ export class Chessfield implements ChessfieldApi {
 
     // 2. Scene background
     const bgColor = this.themeProvider.getBackgroundColor();
+    console.log('scene bgColor', bgColor);
     this.sceneProvider.updateBackground(this.store.scene!, bgColor);
 
     // 3. Decor (frame, player indicators) - update via TSL userData
