@@ -1,18 +1,13 @@
 import './chessfield.css';
 
 import type * as cg from '@lichess-org/chessground/types';
-// import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-// import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-// import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-// import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-// import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
-// import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
-import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import * as THREE from 'three/webgpu';
 
-// import { LoaderComponent, type LoaderOptions } from './component/loader.component.ts';
-import { coordToVector2, lmToCoordinates } from './helper.ts';
+import { CameraController } from './config/CameraController.ts';
+import { ConfigManager } from './config/ConfigManager.ts';
+import { ThemeController } from './config/ThemeController.ts';
+import { ChessfieldCore } from './core/ChessfieldCore.ts';
+import { GameStateManager } from './game/GameStateManager.ts';
+import { ResourceDisposal } from './lifecycle/ResourceDisposal.ts';
 import { CameraProvider } from './provider/camera.provider.ts';
 import { ControlsProvider } from './provider/controls.provider.ts';
 import { GameProvider } from './provider/game.provider.ts';
@@ -25,40 +20,22 @@ import { ThemeProvider } from './provider/theme.provider.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
-import type * as cf from './resource/chessfield.types';
-import { type Move, type Moves, type ThemeColors } from './resource/chessfield.types';
 import { BoardService } from './service/board.service.ts';
-import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
-import { type TextConfig, TextService } from './service/text/text.service.ts';
-import { type ShaderName } from './shader';
+import { TextService } from './service/text/text.service.ts';
+import { ShapeController } from './shapes/ShapeController.ts';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
 
 export class Chessfield implements ChessfieldApi {
-  private readonly boardService = new BoardService();
-  private readonly shapesService = new ShapesService(['ring']);
-  private readonly rendererProvider = new RendererProvider();
-  private readonly sceneProvider = new SceneProvider();
-  private readonly store: Store;
-  private cameraProvider!: CameraProvider;
-  private controlsProvider!: ControlsProvider;
-  private readonly gameProvider!: GameProvider;
-  private readonly pieceProvider!: PieceProvider;
-  private stateService!: StateService;
-  private themeProvider!: ThemeProvider;
-
-  private canvas!: HTMLCanvasElement;
-  private renderer!: THREE.WebGPURenderer;
-  private controls!: OrbitControls;
-  private eventsService!: EventsService;
-  private foundLastMove!: Move | null;
-  private movesSubscription: (() => void) | null = null;
-  // Camera references for direct updates
-  private camera!: THREE.PerspectiveCamera;
-  private camGroup!: THREE.Group;
+  private readonly core: ChessfieldCore;
+  private readonly themeController: ThemeController;
+  private readonly cameraController: CameraController;
+  private readonly configManager: ConfigManager;
+  private readonly gameStateManager: GameStateManager;
+  private readonly shapeController: ShapeController;
 
   public readonly textService: TextService;
 
@@ -66,596 +43,170 @@ export class Chessfield implements ChessfieldApi {
     private cfElement: HTMLElement | null,
     config?: ChessfieldConfig,
   ) {
-    this.store = new Store(config);
-    this.textService = new TextService(config?.text?.backend ?? 'canvas-sprite');
+    const store = new Store(config);
+    const textService = new TextService(config?.text?.backend ?? 'canvas-sprite');
 
     if (this.cfElement && this.cfElement instanceof HTMLElement) {
-      this.gameProvider = new GameProvider(this.store);
-      this.pieceProvider = new PieceProvider(this.store);
+      const gameProvider = new GameProvider(store);
+      const pieceProvider = new PieceProvider(store);
+      const cameraProvider = new CameraProvider(config);
+      const controlsProvider = new ControlsProvider(config);
+      const themeProvider = new ThemeProvider(config.mode, config.theme);
+      const rendererProvider = new RendererProvider();
+      const sceneProvider = new SceneProvider();
+      const loadingManagerProvider = new LoadingManagerProvider(config, gameProvider);
+      const boardService = new BoardService();
+      const shapesService = new ShapesService(['ring']);
+      const stateService = new StateService([['check', String(themeProvider.getThemeColors().statusCheck)]]);
 
-      const initialFen = this.store.getConfig().fen ?? Store.initialFen;
-      const initialLastMove = this.store.getConfig().lastMove ?? [];
-      this.setFen(initialFen, initialLastMove as cg.Key[]);
+      const core = new ChessfieldCore(this.cfElement, {
+        store,
+        gameProvider,
+        pieceProvider,
+        cameraProvider,
+        controlsProvider,
+        themeProvider,
+        rendererProvider,
+        sceneProvider,
+        loadingManagerProvider,
+        boardService,
+        shapesService,
+        stateService,
+        textService,
+      });
 
-      this.cameraProvider = new CameraProvider(this.store.getConfig());
-      this.controlsProvider = new ControlsProvider(this.store.getConfig());
-      this.themeProvider = new ThemeProvider(this.store.getConfig().mode, this.store.getConfig().theme);
-      const theme = this.themeProvider.getThemeColors();
-      this.stateService = new StateService([['check', String(theme.statusCheck)]]);
+      const themeController = new ThemeController(
+        themeProvider,
+        store,
+        boardService,
+        stateService,
+        sceneProvider,
+      );
+
+      const configManager = new ConfigManager(store, textService, boardService, core, ResourceDisposal);
+
+      // Initialize camera controller after core has camera/camGroup
+      // We'll set it up after start() is called
+
+      const gameStateManager = new GameStateManager(
+        store,
+        gameProvider,
+        pieceProvider,
+        stateService,
+        shapesService,
+      );
+
+      const shapeController = new ShapeController(shapesService, themeProvider);
+
+      // Set initial FEN
+      const initialFen = store.getConfig().fen ?? Store.initialFen;
+      const initialLastMove = store.getConfig().lastMove ?? [];
+      store.setFen(initialFen, initialLastMove);
+
+      this.core = core;
+      this.themeController = themeController;
+      this.configManager = configManager;
+      this.gameStateManager = gameStateManager;
+      this.shapeController = shapeController;
+      this.textService = textService;
+
+      // Camera controller will be initialized after start()
+      this.cameraController = new CameraController(
+        cameraProvider,
+        store,
+        null as any, // Will be set after start()
+        null as any, // Will be set after start()
+      );
+
+      // Store references for later initialization
+      (this as any)._cameraProvider = cameraProvider;
+      (this as any)._store = store;
 
       this.start();
-    }
-  }
-
-  public setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
-    this.store.gameState = null;
-
-    this.store.setFen(fen, lastMove);
-  }
-
-  public async configUpdate(partialConfig: Partial<ChessfieldConfig>) {
-    const currentConfig = this.store.getConfig();
-    const updatedConfig = { ...currentConfig, ...partialConfig };
-    this.store.setConfig(updatedConfig);
-
-    // Handle text backend switch
-    if (partialConfig.text?.backend && partialConfig.text.backend !== currentConfig.text?.backend) {
-      await this.textService.setBackend(partialConfig.text.backend);
-    }
-
-    // Handle player names change
-    if (partialConfig.playerNames) {
-      this.textService.removeAll();
-      await this.boardService.addPlayerNames(
-        this.textService,
-        {
-          white: partialConfig.playerNames.white ?? 'White',
-          black: partialConfig.playerNames.black ?? 'Black',
-        },
-        {
-          ...currentConfig.text,
-          ...partialConfig.text,
-        } as TextConfig,
-      );
-    }
-
-    // Clean up moves subscription before restarting
-    if (this.movesSubscription) {
-      this.movesSubscription();
-      this.movesSubscription = null;
-    }
-
-    // Clean up pieces group from current scene
-    if (this.store.piecesGroup && this.store.scene) {
-      this.store.scene.remove(this.store.piecesGroup);
-      this.store.piecesGroup.clear();
-    }
-
-    // Dispose old renderer (stops animation loop and releases WebGPU resources)
-    if (this.renderer) {
-      this.renderer.setAnimationLoop(null);
-      if (typeof this.renderer.dispose === 'function') {
-        this.renderer.dispose();
-      }
-    }
-
-    // Dispose old controls
-    if (this.controls) {
-      this.controls.dispose();
-    }
-
-    // Clear service state (NOT dispose - services persist across configUpdates)
-    // Old meshes are in the old scene which gets dereferenced and GC'd
-    this.shapesService?.clearAll();
-    this.stateService?.clearAll();
-    this.gameProvider?.disposeOldMeshes?.();
-
-    // Clean up scene - traverse and dispose remaining geometries/materials
-    if (this.store.scene) {
-      this.store.scene.traverse(object => {
-        if (object instanceof THREE.Mesh) {
-          object.geometry?.dispose();
-          if (Array.isArray(object.material)) {
-            object.material.forEach(m => m?.dispose());
-          } else {
-            object.material?.dispose();
-          }
-        }
-      });
-      this.store.scene.clear();
-    }
-
-    this.eventsService?.dispose();
-    this.canvas.remove();
-    this.start();
-  }
-
-  public switchTheme(theme?: string): void {
-    // Resolve theme: use provided theme or cycle to next
-    let targetTheme: string;
-    if (theme) {
-      // Validate theme exists in Store.themes
-      if (!Store.themes[theme]) {
-        console.warn(`Theme "${theme}" not found. Available themes: ${Object.keys(Store.themes).join(', ')}`);
-        return;
-      }
-      targetTheme = theme;
     } else {
-      // Cycle to next theme
-      targetTheme = this.themeProvider.getNextTheme();
-    }
-
-    // Update ThemeProvider
-    this.themeProvider.setTheme(targetTheme as any);
-
-    // Update store config for persistence
-    const currentConfig = this.store.getConfig();
-    this.store.setConfig({ ...currentConfig, theme: targetTheme });
-
-    // Apply visual updates
-    this.applyThemeColors();
-  }
-
-  public getThemeColors(): ThemeColors {
-    return this.themeProvider.getThemeColors();
-  }
-
-  public getCurrentCamera(): cf.Camera {
-    return this.store.getConfig().camera ?? 'white';
-  }
-
-  public getCurrentMode(): cf.Mode {
-    return this.store.getConfig().mode ?? 'light';
-  }
-
-  public switchMode(mode?: cf.Mode): void {
-    console.log('current Mode before', this.themeProvider.getCurrentMode());
-    const currentMode = this.store.getConfig().mode ?? 'light';
-    const targetMode = mode ?? (currentMode === 'light' ? 'dark' : 'light');
-
-    // Update ThemeProvider
-    this.themeProvider.setMode(targetMode);
-    console.log('current Mode after', this.themeProvider.getCurrentMode());
-
-    // Update store config for persistence
-    const currentConfig = this.store.getConfig();
-    this.store.setConfig({ ...currentConfig, mode: targetMode });
-
-    // Apply visual updates (instant, no reload)
-    this.applyThemeColors();
-  }
-
-  public switchCamera(camera?: string): void {
-    const cameras: cf.Camera[] = ['white', 'right', 'black', 'left', 'top'];
-    const currentCamera = this.store.getConfig().camera ?? 'white';
-    const currentIndex = cameras.indexOf(currentCamera);
-
-    let targetCamera: string;
-    if (camera) {
-      if (!cameras.includes(camera as cf.Camera)) {
-        console.warn(`Camera "${camera}" not found. Available: ${cameras.join(', ')}`);
-        return;
-      }
-      targetCamera = camera;
-    } else {
-      const nextIndex = (currentIndex + 1) % cameras.length;
-      targetCamera = cameras[nextIndex];
-    }
-
-    // When camera is white or black, set angle to 'center'
-    const angle = targetCamera === 'white' || targetCamera === 'black' ? 'center' : undefined;
-
-    // Update camera provider config
-    this.cameraProvider.setConfig({ ...this.store.getConfig(), camera: targetCamera as cf.Camera, angle });
-
-    // Update camera position directly
-    const newPosition = this.cameraProvider.getCameraPosition(targetCamera as cf.Camera);
-    this.camera.position.set(newPosition.x, newPosition.y, newPosition.z);
-
-    // Update camera group rotation directly
-    const newRotation = this.cameraProvider.getCameraGroupRotation(targetCamera as cf.Camera, angle);
-    this.camGroup.rotation.set(newRotation.x, newRotation.y, newRotation.z);
-
-    // Update store config for persistence
-    this.store.setConfig({ ...this.store.getConfig(), camera: targetCamera as cf.Camera, angle });
-  }
-
-  private applyThemeColors(): void {
-    const themeColors = this.themeProvider.getThemeColors();
-    const modeColors = this.themeProvider.getModeColors();
-
-    // 1. Chessboard colors (TSL uniforms)
-    this.store.chessboard?.setSquareColors(themeColors.light, themeColors.dark);
-    this.store.chessboard?.setHighlightColor(themeColors.highlight);
-
-    // 2. Scene background
-    const bgColor = this.themeProvider.getBackgroundColor();
-    console.log('scene bgColor', bgColor);
-    this.sceneProvider.updateBackground(this.store.scene!, bgColor);
-
-    // 3. Decor (frame, player indicators) - update via TSL userData
-    this.boardService.updateDecorColors(modeColors);
-
-    // 4. State/Check color
-    // this.stateService.updateCheckColor(themeColors.statusCheck);
-  }
-
-  public addRing(rank: number, file: number, shape: string): void {
-    this.addRingAt(rank, file, shape);
-  }
-
-  // private setShape(rank: number, file: number, color: string, shaderName: ShaderName = 'ring'): void {
-  //   this.shapesService.setShapeAt(rank, file, color, true, shaderName);
-  // }
-
-  public clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
-    if (rank !== undefined && file !== undefined) {
-      this.shapesService.clearShape(rank * 8 + file, shaderName);
-    } else {
-      this.shapesService.clearAll(shaderName ? [shaderName] : undefined);
+      // Create dummy instances for when cfElement is null
+      this.core = null as any;
+      this.themeController = null as any;
+      this.cameraController = null as any;
+      this.configManager = null as any;
+      this.gameStateManager = null as any;
+      this.shapeController = null as any;
+      this.textService = textService;
     }
   }
 
-  // public getShapesMesh(shaderName: ShaderName): THREE.InstancedMesh {
-  //   return this.shapesService.getMesh(shaderName);
-  // }
-
-  public setState(state: GameState): void {
-    this.store.gameState = state;
-    this.updatePieces();
-  }
-
-  /** @deprecated Use setState instead */
-  public setCheck(state: GameState): void {
-    this.setState(state);
-  }
-
-  /** @deprecated Use setState instead */
-  public setGameOver(state: GameState): void {
-    this.setState(state);
-  }
-
-  private async onLoad(
-    camera: THREE.PerspectiveCamera,
-    scene: THREE.Scene,
-    font: Font | null,
-  ): Promise<void> {
-    if (!this.cfElement) {
-      console.error('Onload: Chessfield HtmlElement is missing.');
-      return;
-    }
-
-    // Trigger overlay fade via loader component
-    // loaderComponent.startFade();
-    // this.loadingCompleted = true;
-
-    const chessboardGroup = new THREE.Group();
-    chessboardGroup.name = '🟣 Chessboard Group';
-    scene.add(chessboardGroup);
-
-    const stateGroup = new THREE.Group();
-    stateGroup.name = '🟣 State Group';
-    scene.add(stateGroup);
-
-    const shapesGroup = new THREE.Group();
-    shapesGroup.name = '🟣 Shapes Group';
-    scene.add(shapesGroup);
-
-    // Chessboard
-    const themeColors = this.themeProvider.getThemeColors();
-    this.store.chessboard = this.boardService.createChessboard();
-    this.store.chessboard.setSquareColors(themeColors.light, themeColors.dark);
-    this.store.chessboard.setHighlightColor(themeColors.highlight);
-    // this.store.chessboard.setStatusCheckColor(themeColors.statusCheck);
-    chessboardGroup.add(this.store.chessboard);
-
-    // Cases
-    this.store.casesGroup = this.boardService.createCases(font);
-    chessboardGroup.add(this.store.casesGroup);
-
-    // Pieces
-    this.updatePieces();
-
-    // Shapes / Rings
-    this.store.shapesRing = this.shapesService.getMesh('ring');
-    this.store.shapesRing.name = '🟢 Shapes (ring)';
-    shapesGroup.add(this.store.shapesRing);
-
-    // Shapes / Checks
-    this.store.state = this.stateService.getMesh('check');
-    this.store.state.name = '🟢 Shapes (check)';
-    shapesGroup.add(this.store.state);
-
-    // Text Service
-    this.textService.setScene(scene);
-    const config = this.store.getConfig();
-    if (config.playerNames) {
-      await this.boardService.addPlayerNames(
-        this.textService,
-        {
-          white: config.playerNames.white ?? 'White',
-          black: config.playerNames.black ?? 'Black',
-        },
-        config.text ?? {},
-      );
-    }
-
-    // EventsService
-    this.eventsService = new EventsService({
-      cfElement: this.cfElement,
-      canvas: this.canvas,
-      camera,
-      scene,
-      store: this.store,
-      shapesService: this.shapesService,
-    });
-
-    this.eventsService.onSquareHover = (rank, file) => {
-      this.store.chessboard?.highlightSquareCursor(rank, file);
-    };
-
-    this.eventsService.onSquareRightClick = this.addRingAt.bind(this);
-
-    this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
-
-    this.eventsService.onResize = async () => {
-      if (!this.cfElement) {
-        return;
-      }
-
-      const rect = this.cfElement.getBoundingClientRect();
-      const sizes = { width: rect.width, height: rect.height };
-      this.renderer.setSize(sizes.width, sizes.height);
-      camera.aspect = sizes.width / sizes.height;
-      camera.updateProjectionMatrix();
-    };
-
-    this.eventsService.init();
-
-    // Animation
-    const timer = new THREE.Timer();
-    timer.connect(document);
-
-    const tick = () => {
-      timer.update();
-
-      this.controls.update();
-      this.renderer.render(scene, camera);
-    };
-
-    this.renderer.setAnimationLoop(tick);
-  }
-
-  async start() {
+  private async start(): Promise<void> {
     if (!this.cfElement) {
       console.error('Start: Chessfield HtmlElement is missing.');
       return;
     }
 
-    this.cfElement.classList.add('cf-chessfield-container');
+    await this.core.start();
 
-    const rect = this.cfElement.getBoundingClientRect();
-    const sizes = {
-      width: rect.width,
-      height: rect.height,
-    };
-
-    // Scene
-    const backgroundColor = this.themeProvider.getBackgroundColor();
-    this.store.scene = this.sceneProvider.getScene(backgroundColor);
-
-    // Camera
-    const camera = this.cameraProvider.getCamera(sizes);
-    const camGroup = this.cameraProvider.getCameraGroup(camera);
-    this.store.scene.add(camGroup);
-
-    // Save camera references for direct updates
-    this.camera = camera;
-    this.camGroup = camGroup;
-
-    // Canvas & Renderer
-    this.canvas = this.rendererProvider.getCanvas();
-    this.renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
-    this.cfElement.appendChild(this.renderer.domElement);
-    if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
-      const { Inspector } = await import('three/addons/inspector/Inspector.js');
-      this.renderer.inspector = new Inspector();
-    }
-
-    // Controls
-    this.controls = this.controlsProvider.getControls(camera, this.canvas);
-
-    // Overlay - configure from config
-    // const config = this.store.getConfig();
-    // const loadingOptions: LoaderOptions = {
-    //   overlayFadeDuration: config.loading?.overlayFadeDuration ?? 200,
-    //   progressBarHeight: config.loading?.progressBarHeight ?? 10,
-    //   onLoadingComplete: config.loading?.onLoadingComplete,
-    // };
-    // const _loaderComponent = new LoaderComponent(loadingOptions);
-    const loaderGroup = new THREE.Group();
-    this.store.scene.add(loaderGroup);
-    // const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
-    // const progress = loaderComponent.getProgressBar(
-    //   this.themeProvider.getInvertColor(),
-    //   loadingOptions.progressBarHeight,
-    // );
-    // loaderGroup.add(overlay);
-    // loaderGroup.add(progress);
-
-    // Décor
-    const decorGroup = this.boardService.decor(this.themeProvider.getModeColors());
-    decorGroup.name = '🔵 Décor';
-    this.store.scene.add(decorGroup);
-
-    /**
-     * LOADING MANAGEMENT
-     */
-    const loadingManagerProvider = new LoadingManagerProvider(this.store.getConfig(), this.gameProvider);
-
-    loadingManagerProvider.getLoadingManager().onError = e => {
-      console.error('error', e);
-    };
-
-    // loadingManagerProvider.getLoadingManager().onProgress = (_itemUrl, itemsNumber, itemsTotal) => {
-    //   const progressValue = itemsNumber / itemsTotal;
-    //   console.log('[Loader] Progress:', progressValue);
-    //   loaderComponent.setProgress(progressValue);
-    // };
-
-    const font = loadingManagerProvider.font;
-    // this.loadingCompleted = false;
-    loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
-      this,
-      camera,
-      this.store.scene,
-      font,
-      // loaderComponent,
-    );
-  }
-
-  private updatePieces() {
-    if (this.movesSubscription) {
-      this.movesSubscription();
-    }
-    this.movesSubscription = this.store.movesSubject$.subscribe((moves: Moves) => {
-      // Robust cleanup: remove previous pieces group from scene
-      if (this.store.piecesGroup) {
-        this.store.scene?.remove(this.store.piecesGroup);
-        // Clear children references to help GC
-        this.store.piecesGroup.clear();
-      }
-
-      this.foundLastMove = GameProvider.findLastMove(moves.moves);
-
-      let boardPieces: cf.BoardPiece[] = [];
-
-      if (this.foundLastMove) {
-        boardPieces = this.gameProvider.initGamePieces(this.foundLastMove);
-
-        const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
-        if (lastMoveToCoordinates.length > 1) {
-          this.store.chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-          this.store.chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
-        }
-      }
-
-      const piecesGroup = this.pieceProvider.updateGamePositions(boardPieces);
-      this.store.piecesGroup = piecesGroup;
-      this.store.boardPieces = boardPieces;
-      this.store.piecesObjects = this.store.getBoardPiecesObjectsMap();
-      this.store.scene?.add(piecesGroup);
-
-      // Happen after pieces have been put in position
-      if (this.store.gameState) {
-        if (this.store.gameState.mate || this.store.gameState.draw) {
-          this.addShapes(this.store.gameState);
-        }
-        if (this.store.gameState.check) {
-          console.log('Check!!!');
-          let kingVec;
-
-          // NOTE: for debugging purpose,
-          // both kings can be checked at the same time.
-
-          this.store.gameState.check.forEach((key: cg.Key) => {
-            if (key) {
-              kingVec = coordToVector2(key);
-              this.stateService.setStateAt(kingVec.x, kingVec.y);
-            }
-          });
-        }
-      } else {
-        this.stateService.clearAll(['check']);
-      }
-    });
-  }
-
-  private addShapes(state: GameState | null): void {
-    if (!state) {
-      return;
-    }
-
-    const boardPieces = this.store.boardPieces ?? [];
-    const piecesObjects = this.store.piecesObjects;
-
-    const findPieceMesh = (mateKey: string): THREE.Object3D | null => {
-      if (!piecesObjects) return null;
-      const boardPiece = boardPieces.find(bp => bp.coord === mateKey);
-      if (!boardPiece || !boardPiece.objectKey) return null;
-      return piecesObjects.get(boardPiece.objectKey) ?? null;
-    };
-
-    const findStateSprite = (piece: THREE.Object3D) => {
-      return piece.children.find(c => {
-        return c.name === 'stateSprite';
-      });
-    };
-
-    if (state.winner) {
-      let mateKey;
-      if (state.winner === 'w') {
-        mateKey = state.kings.black;
-      } else {
-        // Black wins
-        mateKey = state.kings.white;
-      }
-      if (mateKey) {
-        const squareVec2 = coordToVector2(mateKey);
-
-        this.stateService.setStateAt(squareVec2.x, squareVec2.y);
-
-        const pieceFound = findPieceMesh(mateKey);
-        console.log(pieceFound);
-
-        if (pieceFound) {
-          const spriteFound = findStateSprite(pieceFound);
-          if (spriteFound) {
-            spriteFound.userData['showSprite'] = true;
-            spriteFound.userData['lostState'] = true;
-          }
-        }
-      }
-    }
-    console.log('state!', state);
-    if (state.draw) {
-      console.log('draw!');
-      // game is a draw
-      state.draw.forEach((key: cg.Key) => {
-        if (key) {
-          const pieceFound = findPieceMesh(key);
-          console.log(pieceFound);
-
-          if (pieceFound) {
-            const spriteFound = findStateSprite(pieceFound);
-            if (spriteFound) {
-              spriteFound.userData['showSprite'] = true;
-              spriteFound.userData['lostState'] = false;
-            }
-          }
-        }
-      });
+    // Initialize camera controller with actual camera/camGroup
+    const camera = this.core.getCamera();
+    const camGroup = this.core.getCamGroup();
+    if (camera && camGroup) {
+      this.cameraController = new CameraController(
+        (this as any)._cameraProvider,
+        (this as any)._store,
+        camera,
+        camGroup,
+      );
     }
   }
 
-  public addRingAt(rank: number, file: number, shape: string): void {
-    const index = rank * 8 + file;
-    const isVisible = this.shapesService.getVisible(index, 'ring');
+  public setFen(fen: cg.FEN, lastMove?: cg.Key[]) {
+    this.gameStateManager.setFen(fen, lastMove);
+  }
 
-    const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
+  public async configUpdate(partialConfig: Partial<ChessfieldConfig>) {
+    await this.configManager.configUpdate(partialConfig);
+  }
 
-    const color =
-      (theme as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
+  public switchTheme(theme?: string): void {
+    this.themeController.switchTheme(theme);
+  }
 
-    if (!isVisible) {
-      this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-    } else {
-      const currentColor = this.shapesService.getColor(index, 'ring');
-      if (currentColor.toLowerCase() === color.toLowerCase()) {
-        this.shapesService.clearShape(index, 'ring');
-      } else {
-        this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-      }
-    }
+  public getThemeColors() {
+    return this.themeController.getThemeColors();
+  }
+
+  public getCurrentCamera() {
+    return this.cameraController.getCurrentCamera();
+  }
+
+  public getCurrentMode() {
+    return this.themeController.getCurrentMode();
+  }
+
+  public switchMode(mode?: 'light' | 'dark'): void {
+    this.themeController.switchMode(mode);
+  }
+
+  public switchCamera(camera?: string): void {
+    this.cameraController.switchCamera(camera as any);
+  }
+
+  public setState(state: GameState): void {
+    this.gameStateManager.setState(state);
+  }
+
+  /** @deprecated Use setState instead */
+  public setCheck(state: GameState): void {
+    this.gameStateManager.setCheck(state);
+  }
+
+  /** @deprecated Use setState instead */
+  public setGameOver(state: GameState): void {
+    this.gameStateManager.setGameOver(state);
+  }
+
+  public addRing(rank: number, file: number, shape: string): void {
+    this.shapeController.addRing(rank, file, shape);
+  }
+
+  public clearShape(rank?: number, file?: number, shaderName?: string): void {
+    this.shapeController.clearShape(rank, file, shaderName);
   }
 }
