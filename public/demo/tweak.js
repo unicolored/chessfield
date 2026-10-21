@@ -7,6 +7,16 @@ const board1 = new Chessfield(document.getElementById('board-1'), {
   camera: 'white',
   angle: 'right',
   theme: 'green',
+  playerNames: {
+    white: 'GM Magnus Carlsen',
+    black: 'GM Hikaru Nakamura',
+  },
+  text: {
+    backend: 'canvas-sprite',
+    fontSize: 0.006,
+    offset: 0.07,
+    color: '#000',
+  },
   plugins: {
     themes: {
       custom: {
@@ -23,6 +33,13 @@ const board1 = new Chessfield(document.getElementById('board-1'), {
     },
   },
 });
+
+const switchThemeBtn = document.getElementById('switch-theme-btn');
+if (switchThemeBtn) {
+  switchThemeBtn.addEventListener('click', () => {
+    board1.switchTheme();
+  });
+}
 
 board1.addRing(6, 2, 'ring');
 board1.addRing(7, 2, 'ring');
@@ -75,11 +92,4 @@ try {
   // console.log(legalMoves);
 } catch (e) {
   console.error(e);
-}
-
-const switchThemeBtn = document.getElementById('switch-theme-btn');
-if (switchThemeBtn) {
-  switchThemeBtn.addEventListener('click', () => {
-    board1.switchTheme();
-  });
 }
