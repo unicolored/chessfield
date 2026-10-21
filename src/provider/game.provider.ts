@@ -126,9 +126,9 @@ export class GameProvider {
     return boardPieces;
   }
 
-  private disposeOldMeshes(): void {
+  public disposeOldMeshes(): void {
     const oldMap = this.store.getBoardPiecesObjectsMap();
-    oldMap.forEach((oldMesh) => {
+    oldMap.forEach(oldMesh => {
       // Only dispose Mesh/InstancedMesh types (not Group)
       if (!(oldMesh instanceof THREE.Mesh)) return;
 
@@ -146,7 +146,7 @@ export class GameProvider {
       }
 
       // Dispose children (spriteMesh)
-      oldMesh.children.forEach((child) => {
+      oldMesh.children.forEach(child => {
         if (child instanceof THREE.Mesh) {
           child.geometry?.dispose();
           const childMats = Array.isArray(child.material) ? child.material : [child.material];

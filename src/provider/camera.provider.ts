@@ -10,7 +10,11 @@ export class CameraProvider {
 
   defaultCameraPosition = new THREE.Vector3(0, cm(14), cm(14));
 
-  constructor(private readonly config: ChessfieldConfig) {
+  constructor(private config: ChessfieldConfig) {
+    this.initMaps();
+  }
+
+  private initMaps(): void {
     const orientation = this.config.orientation ?? 'white';
     const viewOrientation = orientation === 'white' ? 0.01 : -0.01;
     this.cameraPositionsMap.set('top', new THREE.Vector3(0, cm(16), cm(viewOrientation)));
@@ -27,6 +31,11 @@ export class CameraProvider {
     this.cameraGroupRotationMap.set('left', new THREE.Vector3(0, qcd * 6, 0));
   }
 
+  setConfig(config: ChessfieldConfig): void {
+    this.config = config;
+    this.initMaps();
+  }
+
   getCamera({ width, height }: { width: number; height: number }): THREE.PerspectiveCamera {
     const camera = new THREE.PerspectiveCamera(33, width / height, cm(0.1), 3);
     camera.name = '🎥 Main Camera';
@@ -40,20 +49,24 @@ export class CameraProvider {
     return camera;
   }
 
+  getCameraPosition(camera: cf.Camera): THREE.Vector3 {
+    return this.cameraPositionsMap.get(camera) ?? this.defaultCameraPosition;
+  }
+
+  getCameraGroupRotation(camera: cf.Camera, angle?: cf.Angle): THREE.Vector3 {
+    let angleSuffix = '';
+    if ((camera === 'white' || camera === 'black') && angle && (angle === 'left' || angle === 'right')) {
+      angleSuffix = '-' + angle;
+    }
+    const cameraAngle = `${camera}${angleSuffix}`;
+    return this.cameraGroupRotationMap.get(cameraAngle) ?? new THREE.Vector3(0, cm(12), cm(12));
+  }
+
   getCameraGroup(camera: THREE.PerspectiveCamera): THREE.Group {
     const camGroup = new THREE.Group();
     camGroup.add(camera);
 
-    let angle = '';
-    if (this.config.camera === 'white' || this.config.camera === 'black') {
-      const configAngle = this.config.angle;
-      if (configAngle === 'left' || configAngle === 'right') {
-        angle = this.config.angle ? '-' + this.config.angle : '';
-      }
-    }
-
-    const cameraAngle = `${this.config.camera}${angle}`;
-    const viewRotation = this.cameraGroupRotationMap.get(cameraAngle) ?? new THREE.Vector3(0, cm(12), cm(12));
+    const viewRotation = this.getCameraGroupRotation(this.config.camera ?? 'white', this.config.angle);
     camGroup.rotation.set(viewRotation.x, viewRotation.y, viewRotation.z);
 
     return camGroup;

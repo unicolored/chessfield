@@ -3,18 +3,18 @@ import type * as cg from '@lichess-org/chessground/types';
 import type * as cf from './chessfield.types';
 import { type Themes } from './chessfield.types';
 
+export type TextBackendType = 'canvas-sprite' | 'troika-text';
+
 export interface ChessfieldConfig {
-  mode?: cf.Mode; //
-  theme?: cf.Theme; //
-  fen?: cg.FEN; // chess position in Forsyth notation
-  lastMove?: cg.Key[] | string[]; // squares part of the last move ["c3", "c4"]
-  orientation?: cg.Color; // board orientation when 'view' is 'top'.
-  camera?: cf.Camera; // camera position around the chessboard.
-  angle?: cf.Angle; // angle of the chessboard when camera is 'white' or 'black'.
-  turnColor?: cg.Color; // turn to play. Override the value set by a fen.
-  // selected?: cg.Key; // square currently selected "a1"
-  // coordinates?: boolean; // include coords attributes
-  coordinatesOnSquares?: boolean; // include coords attributes on every square
+  mode?: cf.Mode;
+  theme?: cf.Theme;
+  fen?: cg.FEN;
+  lastMove?: cg.Key[] | string[];
+  orientation?: cg.Color;
+  camera?: cf.Camera;
+  angle?: cf.Angle;
+  turnColor?: cg.Color;
+  coordinatesOnSquares?: boolean;
   plugins?: {
     themes?: Themes;
   };
@@ -22,8 +22,36 @@ export interface ChessfieldConfig {
   zoomMinDistance?: number;
   zoomMaxDistance?: number;
   loading?: {
-    overlayFadeDuration?: number;  // milliseconds
-    progressBarHeight?: number;    // world units
+    overlayFadeDuration?: number;
+    progressBarHeight?: number;
     onLoadingComplete?: () => void;
+  };
+
+  /** Player names to display on board sides */
+  playerNames?: {
+    white?: string;
+    black?: string;
+  };
+
+  /** Text rendering configuration */
+  text?: {
+    /** Rendering backend: 'canvas-sprite' | 'troika-text' */
+    backend?: TextBackendType;
+    /** Font size in world units (centimeters) */
+    fontSize?: number;
+    /** CSS font family */
+    fontFamily?: string;
+    /** Font weight */
+    fontWeight?: string | number;
+    /** Text color (CSS color or hex) */
+    color?: string | number;
+    /** Distance from board edge along Z axis */
+    offset?: number;
+    /** Maximum width for text wrapping (troika only) */
+    maxWidth?: number;
+    /** Outline width (troika only) */
+    outlineWidth?: number;
+    /** Outline color (troika only) */
+    outlineColor?: string | number;
   };
 }
