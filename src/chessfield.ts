@@ -31,10 +31,8 @@ import { BoardService } from './service/board.service.ts';
 import { EventsService } from './service/events.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
+import { type TextConfig, TextService } from './service/text/text.service.ts';
 import { type ShaderName } from './shader';
-
-export type { ChessfieldApi, ChessfieldConfig, GameState };
-export * from './resource/chessfield.types';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
@@ -60,11 +58,14 @@ export class Chessfield implements ChessfieldApi {
   private camera!: THREE.PerspectiveCamera;
   private camGroup!: THREE.Group;
 
+  public readonly textService: TextService;
+
   constructor(
     private cfElement: HTMLElement | null,
     config?: ChessfieldConfig,
   ) {
     this.store = new Store(config);
+    this.textService = new TextService(config?.text?.backend ?? 'canvas-sprite');
 
     if (this.cfElement && this.cfElement instanceof HTMLElement) {
       this.gameProvider = new GameProvider(this.store);
@@ -90,10 +91,31 @@ export class Chessfield implements ChessfieldApi {
     this.store.setFen(fen, lastMove);
   }
 
-  public configUpdate(partialConfig: Partial<ChessfieldConfig>) {
+  public async configUpdate(partialConfig: Partial<ChessfieldConfig>) {
     const currentConfig = this.store.getConfig();
     const updatedConfig = { ...currentConfig, ...partialConfig };
     this.store.setConfig(updatedConfig);
+
+    // Handle text backend switch
+    if (partialConfig.text?.backend && partialConfig.text.backend !== currentConfig.text?.backend) {
+      await this.textService.setBackend(partialConfig.text.backend);
+    }
+
+    // Handle player names change
+    if (partialConfig.playerNames) {
+      this.textService.removeAll();
+      await this.boardService.addPlayerNames(
+        this.textService,
+        {
+          white: partialConfig.playerNames.white ?? 'White',
+          black: partialConfig.playerNames.black ?? 'Black',
+        },
+        {
+          ...currentConfig.text,
+          ...partialConfig.text,
+        } as TextConfig,
+      );
+    }
 
     // Clean up moves subscription before restarting
     if (this.movesSubscription) {
@@ -225,26 +247,23 @@ export class Chessfield implements ChessfieldApi {
     this.updatePieces();
   }
 
-  // /** @deprecated Use setState instead */
-  // public setCheck(state: GameState): void {
-  //   this.store.gameState = state;
-  //   this.updatePieces();
-  // }
-  //
-  // /** @deprecated Use setState instead */
-  // public setGameOver(state: GameState): void {
-  //   this.store.gameState = state;
-  //   this.updatePieces();
-  // }
+  /** @deprecated Use setState instead */
+  public setCheck(state: GameState): void {
+    this.setState(state);
+  }
 
-  private onLoad(
+  /** @deprecated Use setState instead */
+  public setGameOver(state: GameState): void {
+    this.setState(state);
+  }
+
+  private async onLoad(
     camera: THREE.PerspectiveCamera,
     scene: THREE.Scene,
     renderer: THREE.Renderer,
     controls: OrbitControls,
     font: Font | null,
-    // loaderComponent: LoaderComponent,
-  ): void {
+  ): Promise<void> {
     if (!this.cfElement) {
       console.error('Onload: Chessfield HtmlElement is missing.');
       return;
@@ -290,6 +309,20 @@ export class Chessfield implements ChessfieldApi {
     this.store.state = this.stateService.getMesh('check');
     this.store.state.name = '🟢 Shapes (check)';
     shapesGroup.add(this.store.state);
+
+    // Text Service
+    this.textService.setScene(scene);
+    const config = this.store.getConfig();
+    if (config.playerNames) {
+      await this.boardService.addPlayerNames(
+        this.textService,
+        {
+          white: config.playerNames.white ?? 'White',
+          black: config.playerNames.black ?? 'Black',
+        },
+        config.text ?? {},
+      );
+    }
 
     // EventsService
     this.eventsService = new EventsService({
@@ -383,7 +416,7 @@ export class Chessfield implements ChessfieldApi {
       progressBarHeight: config.loading?.progressBarHeight ?? 10,
       onLoadingComplete: config.loading?.onLoadingComplete,
     };
-    const loaderComponent = new LoaderComponent(loadingOptions);
+    // const _loaderComponent = new LoaderComponent(loadingOptions);
     const loaderGroup = new THREE.Group();
     this.store.scene.add(loaderGroup);
     // const overlay = loaderComponent.getOverlay(backgroundColor, loadingOptions.overlayFadeDuration);
