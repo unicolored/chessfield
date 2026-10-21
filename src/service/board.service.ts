@@ -11,6 +11,7 @@ import { type ThemeColors } from '../resource/chessfield.types.ts';
 import { cbShader } from '../shader/cbShader.ts';
 
 import { ShapesService } from './shapes.service.ts';
+import { type TextService, type TextConfig } from './text/text.service.ts';
 
 export class BoardService {
   private decorGroup: THREE.Group | null = null;
@@ -235,5 +236,44 @@ export class BoardService {
     chessboard.position.y = 0.00005;
 
     return chessboard as cf.ExtendedMesh;
+  }
+
+  /** Add player name labels to scene via TextService */
+  public async addPlayerNames(
+    textService: TextService,
+    names: { white: string; black: string },
+    textConfig: TextConfig,
+  ): Promise<void> {
+    const offset = textConfig.offset ?? cm(5.5);
+    const fontSize = textConfig.fontSize ?? cm(0.4);
+    const color = textConfig.color ?? '#ffffff';
+    const fontFamily = textConfig.fontFamily ?? 'system-ui, sans-serif';
+    const fontWeight = textConfig.fontWeight ?? '400';
+
+    // White player name - South side (bottom), facing camera
+    await textService.add({
+      text: names.white ?? 'White',
+      position: new THREE.Vector3(0, cm(0.5), offset),
+      fontSize,
+      color,
+      fontFamily,
+      fontWeight,
+      anchorX: 'center',
+      anchorY: 'center',
+      rotation: new THREE.Euler(0, Math.PI, 0),
+    });
+
+    // Black player name - North side (top), facing camera
+    await textService.add({
+      text: names.black ?? 'Black',
+      position: new THREE.Vector3(0, cm(0.5), -offset),
+      fontSize,
+      color,
+      fontFamily,
+      fontWeight,
+      anchorX: 'center',
+      anchorY: 'center',
+      rotation: new THREE.Euler(0, 0, 0),
+    });
   }
 }
