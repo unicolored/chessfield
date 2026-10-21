@@ -29,6 +29,9 @@ import { ShapeController } from './shapes/ShapeController.ts';
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
 
+export type { ChessfieldApi, ChessfieldConfig, GameState };
+export * from './resource/chessfield.types';
+
 export class Chessfield implements ChessfieldApi {
   private readonly core: ChessfieldCore;
   private readonly themeController: ThemeController;
