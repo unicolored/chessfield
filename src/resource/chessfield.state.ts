@@ -5,8 +5,13 @@ import type * as cf from './chessfield.types';
 
 export interface GameState {
   status?: 'check' | 'mate' | 'draw' | 'resign' | 'timeout';
-  kings: { white?: cg.Key; black?: cg.Key };
+  kings?: { white?: cg.Key; black?: cg.Key };
   winner?: 'w' | 'b';
+  mate?: cg.Key[] | string[];
+  check?: cg.Key[] | string[];
+  draw?: cg.Key[] | string[];
+  gameoverReason?: 'mate' | 'draw' | 'resign' | 'timeout';
+  drawReason?: 'agreement' | 'stalemate' | 'material' | '50moves';
 }
 
 export interface HeadlessState {

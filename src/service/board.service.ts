@@ -11,20 +11,28 @@ import { type ThemeColors } from '../resource/chessfield.types.ts';
 import { cbShader } from '../shader/cbShader.ts';
 
 import { ShapesService } from './shapes.service.ts';
+import { type TextConfig, type TextService } from './text/text.service.ts';
 
 export class BoardService {
+  private decorGroup: THREE.Group | null = null;
+  private decorMeshes: THREE.Mesh[] = [];
+
   public decor(mode: ThemeColors): THREE.Group {
     const decorGroup = new THREE.Group();
+    this.decorGroup = decorGroup;
+    this.decorMeshes = [];
 
     // Create a box geometry and material
     const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
     const frameColor = mode.dark;
     const frameMaterial = new THREE.MeshBasicNodeMaterial({ color: frameColor });
     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    frame.userData['decorType'] = 'frame';
     // Position the box in the scene
     frame.position.set(0, cm(-0.1), cm(0));
     // Add the box to the scene
     decorGroup.add(frame);
+    this.decorMeshes.push(frame);
 
     // const gridHelper = new GridHelper(0.1, 10, gridColor, gridColor);
     // gridHelper.position.y = cm(0.045);
@@ -35,20 +43,46 @@ export class BoardService {
 
     const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['light'].dark });
     const player1 = new THREE.Mesh(playerGeometry, player1Material);
+    player1.userData['decorType'] = 'player1';
     // Position the box in the scene
     player1.position.set(0, cm(0), cm(4.5));
     // Add the box to the scene
     decorGroup.add(player1);
+    this.decorMeshes.push(player1);
 
     // Create a box geometry and material
     const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['dark'].dark });
     const player2 = new THREE.Mesh(playerGeometry, player2Material);
+    player2.userData['decorType'] = 'player2';
     // Position the box in the scene
     player2.position.set(0, cm(0), cm(-4.5));
     // Add the box to the scene
     decorGroup.add(player2);
+    this.decorMeshes.push(player2);
 
     return decorGroup;
+  }
+
+  public updateDecorColors(modeColors: ThemeColors): void {
+    if (!this.decorGroup) return;
+
+    for (const mesh of this.decorMeshes) {
+      const material = mesh.material as THREE.MeshBasicNodeMaterial;
+      if (!material) continue;
+
+      const decorType = mesh.userData['decorType'] as string | undefined;
+      switch (decorType) {
+        case 'frame':
+          material.colorNode = vec4(new THREE.Color(modeColors.dark), 1.0);
+          break;
+        case 'player1':
+          material.colorNode = vec4(new THREE.Color(Store.themes['light'].dark), 1.0);
+          break;
+        case 'player2':
+          material.colorNode = vec4(new THREE.Color(Store.themes['dark'].dark), 1.0);
+          break;
+      }
+    }
   }
 
   public createCases(font: Font | null): THREE.Group {
@@ -202,5 +236,44 @@ export class BoardService {
     chessboard.position.y = 0.00005;
 
     return chessboard as cf.ExtendedMesh;
+  }
+
+  /** Add player name labels to scene via TextService */
+  public async addPlayerNames(
+    textService: TextService,
+    names: { white: string; black: string },
+    textConfig: TextConfig,
+  ): Promise<void> {
+    const offset = textConfig.offset ?? cm(5.5);
+    const fontSize = textConfig.fontSize ?? cm(0.4);
+    const color = textConfig.color ?? '#ffffff';
+    const fontFamily = textConfig.fontFamily ?? 'system-ui, sans-serif';
+    const fontWeight = textConfig.fontWeight ?? '400';
+
+    // White player name - South side (bottom), facing camera
+    await textService.add({
+      text: names.white ?? 'White',
+      position: new THREE.Vector3(0, cm(0.5), offset),
+      fontSize,
+      color,
+      fontFamily,
+      fontWeight,
+      anchorX: 'center',
+      anchorY: 'center',
+      rotation: new THREE.Euler(0, Math.PI, 0),
+    });
+
+    // Black player name - North side (top), facing camera
+    await textService.add({
+      text: names.black ?? 'Black',
+      position: new THREE.Vector3(0, cm(0.5), -offset),
+      fontSize,
+      color,
+      fontFamily,
+      fontWeight,
+      anchorX: 'center',
+      anchorY: 'center',
+      rotation: new THREE.Euler(0, 0, 0),
+    });
   }
 }

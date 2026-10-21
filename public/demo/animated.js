@@ -71,14 +71,22 @@ try {
           // console.log(`Winner king ${winner} on:`, findWinnerKing);
           console.log(`${headers[winner]} wins over ${headers[loser]}`);
 
+          const mate = [];
+          if (winner === WHITE) {
+            mate.push(findBlackKing);
+          } else if (winner === BLACK) {
+            mate.push(findWhiteKing);
+          }
+
           const gO = {
             winner,
             kings: {
               white: findWhiteKing.pop(),
               black: findBlackKing.pop(),
             },
+            mate,
           };
-          board1.setGameOver(gO);
+          board1.setState(gO);
         } else if (chess.isDraw()) {
           // It's a draw - check specific reason
           console.log('Draw!');
@@ -88,16 +96,17 @@ try {
           console.log('50-move rule:', chess.isDrawByFiftyMoves());
           console.log('Insufficient material:', chess.isInsufficientMaterial());
 
-          const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
-          const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+          const findBlackKing = chess.findPiece({ type: KING, color: BLACK }).pop();
+          const findWhiteKing = chess.findPiece({ type: KING, color: WHITE }).pop();
 
           const gO = {
             kings: {
-              white: findWhiteKing.pop(),
-              black: findBlackKing.pop(),
+              white: findWhiteKing,
+              black: findBlackKing,
             },
+            draw: [findWhiteKing, findBlackKing],
           };
-          board1.setGameOver(gO);
+          board1.setState(gO);
         }
       } else if (chess.inCheck()) {
         // Find king in check
@@ -106,12 +115,12 @@ try {
         const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
         // -> ['e8']
         const check = {
-          kings: {
-            white: chess.turn() === 'w' ? findCheckKing.pop() : null,
-            black: chess.turn() === 'b' ? findCheckKing.pop() : null,
-          },
+          check: [
+            chess.turn() === 'w' ? findCheckKing.pop() : undefined,
+            chess.turn() === 'b' ? findCheckKing.pop() : undefined,
+          ],
         };
-        board1.setCheck(check);
+        board1.setState(check);
       }
     }
     if (!chess.isGameOver()) requestAnimationFrame(animate);

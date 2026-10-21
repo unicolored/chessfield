@@ -19,6 +19,7 @@ export class RendererProvider {
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // await renderer.init();
 
     return renderer;
   }

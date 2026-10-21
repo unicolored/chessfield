@@ -24,7 +24,10 @@ export class GameProvider {
 
   constructor(private store: Store) {}
 
-  initGamePieces(move: cf.Move): void {
+  initGamePieces(move: cf.Move): cf.BoardPiece[] {
+    // Dispose old meshes before creating new ones to prevent memory leak
+    this.disposeOldMeshes();
+
     // const gamePiecesMap: GamePieces = new Map();
     const whitePiecesListMap: cf.CoordPieceNameMap = new Map();
     const blackPiecesListMap: cf.CoordPieceNameMap = new Map();
@@ -120,7 +123,37 @@ export class GameProvider {
     });
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
-    this.store.updategamePieces(boardPieces);
+    return boardPieces;
+  }
+
+  public disposeOldMeshes(): void {
+    const oldMap = this.store.getBoardPiecesObjectsMap();
+    oldMap.forEach(oldMesh => {
+      // Only dispose Mesh/InstancedMesh types (not Group)
+      if (!(oldMesh instanceof THREE.Mesh)) return;
+
+      // Dispose geometry
+      oldMesh.geometry?.dispose();
+
+      // Dispose material(s)
+      const mats = Array.isArray(oldMesh.material) ? oldMesh.material : [oldMesh.material];
+      mats.forEach((mat: THREE.Material) => mat?.dispose());
+
+      // Dispose InstancedMesh buffers
+      if (oldMesh instanceof THREE.InstancedMesh) {
+        oldMesh.instanceMatrix?.dispose();
+        oldMesh.instanceColor?.dispose();
+      }
+
+      // Dispose children (spriteMesh)
+      oldMesh.children.forEach(child => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry?.dispose();
+          const childMats = Array.isArray(child.material) ? child.material : [child.material];
+          childMats.forEach((mat: THREE.Material) => mat?.dispose());
+        }
+      });
+    });
   }
 
   public loadGlbGeometry(loadingManager: THREE.LoadingManager): void {
