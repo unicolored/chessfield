@@ -43,13 +43,18 @@ try {
 
   chess.load(fen, { skipValidation: false });
 
-  let lastTime = 0;
-  const delay = 5;
+  // Animation configuration
+  const targetFPS = 30; // Reasonable frame rate for demo
+  const frameInterval = 1000 / targetFPS;
+  let lastFrameTime = 0;
 
   function animate(time) {
-    if (!lastTime) lastTime = time;
-    if (time - lastTime >= delay && !chess.isGameOver()) {
-      lastTime = time;
+    if (!lastFrameTime) lastFrameTime = time;
+
+    // Throttle to target FPS
+    if (time - lastFrameTime >= frameInterval && !chess.isGameOver()) {
+      lastFrameTime = time;
+
       const moves = chess.moves();
       const move = moves[Math.floor(Math.random() * moves.length)];
       chess.move(move);
