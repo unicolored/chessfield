@@ -56,7 +56,9 @@ export class Chessfield implements ChessfieldApi {
   private eventsService!: EventsService;
   private foundLastMove!: Move | null;
   private movesSubscription: (() => void) | null = null;
-  // private loadingCompleted = false;
+  // Camera references for direct updates
+  private camera!: THREE.PerspectiveCamera;
+  private camGroup!: THREE.Group;
 
   constructor(
     private cfElement: HTMLElement | null,
@@ -138,6 +140,45 @@ export class Chessfield implements ChessfieldApi {
 
   public getThemeColors(): ThemeColors {
     return this.themeProvider.getThemeColors();
+  }
+
+  public getCurrentCamera(): cf.Camera {
+    return this.store.getConfig().camera ?? 'white';
+  }
+
+  public switchCamera(camera?: string): void {
+    const cameras: cf.Camera[] = ['white', 'right', 'black', 'left', 'top'];
+    const currentCamera = this.store.getConfig().camera ?? 'white';
+    const currentIndex = cameras.indexOf(currentCamera);
+
+    let targetCamera: string;
+    if (camera) {
+      if (!cameras.includes(camera as cf.Camera)) {
+        console.warn(`Camera "${camera}" not found. Available: ${cameras.join(', ')}`);
+        return;
+      }
+      targetCamera = camera;
+    } else {
+      const nextIndex = (currentIndex + 1) % cameras.length;
+      targetCamera = cameras[nextIndex];
+    }
+
+    // When camera is white or black, set angle to 'center'
+    const angle = (targetCamera === 'white' || targetCamera === 'black') ? 'center' : undefined;
+
+    // Update camera provider config
+    this.cameraProvider.setConfig({ ...this.store.getConfig(), camera: targetCamera as cf.Camera, angle });
+
+    // Update camera position directly
+    const newPosition = this.cameraProvider.getCameraPosition(targetCamera as cf.Camera);
+    this.camera.position.set(newPosition.x, newPosition.y, newPosition.z);
+
+    // Update camera group rotation directly
+    const newRotation = this.cameraProvider.getCameraGroupRotation(targetCamera as cf.Camera, angle);
+    this.camGroup.rotation.set(newRotation.x, newRotation.y, newRotation.z);
+
+    // Update store config for persistence
+    this.store.setConfig({ ...this.store.getConfig(), camera: targetCamera as cf.Camera, angle });
   }
 
   private applyThemeColors(): void {
@@ -318,6 +359,10 @@ export class Chessfield implements ChessfieldApi {
     const camera = this.cameraProvider.getCamera(sizes);
     const camGroup = this.cameraProvider.getCameraGroup(camera);
     this.store.scene.add(camGroup);
+
+    // Save camera references for direct updates
+    this.camera = camera;
+    this.camGroup = camGroup;
 
     // Canvas & Renderer
     this.canvas = this.rendererProvider.getCanvas();
