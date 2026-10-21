@@ -51,6 +51,8 @@ export class Chessfield implements ChessfieldApi {
   private themeProvider!: ThemeProvider;
 
   private canvas!: HTMLCanvasElement;
+  private renderer!: THREE.WebGPURenderer;
+  private controls!: OrbitControls;
   private eventsService!: EventsService;
   private foundLastMove!: Move | null;
   private movesSubscription: (() => void) | null = null;
@@ -127,6 +129,40 @@ export class Chessfield implements ChessfieldApi {
     if (this.store.piecesGroup && this.store.scene) {
       this.store.scene.remove(this.store.piecesGroup);
       this.store.piecesGroup.clear();
+    }
+
+    // Dispose old renderer (stops animation loop and releases WebGPU resources)
+    if (this.renderer) {
+      this.renderer.setAnimationLoop(null);
+      if (typeof this.renderer.dispose === 'function') {
+        this.renderer.dispose();
+      }
+    }
+
+    // Dispose old controls
+    if (this.controls) {
+      this.controls.dispose();
+    }
+
+    // Clear service state (NOT dispose - services persist across configUpdates)
+    // Old meshes are in the old scene which gets dereferenced and GC'd
+    this.shapesService?.clearAll();
+    this.stateService?.clearAll();
+    this.gameProvider?.disposeOldMeshes?.();
+
+    // Clean up scene - traverse and dispose remaining geometries/materials
+    if (this.store.scene) {
+      this.store.scene.traverse(object => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry?.dispose();
+          if (Array.isArray(object.material)) {
+            object.material.forEach(m => m?.dispose());
+          } else {
+            object.material?.dispose();
+          }
+        }
+      });
+      this.store.scene.clear();
     }
 
     this.eventsService?.dispose();
@@ -282,8 +318,6 @@ export class Chessfield implements ChessfieldApi {
   private async onLoad(
     camera: THREE.PerspectiveCamera,
     scene: THREE.Scene,
-    renderer: THREE.Renderer,
-    controls: OrbitControls,
     font: Font | null,
   ): Promise<void> {
     if (!this.cfElement) {
@@ -371,7 +405,7 @@ export class Chessfield implements ChessfieldApi {
 
       const rect = this.cfElement.getBoundingClientRect();
       const sizes = { width: rect.width, height: rect.height };
-      renderer.setSize(sizes.width, sizes.height);
+      this.renderer.setSize(sizes.width, sizes.height);
       camera.aspect = sizes.width / sizes.height;
       camera.updateProjectionMatrix();
     };
@@ -385,11 +419,11 @@ export class Chessfield implements ChessfieldApi {
     const tick = () => {
       timer.update();
 
-      controls.update();
-      renderer.render(scene, camera);
+      this.controls.update();
+      this.renderer.render(scene, camera);
     };
 
-    renderer.setAnimationLoop(tick);
+    this.renderer.setAnimationLoop(tick);
   }
 
   async start() {
@@ -421,15 +455,15 @@ export class Chessfield implements ChessfieldApi {
 
     // Canvas & Renderer
     this.canvas = this.rendererProvider.getCanvas();
-    const renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
-    this.cfElement.appendChild(renderer.domElement);
+    this.renderer = this.rendererProvider.getRenderer(sizes, this.canvas);
+    this.cfElement.appendChild(this.renderer.domElement);
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
-      renderer.inspector = new Inspector();
+      this.renderer.inspector = new Inspector();
     }
 
     // Controls
-    const controls = this.controlsProvider.getControls(camera, this.canvas);
+    this.controls = this.controlsProvider.getControls(camera, this.canvas);
 
     // Overlay - configure from config
     // const config = this.store.getConfig();
@@ -475,8 +509,6 @@ export class Chessfield implements ChessfieldApi {
       this,
       camera,
       this.store.scene,
-      renderer,
-      controls,
       font,
       // loaderComponent,
     );

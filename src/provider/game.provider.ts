@@ -126,7 +126,7 @@ export class GameProvider {
     return boardPieces;
   }
 
-  private disposeOldMeshes(): void {
+  public disposeOldMeshes(): void {
     const oldMap = this.store.getBoardPiecesObjectsMap();
     oldMap.forEach(oldMesh => {
       // Only dispose Mesh/InstancedMesh types (not Group)
