@@ -100,13 +100,7 @@ export class GameProvider {
       const userDataWinner = userData('lostState', 'bool');
       spriteMaterial.colorNode = stateSprite({ lost: userDataWinner, show: userDataShow });
 
-      let mesh;
-
-      // if (value.count > 1) {
-      //   mesh = new THREE.InstancedMesh(geometry, material, value.count);
-      // } else {
-      // for (let i = 1; i <= piece.count; i++) {
-      mesh = new THREE.Mesh(geometry, material);
+      const mesh = new THREE.Mesh(geometry, material);
 
       const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
 

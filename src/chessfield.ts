@@ -21,6 +21,7 @@ import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
 import { BoardService } from './service/board.service.ts';
+import { GamePieceService } from './service/game-piece.service.ts';
 import { ShapesService } from './service/shapes.service.ts';
 import { StateService } from './service/state.service.ts';
 import { TextService } from './service/text/text.service.ts';
@@ -59,6 +60,15 @@ export class Chessfield implements ChessfieldApi {
       const shapesService = new ShapesService(['ring']);
       const stateService = new StateService([['check', String(themeProvider.getThemeColors().statusCheck)]]);
 
+      const gamePieceService = new GamePieceService(
+        store,
+        gameProvider,
+        pieceProvider,
+        stateService,
+        shapesService,
+        themeProvider,
+      );
+
       const core = new ChessfieldCore(this.cfElement, {
         store,
         gameProvider,
@@ -73,6 +83,7 @@ export class Chessfield implements ChessfieldApi {
         shapesService,
         stateService,
         textService,
+        gamePieceService,
       });
 
       const themeController = new ThemeController(
@@ -94,6 +105,7 @@ export class Chessfield implements ChessfieldApi {
         pieceProvider,
         stateService,
         shapesService,
+        gamePieceService,
       );
 
       const shapeController = new ShapeController(shapesService, themeProvider);

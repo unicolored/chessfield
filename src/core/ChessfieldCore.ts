@@ -1,12 +1,10 @@
-import type * as cg from '@lichess-org/chessground/types';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import type * as THREE from 'three/webgpu';
 
-import { coordToVector2, lmToCoordinates } from '../helper.ts';
 import type { CameraProvider } from '../provider/camera.provider.ts';
 import type { ControlsProvider } from '../provider/controls.provider.ts';
-import { GameProvider } from '../provider/game.provider.ts';
+import { type GameProvider } from '../provider/game.provider.ts';
 import type { LoadingManagerProvider } from '../provider/loadingManager.provider.ts';
 import type { PieceProvider } from '../provider/piece.provider.ts';
 import type { RendererProvider } from '../provider/renderer.provider.ts';
@@ -15,6 +13,7 @@ import type { Store } from '../provider/store.ts';
 import type { ThemeProvider } from '../provider/theme.provider.ts';
 import type { BoardService } from '../service/board.service.ts';
 import type { EventsService } from '../service/events.service.ts';
+import type { GamePieceService } from '../service/game-piece.service.ts';
 import type { ShapesService } from '../service/shapes.service.ts';
 import type { StateService } from '../service/state.service.ts';
 import type { TextService } from '../service/text/text.service.ts';
@@ -36,6 +35,7 @@ export interface ChessfieldCoreDependencies {
   shapesService: ShapesService;
   stateService: StateService;
   textService: TextService;
+  gamePieceService: GamePieceService;
 }
 
 export class ChessfieldCore {
@@ -53,6 +53,7 @@ export class ChessfieldCore {
   private shapesService: ShapesService;
   private stateService: StateService;
   private textService: TextService;
+  private gamePieceService: GamePieceService;
   private eventsService: EventsService | null = null;
 
   public readonly canvas: HTMLCanvasElement | null = null;
@@ -61,9 +62,7 @@ export class ChessfieldCore {
   public readonly camera: THREE.PerspectiveCamera | null = null;
   public readonly camGroup: THREE.Group | null = null;
 
-  private movesSubscription: (() => void) | null = null;
   private animationLoop: AnimationLoop;
-  private foundLastMove: { lastMove: cg.Key[] } | null = null;
 
   constructor(cfElement: HTMLElement | null, deps: ChessfieldCoreDependencies) {
     this.cfElement = cfElement;
@@ -80,6 +79,7 @@ export class ChessfieldCore {
     this.shapesService = deps.shapesService;
     this.stateService = deps.stateService;
     this.textService = deps.textService;
+    this.gamePieceService = deps.gamePieceService;
     this.animationLoop = new AnimationLoop();
   }
 
@@ -139,6 +139,10 @@ export class ChessfieldCore {
     return this.textService;
   }
 
+  getGamePieceService(): GamePieceService {
+    return this.gamePieceService;
+  }
+
   getEventsService(): EventsService {
     return this.eventsService;
   }
@@ -187,37 +191,8 @@ export class ChessfieldCore {
     this.movesSubscription = sub;
   }
 
-  getFoundLastMove(): { lastMove: cg.Key[] } | null {
-    return this.foundLastMove;
-  }
-
-  setFoundLastMove(move: { lastMove: cg.Key[] } | null): void {
-    this.foundLastMove = move;
-  }
-
   getAnimationLoop(): AnimationLoop {
     return this.animationLoop;
-  }
-
-  // Delegate methods for API
-  addRingAt(rank: number, file: number, shape: string): void {
-    const index = rank * 8 + file;
-    const isVisible = this.shapesService.getVisible(index, 'ring');
-
-    const theme = this.themeProvider.getThemeColors();
-    const color =
-      (theme as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
-
-    if (!isVisible) {
-      this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-    } else {
-      const currentColor = this.shapesService.getColor(index, 'ring');
-      if (currentColor.toLowerCase() === color.toLowerCase()) {
-        this.shapesService.clearShape(index, 'ring');
-      } else {
-        this.shapesService.setShapeAt(rank, file, color, true, 'ring');
-      }
-    }
   }
 
   async start(): Promise<void> {
@@ -313,14 +288,14 @@ export class ChessfieldCore {
     );
 
     // Update pieces
-    this.updatePieces();
+    this.gamePieceService.updatePieces();
 
     // Setup events
     this.eventsService.onSquareHover = (rank, file) => {
       this.store.chessboard?.highlightSquareCursor(rank, file);
     };
 
-    this.eventsService.onSquareRightClick = this.addRingAt.bind(this);
+    this.eventsService.onSquareRightClick = this.gamePieceService.addRingAt.bind(this.gamePieceService);
 
     this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
 
@@ -343,117 +318,6 @@ export class ChessfieldCore {
     const renderer = this.getRenderer();
     if (controls && renderer) {
       this.animationLoop.start(controls, renderer, scene, camera);
-    }
-  }
-
-  updatePieces(): void {
-    if (this.movesSubscription) {
-      this.movesSubscription();
-    }
-
-    this.movesSubscription = this.store.movesSubject$.subscribe((moves: any) => {
-      // Robust cleanup: remove previous pieces group from scene
-      if (this.store.piecesGroup) {
-        this.store.scene?.remove(this.store.piecesGroup);
-        this.store.piecesGroup.clear();
-      }
-
-      this.foundLastMove = GameProvider.findLastMove(moves.moves);
-
-      let boardPieces: any[] = [];
-
-      if (this.foundLastMove) {
-        boardPieces = this.gameProvider.initGamePieces(this.foundLastMove);
-
-        const lastMoveToCoordinates = lmToCoordinates(this.foundLastMove.lastMove);
-        if (lastMoveToCoordinates.length > 1) {
-          this.store.chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-          this.store.chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
-        }
-      }
-
-      const piecesGroup = this.pieceProvider.updateGamePositions(boardPieces);
-      this.store.piecesGroup = piecesGroup;
-      this.store.boardPieces = boardPieces;
-      this.store.piecesObjects = this.store.getBoardPiecesObjectsMap();
-      this.store.scene?.add(piecesGroup);
-
-      // Handle game state
-      if (this.store.gameState) {
-        if (this.store.gameState.mate || this.store.gameState.draw) {
-          this.addShapes(this.store.gameState);
-        }
-        if (this.store.gameState.check) {
-          console.log('Check!!!');
-          this.store.gameState.check.forEach((key: cg.Key) => {
-            if (key) {
-              const kingVec = coordToVector2(key);
-              this.stateService.setStateAt(kingVec.x, kingVec.y);
-            }
-          });
-        }
-      } else {
-        this.stateService.clearAll(['check']);
-      }
-    });
-  }
-
-  addShapes(state: any): void {
-    if (!state) {
-      return;
-    }
-
-    const boardPieces = this.store.boardPieces ?? [];
-    const piecesObjects = this.store.piecesObjects;
-
-    const findPieceMesh = (mateKey: string): THREE.Object3D | null => {
-      if (!piecesObjects) return null;
-      const boardPiece = boardPieces.find((bp: any) => bp.coord === mateKey);
-      if (!boardPiece || !boardPiece.objectKey) return null;
-      return piecesObjects.get(boardPiece.objectKey) ?? null;
-    };
-
-    const findStateSprite = (piece: THREE.Object3D) => {
-      return piece.children.find(c => c.name === 'stateSprite');
-    };
-
-    if (state.winner) {
-      let mateKey;
-      if (state.winner === 'w') {
-        mateKey = state.kings.black;
-      } else {
-        mateKey = state.kings.white;
-      }
-      if (mateKey) {
-        const squareVec2 = this.gameProvider.coordToVector2?.(mateKey);
-        if (squareVec2) {
-          this.stateService.setStateAt(squareVec2.x, squareVec2.y);
-
-          const pieceFound = findPieceMesh(mateKey);
-          if (pieceFound) {
-            const spriteFound = findStateSprite(pieceFound);
-            if (spriteFound) {
-              spriteFound.userData['showSprite'] = true;
-              spriteFound.userData['lostState'] = true;
-            }
-          }
-        }
-      }
-    }
-
-    if (state.draw) {
-      state.draw.forEach((key: cg.Key) => {
-        if (key) {
-          const pieceFound = findPieceMesh(key);
-          if (pieceFound) {
-            const spriteFound = findStateSprite(pieceFound);
-            if (spriteFound) {
-              spriteFound.userData['showSprite'] = true;
-              spriteFound.userData['lostState'] = false;
-            }
-          }
-        }
-      });
     }
   }
 }
