@@ -1,6 +1,6 @@
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import type * as THREE from 'three/webgpu';
+import * as THREE from 'three/webgpu';
 
 import type { CameraProvider } from '../provider/camera.provider.ts';
 import type { ControlsProvider } from '../provider/controls.provider.ts';
@@ -57,7 +57,8 @@ export class ChessfieldCore {
   private eventsService: EventsService | null = null;
 
   public readonly canvas: HTMLCanvasElement | null = null;
-  public readonly renderer: THREE.WebGPURenderer | null = null;
+  public renderer: THREE.WebGPURenderer | null = null;
+  public renderPipeline: THREE.RenderPipeline | null = null;
   public readonly controls: OrbitControls | null = null;
   public readonly camera: THREE.PerspectiveCamera | null = null;
   public readonly camGroup: THREE.Group | null = null;
@@ -143,12 +144,16 @@ export class ChessfieldCore {
     return this.gamePieceService;
   }
 
-  getEventsService(): EventsService {
+  getEventsService(): EventsService | null {
     return this.eventsService;
   }
 
   getRenderer(): THREE.WebGPURenderer | null {
     return this.renderer;
+  }
+
+  getRenderPipeline(): THREE.RenderPipeline | null {
+    return this.renderPipeline;
   }
 
   getControls(): OrbitControls | null {
@@ -168,7 +173,11 @@ export class ChessfieldCore {
   }
 
   setRenderer(renderer: THREE.WebGPURenderer): void {
-    (this as any).renderer = renderer;
+    this.renderer = renderer;
+  }
+
+  setRenderPipeline(renderer: THREE.WebGPURenderer): void {
+    this.renderPipeline = new THREE.RenderPipeline(renderer);
   }
 
   setControls(controls: OrbitControls): void {
@@ -225,8 +234,10 @@ export class ChessfieldCore {
     // Canvas & Renderer
     const canvas = this.rendererProvider.getCanvas();
     const renderer = this.rendererProvider.getRenderer(sizes, canvas);
+    // const renderPipeline = this.rendererProvider.getRenderPipeline(renderer);
     this.setCanvas(canvas);
     this.setRenderer(renderer);
+    this.setRenderPipeline(renderer);
     this.cfElement.appendChild(renderer.domElement);
 
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
@@ -291,15 +302,15 @@ export class ChessfieldCore {
     this.gamePieceService.updatePieces();
 
     // Setup events
-    this.eventsService.onSquareHover = (rank, file) => {
+    this.eventsService!.onSquareHover = (rank, file) => {
       this.store.chessboard?.highlightSquareCursor(rank, file);
     };
 
-    this.eventsService.onSquareRightClick = this.gamePieceService.addRingAt.bind(this.gamePieceService);
+    this.eventsService!.onSquareRightClick = this.gamePieceService.addRingAt.bind(this.gamePieceService);
 
-    this.eventsService.onLeftClickClear = () => this.shapesService.clearAll();
+    this.eventsService!.onLeftClickClear = () => this.shapesService.clearAll();
 
-    this.eventsService.onResize = async () => {
+    this.eventsService!.onResize = async () => {
       if (!this.cfElement) {
         return;
       }
@@ -316,8 +327,9 @@ export class ChessfieldCore {
     // Start animation loop
     const controls = this.getControls();
     const renderer = this.getRenderer();
+    const renderPipeline = this.getRenderPipeline();
     if (controls && renderer) {
-      this.animationLoop.start(controls, renderer, scene, camera);
+      this.animationLoop.start(controls, renderer, renderPipeline, scene, camera);
     }
   }
 }

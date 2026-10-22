@@ -14,7 +14,8 @@ export class RendererProvider {
     const renderer = new THREE.WebGPURenderer({
       canvas,
       // powerPreference: 'high-performance',
-      antialias: RendererProvider.enableAntialias,
+      // antialias: RendererProvider.enableAntialias,
+      antialias: false,
       forceWebGL: false,
     });
     renderer.setSize(width, height);
@@ -22,5 +23,15 @@ export class RendererProvider {
     // await renderer.init();
 
     return renderer;
+  }
+
+  getRenderPipeline(renderer: THREE.Renderer): THREE.RenderPipeline {
+    /**
+     * Post-processing
+     */
+    const renderPipeline = new THREE.RenderPipeline(renderer);
+    renderPipeline.outputColorTransform = false;
+
+    return renderPipeline;
   }
 }
