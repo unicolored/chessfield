@@ -8,7 +8,7 @@ import * as THREE from 'three/webgpu';
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
 import { cm, objKey } from '../helper.ts';
 import type * as cf from '../resource/chessfield.types.ts';
-import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
+import type { BoardPiece } from '../resource/chessfield.types.ts';
 import { stateSprite } from '../shader/stateSprite.ts';
 
 import { PieceProvider } from './piece.provider';
@@ -41,6 +41,7 @@ export class GameProvider {
     const fenParsed = new FenParser(fen);
 
     const boardPieces: cf.BoardPiece[] = [];
+    console.log('fenParsed', fenParsed);
     fenParsed.ranks.forEach((rank: string, index: number) => {
       const rankIndex = Store.boardSize - index;
 
@@ -65,16 +66,18 @@ export class GameProvider {
             role,
             color,
             objectKey: objKey(color, role),
-            count: 0,
+            count: 1,
           });
           // }
         }
       });
     });
 
-    const whiteCountsMap = this.countPieces(whitePiecesListMap, 'white');
-    const blackCountsMap = this.countPieces(blackPiecesListMap, 'black');
-    const mergedMap = new Map([...whiteCountsMap, ...blackCountsMap]);
+    console.log('boardPieces from FEN', boardPieces);
+
+    // const whiteCountsMap = this.countPieces(whitePiecesListMap, 'white');
+    // const blackCountsMap = this.countPieces(blackPiecesListMap, 'black');
+    // const mergedMap = new Map([...whiteCountsMap, ...blackCountsMap]);
 
     const pieceGeometriesMap = this.store.getPiecesGeometriesGltfMap();
 
@@ -84,10 +87,10 @@ export class GameProvider {
       color: 0xff_00_00,
     });
 
-    mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
-      const baseGeometry: THREE.BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
+    boardPieces.forEach((piece: BoardPiece) => {
+      const baseGeometry: THREE.BufferGeometry | undefined = pieceGeometriesMap.get(piece.role);
       const geometry = baseGeometry ? baseGeometry.clone() : undefined;
-      const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
+      const material = this.pieceMaterials[piece.color] ?? fallbackMaterial;
 
       const spriteMaterial = new THREE.SpriteNodeMaterial({
         transparent: true,
@@ -99,32 +102,85 @@ export class GameProvider {
 
       let mesh;
 
-      if (value.count > 1) {
-        mesh = new THREE.InstancedMesh(geometry, material, value.count);
-      } else {
-        mesh = new THREE.Mesh(geometry, material);
+      // if (value.count > 1) {
+      //   mesh = new THREE.InstancedMesh(geometry, material, value.count);
+      // } else {
+      // for (let i = 1; i <= piece.count; i++) {
+      mesh = new THREE.Mesh(geometry, material);
 
-        const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
+      const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
 
-        const spriteMesh = new THREE.Mesh(sprite, spriteMaterial);
-        spriteMesh.name = 'stateSprite';
+      const spriteMesh = new THREE.Mesh(sprite, spriteMaterial);
+      spriteMesh.name = 'stateSprite';
 
-        const boundingBox = new THREE.Box3().setFromObject(mesh);
-        const highestY = boundingBox.max.y;
-        spriteMesh.position.set(0, highestY + cm(0.33), 0);
-        mesh.add(spriteMesh);
-      }
-
+      const boundingBox = new THREE.Box3().setFromObject(mesh);
+      const highestY = boundingBox.max.y;
+      spriteMesh.position.set(0, highestY + cm(0.33), 0);
+      mesh.add(spriteMesh);
       mesh.castShadow = false;
       mesh.receiveShadow = false;
-      mesh.name = `${key}-${value.color}-${value.role}`;
+      const name = `${piece.objectKey}-${piece.coord}`;
+      mesh.name = name;
+      mesh.userData['color'] = piece.color;
+      mesh.userData['role'] = piece.role;
+      mesh.userData['coord'] = piece.coord;
+      // }
+      // }
 
-      boardPiecesObjectsMap.set(key, mesh);
+      boardPiecesObjectsMap.set(name, mesh);
     });
+    console.log('boardPiecesObjectMap', boardPiecesObjectsMap);
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
+
     return boardPieces;
   }
+
+  // console.log('mergedMap', mergedMap);
+
+  //   mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
+  //     const baseGeometry: THREE.BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
+  //     const geometry = baseGeometry ? baseGeometry.clone() : undefined;
+  //     const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
+  //
+  //     const spriteMaterial = new THREE.SpriteNodeMaterial({
+  //       transparent: true,
+  //     });
+  //
+  //     const userDataShow = userData('showSprite', 'bool');
+  //     const userDataWinner = userData('lostState', 'bool');
+  //     spriteMaterial.colorNode = stateSprite({ lost: userDataWinner, show: userDataShow });
+  //
+  //     let mesh;
+  //
+  //     // if (value.count > 1) {
+  //     //   mesh = new THREE.InstancedMesh(geometry, material, value.count);
+  //     // } else {
+  //     for (let i = 1; i <= value.count; i++) {
+  //       mesh = new THREE.Mesh(geometry, material);
+  //
+  //       const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
+  //
+  //       const spriteMesh = new THREE.Mesh(sprite, spriteMaterial);
+  //       spriteMesh.name = 'stateSprite';
+  //
+  //       const boundingBox = new THREE.Box3().setFromObject(mesh);
+  //       const highestY = boundingBox.max.y;
+  //       spriteMesh.position.set(0, highestY + cm(0.33), 0);
+  //       mesh.add(spriteMesh);
+  //       mesh.castShadow = false;
+  //       mesh.receiveShadow = false;
+  //       mesh.name = `${key}-${value.color}-${value.role}-${i}`;
+  //     }
+  //     // }
+  //
+  //     boardPiecesObjectsMap.set(key, mesh);
+  //   });
+  //   console.log('boardPieces', boardPiecesObjectsMap);
+  //
+  //   this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
+  //   return boardPieces;
+  // }
 
   public disposeOldMeshes(): void {
     const oldMap = this.store.getBoardPiecesObjectsMap();
@@ -194,13 +250,13 @@ export class GameProvider {
     return null;
   }
 
-  private countPieces(listeMap: cf.CoordPieceNameMap, color: cg.Color): Map<PieceColorRole, BoardPiece> {
-    const map = new Map<PieceColorRole, BoardPiece>();
-    listeMap.forEach(pieceName => {
-      const oK = objKey(color, pieceName);
-      const count = map.get(oK)?.count || 0;
-      map.set(oK, { count: count + 1, color, role: pieceName, coord: null, objectKey: null });
-    });
-    return map;
-  }
+  // private countPieces(listeMap: cf.CoordPieceNameMap, color: cg.Color): Map<PieceColorRole, BoardPiece> {
+  //   const map = new Map<PieceColorRole, BoardPiece>();
+  //   listeMap.forEach(pieceName => {
+  //     const oK = objKey(color, pieceName);
+  //     const count = map.get(oK)?.count || 0;
+  //     map.set(oK, { count: count + 1, color, role: pieceName });
+  //   });
+  //   return map;
+  // }
 }
