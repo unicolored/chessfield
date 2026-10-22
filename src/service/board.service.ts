@@ -1,5 +1,4 @@
 import * as cg from '@lichess-org/chessground/types';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { uniform, vec2, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
@@ -97,12 +96,12 @@ export class BoardService {
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-        const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
+        const square = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
 
         // GROUP
         const caseGroup = new THREE.Group();
-        caseGroup.name = coord;
-        caseGroup.userData['coord'] = coord;
+        caseGroup.name = square;
+        caseGroup.userData['square'] = square;
 
         // SQUARE
         const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
@@ -132,21 +131,21 @@ export class BoardService {
         // squareMaterial.opacityNode = float(pattern);
         // squareMaterial.colorNode = vec4(shader, instanceVisible);
 
-        const square = new THREE.Mesh(squareGeometry, squareMaterial);
-        square.rotation.x = -Math.PI / 2;
+        const squareMesh = new THREE.Mesh(squareGeometry, squareMaterial);
+        squareMesh.rotation.x = -Math.PI / 2;
 
-        square.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
-        square.castShadow = false;
-        square.receiveShadow = false;
+        squareMesh.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
+        squareMesh.castShadow = false;
+        squareMesh.receiveShadow = false;
 
         // TEXT
-        if (font) {
-          const textMesh = this.makeCoordText(font, coord, { rankInt, colInt }, theme);
-
-          // ADD
-          square.add(textMesh);
-        }
-        caseGroup.add(square);
+        // if (font) {
+        //   const textMesh = this.makeCoordText(font, square, { rankInt, colInt }, theme);
+        //
+        //   // ADD
+        //   squareMesh.add(textMesh);
+        // }
+        caseGroup.add(squareMesh);
         casesGroup.add(caseGroup);
       }
     }
@@ -154,33 +153,33 @@ export class BoardService {
     return casesGroup;
   }
 
-  private makeCoordText(
-    font: Font,
-    text: string,
-    pos: { rankInt: number; colInt: number },
-    theme: cf.ThemeColors,
-  ): THREE.Mesh {
-    const textMaterial = new THREE.MeshPhongMaterial({
-      color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,
-    });
-    const textGeometry = new TextGeometry(text, {
-      font,
-      size: cm(0.1),
-      depth: cm(0.01),
-      // curveSegments: 12,
-      // bevelEnabled: true,
-      // bevelThickness: 10,
-      // bevelSize: 8,
-      // bevelOffset: 0,
-      // bevelSegments: 5
-    });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-
-    textMesh.position.set(cm(0.25), cm(0.25), cm(0.005));
-    // textMesh.rotation.x = Math.PI * 60;
-
-    return textMesh;
-  }
+  // private makeCoordText(
+  //   font: Font,
+  //   text: string,
+  //   pos: { rankInt: number; colInt: number },
+  //   theme: cf.ThemeColors,
+  // ): THREE.Mesh {
+  //   const textMaterial = new THREE.MeshPhongMaterial({
+  //     color: (pos.rankInt + pos.colInt) % 2 !== 0 ? theme.light : theme.dark,
+  //   });
+  //   const textGeometry = new TextGeometry(text, {
+  //     font,
+  //     size: cm(0.1),
+  //     depth: cm(0.01),
+  //     // curveSegments: 12,
+  //     // bevelEnabled: true,
+  //     // bevelThickness: 10,
+  //     // bevelSize: 8,
+  //     // bevelOffset: 0,
+  //     // bevelSegments: 5
+  //   });
+  //   const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+  //
+  //   textMesh.position.set(cm(0.25), cm(0.25), cm(0.005));
+  //   // textMesh.rotation.x = Math.PI * 60;
+  //
+  //   return textMesh;
+  // }
 
   createChessboard(): cf.ExtendedMesh {
     const geometry = new THREE.PlaneGeometry(0.08, 0.08);

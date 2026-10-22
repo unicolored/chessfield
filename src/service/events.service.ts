@@ -110,13 +110,13 @@ export class EventsService {
           const rank = coordAttr.getY(instanceId);
           coord = vector2ToCoord(new THREE.Vector2(file, rank));
         } else {
-          coord = mesh.userData['coord'] as string;
+          coord = mesh.userData['square'] as string;
         }
       } else {
-        coord = mesh.userData['coord'] as string;
+        coord = mesh.userData['square'] as string;
       }
     } else {
-      coord = intersect.object.parent?.userData['coord'] as string;
+      coord = intersect.object.parent?.userData['square'] as string;
     }
 
     if (!coord) return null;

@@ -56,9 +56,9 @@ export class GameProvider {
           // const pieceGroup = this.getOnePiece(pieceGeometries[pieceKey], pieceMaterials[color]);
 
           if (color === 'white') {
-            whitePiecesListMap.set(coord, role);
+            whitePiecesListMap.set(square, role);
           } else if (color === 'black') {
-            blackPiecesListMap.set(coord, role);
+            blackPiecesListMap.set(square, role);
           }
 
           boardPieces.push({
@@ -72,8 +72,6 @@ export class GameProvider {
         }
       });
     });
-
-    console.log('boardPieces from FEN', boardPieces);
 
     // const whiteCountsMap = this.countPieces(whitePiecesListMap, 'white');
     // const blackCountsMap = this.countPieces(blackPiecesListMap, 'black');
@@ -123,7 +121,6 @@ export class GameProvider {
 
       boardPiecesObjectsMap.set(name, mesh);
     });
-    console.log('boardPiecesObjectMap', boardPiecesObjectsMap);
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
 
