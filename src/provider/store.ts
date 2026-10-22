@@ -124,8 +124,6 @@ export class Store {
   });
   movesSubject$ = new SimpleObservable(this.movesSubject);
 
-  // private fenSubject = new BehaviorSubject<cg.FEN>(Store.initialFen);
-  // fenSubject$: Observable<cg.FEN> = this.fenSubject.asObservable();
   setFen = (fen: cg.FEN, lastMove?: cg.Key[]) => {
     if (fen && FenParser.isFen(fen)) {
       const moves: cf.Moves = {
