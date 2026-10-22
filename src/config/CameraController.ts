@@ -7,17 +7,17 @@ import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 type Camera = ChessfieldConfig['camera'];
 
 export class CameraController {
-  private camera: THREE.PerspectiveCamera;
-  private camGroup: THREE.Group;
+  // private camera: THREE.PerspectiveCamera;
+  // private camGroup: THREE.Group;
 
   constructor(
     private cameraProvider: CameraProvider,
     private store: Store,
-    camera: THREE.PerspectiveCamera,
-    camGroup: THREE.Group,
+    private camera: THREE.PerspectiveCamera | null,
+    private camGroup: THREE.Group | null,
   ) {
-    this.camera = camera;
-    this.camGroup = camGroup;
+    // this.camera = camera;
+    // this.camGroup = camGroup;
   }
 
   switchCamera(camera?: Camera): void {

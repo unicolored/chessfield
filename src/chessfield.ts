@@ -42,7 +42,7 @@ export class Chessfield implements ChessfieldApi {
 
   constructor(
     private cfElement: HTMLElement | null,
-    config?: ChessfieldConfig,
+    config: ChessfieldConfig = {},
   ) {
     const store = new Store(config);
     const textService = new TextService(config?.text?.backend ?? 'canvas-sprite');
@@ -110,11 +110,6 @@ export class Chessfield implements ChessfieldApi {
 
       const shapeController = new ShapeController(shapesService, themeProvider);
 
-      // Set initial FEN
-      const initialFen = store.getConfig().fen ?? Store.initialFen;
-      const initialLastMove = store.getConfig().lastMove ?? [];
-      store.setFen(initialFen, initialLastMove);
-
       this.core = core;
       this.themeController = themeController;
       this.configManager = configManager;
@@ -126,13 +121,15 @@ export class Chessfield implements ChessfieldApi {
       this.cameraController = new CameraController(
         cameraProvider,
         store,
-        null as any, // Will be set after start()
-        null as any, // Will be set after start()
+        this.core.getCamera(),
+        this.core.getCamGroup(),
       );
 
-      // Store references for later initialization
-      (this as any)._cameraProvider = cameraProvider;
-      (this as any)._store = store;
+      // Set initial FEN
+      const initialFen = store.getConfig().fen ?? Store.initialFen;
+      const initialLastMove = store.getConfig().lastMove ?? [];
+      this.gameStateManager.setFen(initialFen, initialLastMove);
+      // store.setFen(initialFen, initialLastMove);
 
       this.start();
     } else {
@@ -154,18 +151,6 @@ export class Chessfield implements ChessfieldApi {
     }
 
     await this.core.start();
-
-    // Initialize camera controller with actual camera/camGroup
-    const camera = this.core.getCamera();
-    const camGroup = this.core.getCamGroup();
-    if (camera && camGroup) {
-      this.cameraController = new CameraController(
-        (this as any)._cameraProvider,
-        (this as any)._store,
-        camera,
-        camGroup,
-      );
-    }
   }
 
   public setFen(fen: cg.FEN, lastMove?: cg.Key[]) {

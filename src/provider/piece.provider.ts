@@ -37,7 +37,7 @@ export class PieceProvider {
             piecesGroup.add(mesh);
             // if (mesh.count) {
             const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-            updateMatrix.push({ mesh: mesh, pos, square: boardPiece.square });
+            updateMatrix.push({ mesh, pos, square: boardPiece.square });
             matrixes.set(boardPiece.objectKey, updateMatrix);
             // }
           }
@@ -64,7 +64,6 @@ export class PieceProvider {
     });
 
     matrixes.forEach(meshes => {
-      let index = 0;
       for (const { mesh, pos, square } of meshes) {
         const matrix = new THREE.Matrix4();
 
