@@ -48,7 +48,7 @@ export class GameProvider {
       Array.from(rank).forEach((pieceStr: string, index: number) => {
         if (pieceStr !== '-') {
           const letters = Object.values(cg.files);
-          const coord: cg.Key = `${letters[index]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
+          const square: cg.Key = `${letters[index]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
 
           const color: cg.Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as cg.Color;
 
@@ -62,7 +62,7 @@ export class GameProvider {
           }
 
           boardPieces.push({
-            coord,
+            square,
             role,
             color,
             objectKey: objKey(color, role),
@@ -113,11 +113,11 @@ export class GameProvider {
       mesh.add(spriteMesh);
       mesh.castShadow = false;
       mesh.receiveShadow = false;
-      const name = `${piece.objectKey}-${piece.coord}`;
+      const name = `${piece.objectKey}-${piece.square}`;
       mesh.name = name;
       mesh.userData['color'] = piece.color;
       mesh.userData['role'] = piece.role;
-      mesh.userData['coord'] = piece.coord;
+      mesh.userData['square'] = piece.square;
       // }
       // }
 

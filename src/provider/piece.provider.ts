@@ -1,7 +1,7 @@
 import * as cg from '@lichess-org/chessground/types';
 import * as THREE from 'three/webgpu';
 
-import { cm, coordToVector2 } from '../helper.ts';
+import { cm } from '../helper.ts';
 import * as cf from '../resource/chessfield.types.ts';
 
 import { Store } from './store.ts';
@@ -24,20 +24,20 @@ export class PieceProvider {
     const piecesObjects: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
     console.log(piecesObjects);
 
-    const matrixes: Map<string, { mesh: THREE.Mesh; pos: THREE.Vector3; coord: string }[]> = new Map();
+    const matrixes: Map<string, { mesh: THREE.Mesh; pos: THREE.Vector3; square: cg.Key }[]> = new Map();
 
     boardPieces.forEach((boardPiece: cf.BoardPiece) => {
-      if (boardPiece.coord && boardPiece.objectKey) {
-        const pos = squaresVector3.get(boardPiece.coord);
+      if (boardPiece.square && boardPiece.objectKey) {
+        const pos = squaresVector3.get(boardPiece.square);
         if (pos) {
-          const mesh = piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.coord}`) as THREE.Mesh;
+          const mesh = piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.square}`) as THREE.Mesh;
 
           if (mesh) {
             // const instanceMesh = mesh as THREE.Mesh;
             piecesGroup.add(mesh);
             // if (mesh.count) {
             const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-            updateMatrix.push({ mesh: mesh, pos, coord: boardPiece.coord });
+            updateMatrix.push({ mesh: mesh, pos, square: boardPiece.square });
             matrixes.set(boardPiece.objectKey, updateMatrix);
             // }
           }
@@ -65,7 +65,7 @@ export class PieceProvider {
 
     matrixes.forEach(meshes => {
       let index = 0;
-      for (const { mesh, pos, coord } of meshes) {
+      for (const { mesh, pos, square } of meshes) {
         const matrix = new THREE.Matrix4();
 
         // Check if this piece needs rotation
@@ -93,7 +93,7 @@ export class PieceProvider {
         const meshM = mesh as THREE.Mesh;
         // meshM.position.set(pos.x, pos.y, pos.z);
         matrix.setPosition(pos);
-        // meshM.userData['coord'] = coord;
+        meshM.userData['square'] = square;
         meshM.userData['pos'] = pos;
         meshM.userData['matrix'] = matrix;
         meshM.applyMatrix4(matrix);
@@ -109,13 +109,13 @@ export class PieceProvider {
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-        const coord = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
+        const square = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
 
         const x = cm(rankInt - Store.boardSize / 2 + 0.5);
         const y = cm(Store.squareHeight / 2);
         const z = cm(colInt - Store.boardSize / 2 + 0.5);
 
-        this.piecesPositions.set(coord, new THREE.Vector3(x, y, z));
+        this.piecesPositions.set(square, new THREE.Vector3(x, y, z));
       }
     }
 

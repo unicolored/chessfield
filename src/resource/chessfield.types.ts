@@ -63,7 +63,7 @@ export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
 export type ColorPieceNameObjectMap = Map<string, THREE.Mesh | THREE.InstancedMesh | THREE.Group | undefined>;
 
 export interface BoardPiece extends cg.Piece {
-  coord?: cg.Key | null;
+  square?: cg.Key | null;
   objectKey?: PieceColorRole | null;
   count: number;
 }
