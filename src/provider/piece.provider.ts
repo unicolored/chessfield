@@ -22,24 +22,24 @@ export class PieceProvider {
 
     const squaresVector3: Map<string, THREE.Vector3> = this.getSquaresVector3();
     const piecesObjects: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
+    console.log(piecesObjects);
 
-    const matrixes: Map<string, { mesh: THREE.InstancedMesh; pos: THREE.Vector3; coord: string }[]> =
-      new Map();
+    const matrixes: Map<string, { mesh: THREE.Mesh; pos: THREE.Vector3; coord: string }[]> = new Map();
 
     boardPieces.forEach((boardPiece: cf.BoardPiece) => {
       if (boardPiece.coord && boardPiece.objectKey) {
         const pos = squaresVector3.get(boardPiece.coord);
         if (pos) {
-          const mesh = piecesObjects.get(boardPiece.objectKey);
+          const mesh = piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.coord}`) as THREE.Mesh;
 
           if (mesh) {
-            const instanceMesh = mesh as THREE.Mesh as THREE.InstancedMesh;
-            piecesGroup.add(instanceMesh);
-            if (instanceMesh.count) {
-              const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-              updateMatrix.push({ mesh: instanceMesh, pos, coord: boardPiece.coord });
-              matrixes.set(boardPiece.objectKey, updateMatrix);
-            }
+            // const instanceMesh = mesh as THREE.Mesh;
+            piecesGroup.add(mesh);
+            // if (mesh.count) {
+            const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
+            updateMatrix.push({ mesh: mesh, pos, coord: boardPiece.coord });
+            matrixes.set(boardPiece.objectKey, updateMatrix);
+            // }
           }
         }
       }
@@ -54,7 +54,7 @@ export class PieceProvider {
       'black-pawn-black-pawn': -3,
     };
 
-    const coordAttrs = new Map<THREE.InstancedMesh, THREE.InstancedBufferAttribute>();
+    const coordAttrs = new Map<THREE.Mesh, THREE.InstancedBufferAttribute>();
     matrixes.forEach(meshes => {
       const mesh = meshes[0].mesh;
       const count = mesh.count;
@@ -79,25 +79,25 @@ export class PieceProvider {
           matrix.setPosition(pos);
         }
 
-        if (mesh instanceof THREE.InstancedMesh) {
-          mesh.setMatrixAt(index, matrix);
-
-          const coordAttr = coordAttrs.get(mesh);
-          if (coordAttr) {
-            const vec = coordToVector2(coord);
-            coordAttr.setXY(index, vec.x, vec.y);
-          }
-
-          index++;
-        } else {
-          const meshM = mesh as THREE.Mesh;
-          // meshM.position.set(pos.x, pos.y, pos.z);
-          matrix.setPosition(pos);
-          meshM.userData['coord'] = coord;
-          meshM.userData['pos'] = pos;
-          meshM.userData['matrix'] = matrix;
-          meshM.applyMatrix4(matrix);
-        }
+        // if (mesh instanceof THREE.InstancedMesh) {
+        //   mesh.setMatrixAt(index, matrix);
+        //
+        //   const coordAttr = coordAttrs.get(mesh);
+        //   if (coordAttr) {
+        //     const vec = coordToVector2(coord);
+        //     coordAttr.setXY(index, vec.x, vec.y);
+        //   }
+        //
+        //   index++;
+        // } else {
+        const meshM = mesh as THREE.Mesh;
+        // meshM.position.set(pos.x, pos.y, pos.z);
+        matrix.setPosition(pos);
+        // meshM.userData['coord'] = coord;
+        meshM.userData['pos'] = pos;
+        meshM.userData['matrix'] = matrix;
+        meshM.applyMatrix4(matrix);
+        // }
       }
     });
 
