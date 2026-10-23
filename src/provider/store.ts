@@ -23,6 +23,7 @@ export class Store {
   chessboard!: cf.ExtendedMesh;
   casesGroup!: THREE.Group;
   piecesGroup: THREE.Group | null = null;
+  textGroup!: THREE.Group;
   state!: THREE.InstancedMesh;
   shapesRing!: THREE.InstancedMesh;
   gameState: GameState | null = null;
@@ -172,5 +173,34 @@ export class Store {
     });
 
     return pieces;
+  }
+
+  getTextGroup(): THREE.Group {
+    if (!this.textGroup) {
+      this.textGroup = new THREE.Group();
+      this.getScene().add(this.textGroup);
+    }
+  }
+
+  setTextGroup(textGroup: THREE.Group): void {
+    this.textGroup = textGroup;
+  }
+
+  getScene(backgroundColor: string | number): THREE.Scene {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(backgroundColor);
+
+    return scene;
+  }
+
+  getScene(): THREE.Scene {
+    if (!this.scene) {
+      this.scene = new THREE.Scene();
+      this.getScene().add(this.textGroup);
+    }
+  }
+
+  setScene(scene: THREE.Scene): void {
+    this.scene = scene;
   }
 }

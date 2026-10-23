@@ -5,7 +5,6 @@ import { type CameraProvider } from '../provider/camera.provider.ts';
 import { type ControlsProvider } from '../provider/controls.provider.ts';
 import { type LoadingManagerProvider } from '../provider/loadingManager.provider.ts';
 import { type RendererProvider } from '../provider/renderer.provider.ts';
-import { type SceneProvider } from '../provider/scene.provider.ts';
 import { type Store } from '../provider/store.ts';
 import { type ThemeProvider } from '../provider/theme.provider.ts';
 import { type BoardService } from '../service/board.service.ts';
@@ -26,7 +25,6 @@ export class ChessfieldCore {
     private _cfElement: HTMLElement | null,
     private store: Store,
     private themeProvider: ThemeProvider,
-    private sceneProvider: SceneProvider,
     private cameraProvider: CameraProvider,
     private rendererProvider: RendererProvider,
     private controlsProvider: ControlsProvider,
@@ -55,7 +53,7 @@ export class ChessfieldCore {
 
     // Scene
     const backgroundColor = this.themeProvider.getBackgroundColor();
-    this.store.scene = this.sceneProvider.getScene(backgroundColor);
+    this.store.scene = this.store.getScene(backgroundColor);
 
     // Camera
 

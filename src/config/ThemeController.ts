@@ -46,8 +46,8 @@ export class ThemeController {
     this.container.getStore().chessboard?.setHighlightColor(themeColors.highlight);
 
     // 2. Scene background
-    const bgColor = this.container.getThemeProvider().getBackgroundColor();
-    this.container.getSceneProvider().updateBackground(this.container.getStore().scene!, bgColor);
+    // const bgColor = this.container.getThemeProvider().getBackgroundColor();
+    // this.container.getSceneProvider().updateBackground(this.container.getStore().scene!, bgColor);
 
     // 3. Decor (frame, player indicators) - update via TSL userData
     this.container.getBoardService().updateDecorColors(modeColors);

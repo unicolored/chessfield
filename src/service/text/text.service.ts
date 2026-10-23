@@ -3,13 +3,13 @@ import * as THREE from 'three/webgpu';
 import { CanvasSpriteBackend } from './canvas-sprite.backend.ts';
 import { TroikaTextBackend } from './troika-text.backend.ts';
 import {
-  type TextService as ITextService,
+  type TextServiceInterface,
   type TextBackendType,
   type TextInstance,
   type TextOptions,
 } from './types.ts';
 
-export class TextService implements ITextService {
+export class TextService implements TextServiceInterface {
   private scene: THREE.Scene | null = null;
   private textGroup: THREE.Group | null = null;
   private backend: CanvasSpriteBackend | TroikaTextBackend;
@@ -20,9 +20,14 @@ export class TextService implements ITextService {
     return this._backendType;
   }
 
-  constructor(backendType: TextBackendType = 'canvas-sprite') {
+  constructor(scene: THREE.Scene | null, backendType: TextBackendType = 'canvas-sprite') {
     this._backendType = backendType;
     this.backend = this.createBackend(backendType);
+
+    this.scene = scene;
+    this.textGroup = new THREE.Group();
+    this.textGroup.name = '📝 Player Names';
+    scene?.add(this.textGroup);
   }
 
   private createBackend(type: TextBackendType): CanvasSpriteBackend | TroikaTextBackend {
@@ -33,13 +38,6 @@ export class TextService implements ITextService {
       default:
         return new CanvasSpriteBackend();
     }
-  }
-
-  setScene(scene: THREE.Scene): void {
-    this.scene = scene;
-    this.textGroup = new THREE.Group();
-    this.textGroup.name = '📝 Player Names';
-    scene.add(this.textGroup);
   }
 
   async setBackend(type: TextBackendType): Promise<void> {
@@ -65,12 +63,12 @@ export class TextService implements ITextService {
   }
 
   async add(options: TextOptions): Promise<TextInstance> {
-    if (!this.textGroup) {
-      throw new Error('TextService: scene not set. Call setScene() first.');
-    }
+    // if (!this.textGroup) {
+    //   throw new Error('TextService: scene not set. Call setScene() first.');
+    // }
 
     const instance = await (this.backend as any).create(options);
-    this.textGroup.add(instance.object);
+    // this.textGroup.add(instance.object);
     this.instances.set(instance.id, instance);
     return instance;
   }

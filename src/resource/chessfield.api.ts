@@ -20,7 +20,7 @@ export interface ChessfieldApi {
   switchMode(mode?: Mode): void;
 
   // get current camera position
-  getCurrentCamera(): Camera;
+  getCurrentCamera(): Camera | undefined;
 
   // get current mode (light/dark)
   getCurrentMode(): Mode;

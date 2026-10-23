@@ -80,7 +80,7 @@ export class Chessfield implements ChessfieldApi {
     this.container.getShapeController().clearShape(rank, file, shaderName);
   }
 
-  public setPlayers(players: unknown): void {
-    // this.container.getTextService().setPlayers(players);
-  }
+  // updateBackground(scene: THREE.Scene, backgroundColor: string | number): void {
+  //   scene.background = new THREE.Color(backgroundColor);
+  // }
 }

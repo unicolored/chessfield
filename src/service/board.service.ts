@@ -241,6 +241,7 @@ export class BoardService {
     textService: TextService,
     names: { white: string; black: string },
     textConfig: TextConfig,
+    textGroup: THREE.Group,
   ): Promise<void> {
     const offset = textConfig.offset ?? cm(5.5);
     const fontSize = textConfig.fontSize ?? cm(0.4);
@@ -249,7 +250,7 @@ export class BoardService {
     const fontWeight = textConfig.fontWeight ?? '400';
 
     // White player name - South side (bottom), facing camera
-    await textService.add({
+    const whiteName = await textService.add({
       text: names.white ?? 'White',
       position: new THREE.Vector3(0, cm(0.5), offset),
       fontSize,
@@ -260,9 +261,10 @@ export class BoardService {
       anchorY: 'center',
       rotation: new THREE.Euler(0, Math.PI, 0),
     });
+    textGroup.add(whiteName.object);
 
     // Black player name - North side (top), facing camera
-    await textService.add({
+    const blackName = await textService.add({
       text: names.black ?? 'Black',
       position: new THREE.Vector3(0, cm(0.5), -offset),
       fontSize,
@@ -273,5 +275,7 @@ export class BoardService {
       anchorY: 'center',
       rotation: new THREE.Euler(0, 0, 0),
     });
+
+    textGroup.add(blackName.object);
   }
 }

@@ -48,9 +48,8 @@ export interface TextConfig {
   pixelRatio?: number;
 }
 
-export interface TextService {
+export interface TextServiceInterface {
   readonly backendType: TextBackendType;
-  setScene(scene: THREE.Scene): void;
   setBackend(type: TextBackendType): Promise<void>;
   add(options: TextOptions): Promise<TextInstance>;
   remove(id: string): void;

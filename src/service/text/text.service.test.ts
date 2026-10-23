@@ -79,8 +79,8 @@ describe('TextService', () => {
 
   beforeEach(() => {
     scene = new MockScene();
-    textService = new TextService('canvas-sprite');
-    textService.setScene(scene);
+    textService = new TextService(scene, 'canvas-sprite');
+    // textService.setScene(scene);
   });
 
   afterEach(() => {

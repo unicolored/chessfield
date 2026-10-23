@@ -32,6 +32,7 @@ export class ConfigManager {
           ...currentConfig.text,
           ...partialConfig.text,
         } as TextConfig,
+        textGroup,
       );
     }
 

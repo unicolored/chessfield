@@ -14,6 +14,7 @@ export interface SceneCompositionResult {
   shapesGroup: THREE.Group;
   decorGroup: THREE.Group;
   loaderGroup: THREE.Group;
+  textGroup: THREE.Group;
 }
 
 export class SceneComposer {
@@ -46,6 +47,10 @@ export class SceneComposer {
     shapesGroup.name = '🟣 Shapes Group';
     scene.add(shapesGroup);
 
+    const textGroup = new THREE.Group();
+    textGroup.name = '📝 Player Names';
+    scene.add(textGroup);
+
     // Chessboard
     store.chessboard = boardService.createChessboard();
     store.chessboard.setSquareColors(themeColors.light, themeColors.dark);
@@ -67,7 +72,6 @@ export class SceneComposer {
     shapesGroup.add(store.state);
 
     // Text Service
-    textService.setScene(scene);
     if (store.getConfig().playerNames) {
       boardService.addPlayerNames(
         textService,
@@ -76,6 +80,7 @@ export class SceneComposer {
           black: store.getConfig().playerNames?.black ?? 'Black',
         },
         store.getConfig().text ?? {},
+        textGroup,
       );
     }
 
@@ -94,6 +99,7 @@ export class SceneComposer {
       shapesGroup,
       decorGroup,
       loaderGroup,
+      textGroup,
     };
   }
 }

@@ -9,7 +9,6 @@ import { GameProvider } from '../provider/game.provider';
 import { LoadingManagerProvider } from '../provider/loadingManager.provider';
 import { PieceProvider } from '../provider/piece.provider';
 import { RendererProvider } from '../provider/renderer.provider';
-import { SceneProvider } from '../provider/scene.provider';
 import { Store } from '../provider/store';
 import { ThemeProvider } from '../provider/theme.provider';
 import { BoardService } from '../service/board.service';
@@ -29,7 +28,6 @@ export class Container {
   private cameraProvider!: CameraProvider;
   private rendererProvider!: RendererProvider;
   private controlsProvider!: ControlsProvider;
-  private sceneProvider!: SceneProvider;
   private animationLoop!: AnimationLoop;
 
   private pieceProvider!: PieceProvider;
@@ -60,7 +58,6 @@ export class Container {
         this._cfElement,
         this.getStore(),
         this.getThemeProvider(),
-        this.getSceneProvider(),
         this.getCameraProvider(),
         this.getRendererProvider(),
         this.getControlsProvider(),
@@ -133,14 +130,6 @@ export class Container {
     return this.rendererProvider;
   }
 
-  getSceneProvider(): SceneProvider {
-    if (!this.sceneProvider) {
-      this.sceneProvider = new SceneProvider();
-    }
-
-    return this.sceneProvider;
-  }
-
   getLoadingManagerProvider(): LoadingManagerProvider {
     if (!this.loadingManagerProvider) {
       this.loadingManagerProvider = new LoadingManagerProvider(this._config, this.getGameProvider());
@@ -176,7 +165,8 @@ export class Container {
 
   getTextService(): TextService {
     if (!this.textService) {
-      this.textService = new TextService(this._config?.text?.backend ?? 'canvas-sprite');
+      const backend = this._config?.text?.backend ?? 'canvas-sprite';
+      this.textService = new TextService(this.store.scene, backend);
     }
 
     return this.textService;
