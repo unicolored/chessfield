@@ -1,9 +1,6 @@
 import type * as cg from '@lichess-org/chessground/types';
 
-import { type TextService } from '../service/text/types.ts';
-
 import { type ChessfieldConfig } from './chessfield.config.ts';
-import { type GameState } from './chessfield.state.ts';
 import { type Camera, type Mode, type ThemeColors } from './chessfield.types.ts';
 
 export interface ChessfieldApi {
@@ -31,11 +28,8 @@ export interface ChessfieldApi {
   // get current theme colors (light, dark, highlight, etc.)
   getThemeColors(): ThemeColors;
 
-  setCheck(state: GameState): void;
-  setGameOver(state: GameState): void;
-
-  // Text service for player names
-  readonly textService: TextService;
+  // For player names
+  setPlayers(players: unknown): void;
 
   // click a square programmatically
   // selectSquare(key: cg.Key | null): void;

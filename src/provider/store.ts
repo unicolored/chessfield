@@ -13,6 +13,8 @@ import { SimpleObservable, SimpleSubject } from './observable.ts';
 
 export class Store {
   scene: THREE.Scene | null = null;
+  camera: THREE.PerspectiveCamera | null = null;
+  camGroup: THREE.Group | null = null;
   chessboard: cf.ExtendedMesh | null = null;
   casesGroup: THREE.Group | null = null;
   piecesGroup: THREE.Group | null = null;

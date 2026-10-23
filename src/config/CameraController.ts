@@ -7,17 +7,15 @@ import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 type Camera = ChessfieldConfig['camera'];
 
 export class CameraController {
-  // private camera: THREE.PerspectiveCamera;
-  // private camGroup: THREE.Group;
+  private camera: THREE.PerspectiveCamera | null;
+  private camGroup: THREE.Group | null;
 
   constructor(
     private cameraProvider: CameraProvider,
     private store: Store,
-    private camera: THREE.PerspectiveCamera | null,
-    private camGroup: THREE.Group | null,
   ) {
-    // this.camera = camera;
-    // this.camGroup = camGroup;
+    this.camera = store.camera;
+    this.camGroup = store.camGroup;
   }
 
   switchCamera(camera?: Camera): void {
@@ -41,11 +39,13 @@ export class CameraController {
 
     this.cameraProvider.setConfig({ ...this.store.getConfig(), camera: targetCamera, angle });
 
-    const newPosition = this.cameraProvider.getCameraPosition(targetCamera);
-    this.camera.position.set(newPosition.x, newPosition.y, newPosition.z);
+    if (targetCamera) {
+      const newPosition = this.cameraProvider.getCameraPosition(targetCamera);
+      this.camera?.position.set(newPosition.x, newPosition.y, newPosition.z);
 
-    const newRotation = this.cameraProvider.getCameraGroupRotation(targetCamera, angle);
-    this.camGroup.rotation.set(newRotation.x, newRotation.y, newRotation.z);
+      const newRotation = this.cameraProvider.getCameraGroupRotation(targetCamera, angle);
+      this.camGroup?.rotation.set(newRotation.x, newRotation.y, newRotation.z);
+    }
 
     this.store.setConfig({ ...this.store.getConfig(), camera: targetCamera, angle });
   }

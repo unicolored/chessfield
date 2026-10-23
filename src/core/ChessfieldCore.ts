@@ -2,59 +2,18 @@ import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
-import type { CameraProvider } from '../provider/camera.provider.ts';
-import type { ControlsProvider } from '../provider/controls.provider.ts';
-import { type GameProvider } from '../provider/game.provider.ts';
-import type { LoadingManagerProvider } from '../provider/loadingManager.provider.ts';
-import type { PieceProvider } from '../provider/piece.provider.ts';
-import type { RendererProvider } from '../provider/renderer.provider.ts';
-import type { SceneProvider } from '../provider/scene.provider.ts';
 import type { Store } from '../provider/store.ts';
-import type { ThemeProvider } from '../provider/theme.provider.ts';
-import type { BoardService } from '../service/board.service.ts';
-import type { EventsService } from '../service/events.service.ts';
-import type { GamePieceService } from '../service/game-piece.service.ts';
-import type { ShapesService } from '../service/shapes.service.ts';
-import type { StateService } from '../service/state.service.ts';
-import type { TextService } from '../service/text/text.service.ts';
-
-import { AnimationLoop } from './AnimationLoop.ts';
 import { SceneComposer } from './SceneComposer.ts';
+import { Container } from './Container.ts';
 
 export interface ChessfieldCoreDependencies {
+  container: Container;
   store: Store;
-  gameProvider: GameProvider;
-  pieceProvider: PieceProvider;
-  cameraProvider: CameraProvider;
-  controlsProvider: ControlsProvider;
-  themeProvider: ThemeProvider;
-  rendererProvider: RendererProvider;
-  sceneProvider: SceneProvider;
-  loadingManagerProvider: LoadingManagerProvider;
-  boardService: BoardService;
-  shapesService: ShapesService;
-  stateService: StateService;
-  textService: TextService;
-  gamePieceService: GamePieceService;
 }
 
 export class ChessfieldCore {
+  private container: Container;
   private cfElement: HTMLElement | null;
-  private store: Store;
-  private gameProvider: GameProvider;
-  private pieceProvider: PieceProvider;
-  private cameraProvider: CameraProvider;
-  private controlsProvider: ControlsProvider;
-  private themeProvider: ThemeProvider;
-  private rendererProvider: RendererProvider;
-  private sceneProvider: SceneProvider;
-  private loadingManagerProvider: LoadingManagerProvider;
-  private boardService: BoardService;
-  private shapesService: ShapesService;
-  private stateService: StateService;
-  private textService: TextService;
-  private gamePieceService: GamePieceService;
-  private eventsService: EventsService | null = null;
 
   public readonly canvas: HTMLCanvasElement | null = null;
   public renderer: THREE.WebGPURenderer | null = null;
@@ -63,145 +22,9 @@ export class ChessfieldCore {
   public readonly camera: THREE.PerspectiveCamera | null = null;
   public readonly camGroup: THREE.Group | null = null;
 
-  private animationLoop: AnimationLoop;
-
-  constructor(cfElement: HTMLElement | null, deps: ChessfieldCoreDependencies) {
+  constructor(container: Container, cfElement: HTMLElement | null) {
+    this.container = container;
     this.cfElement = cfElement;
-    this.store = deps.store;
-    this.gameProvider = deps.gameProvider;
-    this.pieceProvider = deps.pieceProvider;
-    this.cameraProvider = deps.cameraProvider;
-    this.controlsProvider = deps.controlsProvider;
-    this.themeProvider = deps.themeProvider;
-    this.rendererProvider = deps.rendererProvider;
-    this.sceneProvider = deps.sceneProvider;
-    this.loadingManagerProvider = deps.loadingManagerProvider;
-    this.boardService = deps.boardService;
-    this.shapesService = deps.shapesService;
-    this.stateService = deps.stateService;
-    this.textService = deps.textService;
-    this.gamePieceService = deps.gamePieceService;
-    this.animationLoop = new AnimationLoop();
-  }
-
-  getCfElement(): HTMLElement | null {
-    return this.cfElement;
-  }
-
-  getStore(): Store {
-    return this.store;
-  }
-
-  getGameProvider(): GameProvider {
-    return this.gameProvider;
-  }
-
-  getPieceProvider(): PieceProvider {
-    return this.pieceProvider;
-  }
-
-  getCameraProvider(): CameraProvider {
-    return this.cameraProvider;
-  }
-
-  getControlsProvider(): ControlsProvider {
-    return this.controlsProvider;
-  }
-
-  getThemeProvider(): ThemeProvider {
-    return this.themeProvider;
-  }
-
-  getRendererProvider(): RendererProvider {
-    return this.rendererProvider;
-  }
-
-  getSceneProvider(): SceneProvider {
-    return this.sceneProvider;
-  }
-
-  getLoadingManagerProvider(): LoadingManagerProvider {
-    return this.loadingManagerProvider;
-  }
-
-  getBoardService(): BoardService {
-    return this.boardService;
-  }
-
-  getShapesService(): ShapesService {
-    return this.shapesService;
-  }
-
-  getStateService(): StateService {
-    return this.stateService;
-  }
-
-  getTextService(): TextService {
-    return this.textService;
-  }
-
-  getGamePieceService(): GamePieceService {
-    return this.gamePieceService;
-  }
-
-  getEventsService(): EventsService | null {
-    return this.eventsService;
-  }
-
-  getRenderer(): THREE.WebGPURenderer | null {
-    return this.renderer;
-  }
-
-  getRenderPipeline(): THREE.RenderPipeline | null {
-    return this.renderPipeline;
-  }
-
-  getControls(): OrbitControls | null {
-    return this.controls;
-  }
-
-  getCamera(): THREE.PerspectiveCamera | null {
-    return this.camera;
-  }
-
-  getCamGroup(): THREE.Group | null {
-    return this.camGroup;
-  }
-
-  setCanvas(canvas: HTMLCanvasElement): void {
-    (this as any).canvas = canvas;
-  }
-
-  setRenderer(renderer: THREE.WebGPURenderer): void {
-    this.renderer = renderer;
-  }
-
-  setRenderPipeline(renderer: THREE.WebGPURenderer): void {
-    this.renderPipeline = new THREE.RenderPipeline(renderer);
-  }
-
-  setControls(controls: OrbitControls): void {
-    (this as any).controls = controls;
-  }
-
-  setCamera(camera: THREE.PerspectiveCamera): void {
-    (this as any).camera = camera;
-  }
-
-  setCamGroup(camGroup: THREE.Group): void {
-    (this as any).camGroup = camGroup;
-  }
-
-  getMovesSubscription(): (() => void) | null {
-    return this.movesSubscription;
-  }
-
-  setMovesSubscription(sub: (() => void) | null): void {
-    this.movesSubscription = sub;
-  }
-
-  getAnimationLoop(): AnimationLoop {
-    return this.animationLoop;
   }
 
   async start(): Promise<void> {
