@@ -5,6 +5,7 @@ import { type Container } from '../core/Container.ts';
 import { coordToVector2, lmToCoordinates } from '../helper.ts';
 import { GameProvider } from '../provider/game.provider.ts';
 import type { GameState } from '../resource/chessfield.state.ts';
+import { BoardPiece } from '../chessfield.ts';
 
 export class GamePieceService {
   private movesSubscription: (() => void) | null = null;
@@ -98,9 +99,10 @@ export class GamePieceService {
 
     const findPieceMesh = (mateKey: string): THREE.Object3D | null => {
       if (!piecesObjects) return null;
-      const boardPiece = boardPieces.find((bp: any) => bp.coord === mateKey);
+      const boardPiece = boardPieces.find((bp: BoardPiece) => bp.square === mateKey);
+      console.log(mateKey, boardPiece);
       if (!boardPiece || !boardPiece.objectKey) return null;
-      return piecesObjects.get(boardPiece.objectKey) ?? null;
+      return piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.square}`) ?? null;
     };
 
     const findStateSprite = (piece: THREE.Object3D) => {

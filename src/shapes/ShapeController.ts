@@ -1,6 +1,7 @@
 import type { ThemeProvider } from '../provider/theme.provider.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { ShapesService } from '../service/shapes.service.ts';
+import { ShaderName } from '../shader/index.ts';
 
 export class ShapeController {
   constructor(
@@ -33,11 +34,13 @@ export class ShapeController {
     }
   }
 
-  clearShape(rank?: number, file?: number, shaderName?: string): void {
-    if (rank !== undefined && file !== undefined) {
-      this.shapesService.clearShape(rank * 8 + file, shaderName);
-    } else {
-      this.shapesService.clearAll(shaderName ? [shaderName] : undefined);
+  clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
+    if (shaderName) {
+      if (rank !== undefined && file !== undefined) {
+        this.shapesService.clearShape(rank * 8 + file, shaderName);
+      } else {
+        this.shapesService.clearAll(shaderName ? [shaderName] : undefined);
+      }
     }
   }
 }
