@@ -14,7 +14,7 @@ export interface Moves {
 
 export interface Move {
   fen: cg.FEN;
-  lastMove?: cg.Key[];
+  lastMove?: cg.Key[] | string[];
 }
 
 export type ColorMaterial = {

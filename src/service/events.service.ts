@@ -4,17 +4,13 @@ import * as THREE from 'three/webgpu';
 import { lmToCoordinates, vector2ToCoord } from '../helper';
 import { type Store } from '../provider/store';
 
-import { type ShapesService } from './shapes.service';
-
 export class EventsService {
   public readonly mouse = new THREE.Vector2();
 
-  private readonly cfElement: HTMLElement;
   private readonly canvas: HTMLCanvasElement;
-  private readonly camera: THREE.Camera;
-  private readonly scene: THREE.Scene;
-  private readonly store: Store;
-  private readonly _shapesService: ShapesService;
+  private readonly camera: THREE.PerspectiveCamera | null;
+  private readonly scene: THREE.Scene | null;
+  // private readonly _shapesService: ShapesService;
 
   private readonly raycaster = new THREE.Raycaster();
   private lastRaycastTime = 0;
@@ -25,22 +21,16 @@ export class EventsService {
   onLeftClickClear: (() => void) | null = null;
   onResize: (() => void) | null = null;
 
-  constructor(params: {
-    cfElement: HTMLElement;
-    canvas: HTMLCanvasElement;
-    camera: THREE.Camera;
-    scene: THREE.Scene;
-    store: Store;
-    shapesService: ShapesService;
-  }) {
-    this.cfElement = params.cfElement;
-    this.canvas = params.canvas;
-    this.camera = params.camera;
-    this.scene = params.scene;
-    this.store = params.store;
-    this._shapesService = params.shapesService;
+  constructor(
+    private readonly store: Store,
+    private readonly cfElement: HTMLElement,
+  ) {
+    this.canvas = store.canvas;
+    this.camera = store.camera;
+    this.scene = store.scene;
+    // this._shapesService = params.shapesService;
     // _shapesService is used by Chessfield callbacks, not directly in this service
-    void this._shapesService;
+    // void this._shapesService;
   }
 
   init(): void {

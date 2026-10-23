@@ -1,10 +1,8 @@
+import { type OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as THREE from 'three/webgpu';
 
-import type { ControlsProvider } from '../provider/controls.provider.ts';
 import type { GameProvider } from '../provider/game.provider.ts';
-import type { RendererProvider } from '../provider/renderer.provider.ts';
 import type { Store } from '../provider/store.ts';
-import type { EventsService } from '../service/events.service.ts';
 import type { ShapesService } from '../service/shapes.service.ts';
 import type { StateService } from '../service/state.service.ts';
 
@@ -13,16 +11,14 @@ export interface DisposableResources {
   shapesService: ShapesService;
   stateService: StateService;
   gameProvider: GameProvider;
-  eventsService: EventsService | null;
-  renderer: RendererProvider['renderer'] | null;
-  controls: ControlsProvider['controls'] | null;
+  renderer: THREE.WebGPURenderer | null;
+  controls: OrbitControls | null;
   canvas: HTMLCanvasElement | null;
 }
 
 export class ResourceDisposal {
   static dispose(resources: DisposableResources): void {
-    const { store, shapesService, stateService, gameProvider, eventsService, renderer, controls, canvas } =
-      resources;
+    const { store, shapesService, stateService, gameProvider, canvas } = resources;
 
     // Clean up moves subscription
     // Note: This is handled by the caller since it's a class property
@@ -34,17 +30,17 @@ export class ResourceDisposal {
     }
 
     // Dispose old renderer (stops animation loop and releases WebGPU resources)
-    if (renderer) {
-      renderer.setAnimationLoop(null);
-      if (typeof renderer.dispose === 'function') {
-        renderer.dispose();
-      }
-    }
+    // if (renderer) {
+    //   renderer.setAnimationLoop(null);
+    //   if (typeof renderer.dispose === 'function') {
+    //     renderer.dispose();
+    //   }
+    // }
 
     // Dispose old controls
-    if (controls) {
-      controls.dispose();
-    }
+    // if (controls) {
+    //   controls.dispose();
+    // }
 
     // Clear service state (NOT dispose - services persist across configUpdates)
     // Old meshes are in the old scene which gets dereferenced and GC'd
@@ -66,8 +62,6 @@ export class ResourceDisposal {
       });
       store.scene.clear();
     }
-
-    eventsService?.dispose();
 
     if (canvas && canvas.parentNode) {
       canvas.remove();

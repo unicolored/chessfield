@@ -1,6 +1,7 @@
 import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
 import type * as cg from '@lichess-org/chessground/types';
+import { type OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
@@ -15,11 +16,15 @@ export class Store {
   scene: THREE.Scene | null = null;
   camera: THREE.PerspectiveCamera | null = null;
   camGroup: THREE.Group | null = null;
-  chessboard: cf.ExtendedMesh | null = null;
-  casesGroup: THREE.Group | null = null;
+  canvas!: HTMLCanvasElement;
+  renderer!: THREE.WebGPURenderer;
+  renderPipeline!: THREE.RenderPipeline;
+  controls!: OrbitControls;
+  chessboard!: cf.ExtendedMesh;
+  casesGroup!: THREE.Group;
   piecesGroup: THREE.Group | null = null;
-  shapesRing: THREE.InstancedMesh | null = null;
-  state: THREE.InstancedMesh | null = null;
+  state!: THREE.InstancedMesh;
+  shapesRing!: THREE.InstancedMesh;
   gameState: GameState | null = null;
   boardPieces: cf.BoardPiece[] = [];
   piecesObjects: cf.ColorPieceNameObjectMap | null = null;
@@ -126,7 +131,7 @@ export class Store {
   });
   movesSubject$ = new SimpleObservable(this.movesSubject);
 
-  setFen = (fen: cg.FEN, lastMove?: cg.Key[]) => {
+  setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[]) => {
     if (fen && FenParser.isFen(fen)) {
       const moves: cf.Moves = {
         moves: [

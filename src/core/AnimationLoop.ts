@@ -1,8 +1,8 @@
+// import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { pass, renderOutput } from 'three/tsl';
 import * as THREE from 'three/webgpu';
-import { bloom } from 'three/addons/tsl/display/BloomNode.js';
-import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
 
 export class AnimationLoop {
   private animationLoop: (() => void) | null = null;

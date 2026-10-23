@@ -1,18 +1,9 @@
-import type { SceneProvider } from '../provider/scene.provider.ts';
-import type { Store } from '../provider/store.ts';
-import type { ThemeProvider } from '../provider/theme.provider.ts';
+import { type Container } from '../core/Container.ts';
+import { Store } from '../provider/store.ts';
 import type { ThemeColors } from '../resource/chessfield.types.ts';
-import type { BoardService } from '../service/board.service.ts';
-import type { StateService } from '../service/state.service.ts';
 
 export class ThemeController {
-  constructor(
-    private themeProvider: ThemeProvider,
-    private store: Store,
-    private boardService: BoardService,
-    private stateService: StateService,
-    private sceneProvider: SceneProvider,
-  ) {}
+  constructor(private readonly container: Container) {}
 
   switchTheme(theme?: string): void {
     let targetTheme: string;
@@ -23,53 +14,53 @@ export class ThemeController {
       }
       targetTheme = theme;
     } else {
-      targetTheme = this.themeProvider.getNextTheme();
+      targetTheme = this.container.getThemeProvider().getNextTheme();
     }
 
-    this.themeProvider.setTheme(targetTheme as any);
+    this.container.getThemeProvider().setTheme(targetTheme as any);
 
-    const currentConfig = this.store.getConfig();
-    this.store.setConfig({ ...currentConfig, theme: targetTheme });
+    const currentConfig = this.container.getStore().getConfig();
+    this.container.getStore().setConfig({ ...currentConfig, theme: targetTheme });
 
     this.applyThemeColors();
   }
 
   switchMode(mode?: 'light' | 'dark'): void {
-    const currentMode = this.store.getConfig().mode ?? 'light';
+    const currentMode = this.container.getStore().getConfig().mode ?? 'light';
     const targetMode = mode ?? (currentMode === 'light' ? 'dark' : 'light');
 
-    this.themeProvider.setMode(targetMode);
+    this.container.getThemeProvider().setMode(targetMode);
 
-    const currentConfig = this.store.getConfig();
-    this.store.setConfig({ ...currentConfig, mode: targetMode });
+    const currentConfig = this.container.getStore().getConfig();
+    this.container.getStore().setConfig({ ...currentConfig, mode: targetMode });
 
     this.applyThemeColors();
   }
 
   applyThemeColors(): void {
-    const themeColors = this.themeProvider.getThemeColors();
-    const modeColors = this.themeProvider.getModeColors();
+    const themeColors = this.container.getThemeProvider().getThemeColors();
+    const modeColors = this.container.getThemeProvider().getModeColors();
 
     // 1. Chessboard colors (TSL uniforms)
-    this.store.chessboard?.setSquareColors(themeColors.light, themeColors.dark);
-    this.store.chessboard?.setHighlightColor(themeColors.highlight);
+    this.container.getStore().chessboard?.setSquareColors(themeColors.light, themeColors.dark);
+    this.container.getStore().chessboard?.setHighlightColor(themeColors.highlight);
 
     // 2. Scene background
-    const bgColor = this.themeProvider.getBackgroundColor();
-    this.sceneProvider.updateBackground(this.store.scene!, bgColor);
+    const bgColor = this.container.getThemeProvider().getBackgroundColor();
+    this.container.getSceneProvider().updateBackground(this.container.getStore().scene!, bgColor);
 
     // 3. Decor (frame, player indicators) - update via TSL userData
-    this.boardService.updateDecorColors(modeColors);
+    this.container.getBoardService().updateDecorColors(modeColors);
 
     // 4. State/Check color
     // this.stateService.updateCheckColor(themeColors.statusCheck);
   }
 
   getThemeColors(): ThemeColors {
-    return this.themeProvider.getThemeColors();
+    return this.container.getThemeProvider().getThemeColors();
   }
 
   getCurrentMode(): 'light' | 'dark' {
-    return this.store.getConfig().mode ?? 'light';
+    return this.container.getStore().getConfig().mode ?? 'light';
   }
 }

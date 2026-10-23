@@ -106,7 +106,6 @@ export class BoardService {
         // SQUARE
         const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
         squareGeometry.scale(0.25, 0.25, 0.25);
-        const theme = Store.themes['blue'];
         const squareMaterial = new THREE.MeshBasicNodeMaterial({
           color: 0xff_00_00,
           wireframe: true,

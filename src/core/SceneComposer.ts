@@ -1,13 +1,12 @@
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
-import type { Store } from '../provider/store.ts';
-import type { ThemeProvider } from '../provider/theme.provider.ts';
-import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import type { BoardService } from '../service/board.service.ts';
-import type { ShapesService } from '../service/shapes.service.ts';
-import type { StateService } from '../service/state.service.ts';
-import type { TextService } from '../service/text/text.service.ts';
+import { type Store } from '../provider/store.ts';
+import { type ThemeProvider } from '../provider/theme.provider.ts';
+import { type BoardService } from '../service/board.service.ts';
+import { type ShapesService } from '../service/shapes.service.ts';
+import { type StateService } from '../service/state.service.ts';
+import { type TextService } from '../service/text/text.service.ts';
 
 export interface SceneCompositionResult {
   chessboardGroup: THREE.Group;
@@ -19,14 +18,14 @@ export interface SceneCompositionResult {
 
 export class SceneComposer {
   static compose(
-    scene: THREE.Scene,
+    // container: Container,
     store: Store,
+    themeProvider: ThemeProvider,
     boardService: BoardService,
     shapesService: ShapesService,
     stateService: StateService,
     textService: TextService,
-    themeProvider: ThemeProvider,
-    config: ChessfieldConfig,
+    scene: THREE.Scene,
     font: Font | null,
   ): SceneCompositionResult {
     const themeColors = themeProvider.getThemeColors();
@@ -69,14 +68,14 @@ export class SceneComposer {
 
     // Text Service
     textService.setScene(scene);
-    if (config.playerNames) {
+    if (store.getConfig().playerNames) {
       boardService.addPlayerNames(
         textService,
         {
-          white: config.playerNames.white ?? 'White',
-          black: config.playerNames.black ?? 'Black',
+          white: store.getConfig().playerNames?.white ?? 'White',
+          black: store.getConfig().playerNames?.black ?? 'Black',
         },
-        config.text ?? {},
+        store.getConfig().text ?? {},
       );
     }
 

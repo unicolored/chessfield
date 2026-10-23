@@ -1,10 +1,10 @@
 import type * as cg from '@lichess-org/chessground/types';
 import type * as THREE from 'three/webgpu';
 
+import { type Container } from '../core/Container.ts';
 import { coordToVector2, lmToCoordinates } from '../helper.ts';
 import { GameProvider } from '../provider/game.provider.ts';
 import type { GameState } from '../resource/chessfield.state.ts';
-import { Container } from '../core/Container.ts';
 
 export class GamePieceService {
   private movesSubscription: (() => void) | null = null;

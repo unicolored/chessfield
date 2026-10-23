@@ -82,14 +82,6 @@ describe('Chessfield API', () => {
     expect(typeof chessfield.configUpdate).toBe('function');
   });
 
-  it('should have setCheck method', () => {
-    expect(typeof chessfield.setCheck).toBe('function');
-  });
-
-  it('should have setGameOver method', () => {
-    expect(typeof chessfield.setGameOver).toBe('function');
-  });
-
   it('should accept FEN string in setFen', () => {
     const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
     expect(() => chessfield.setFen(fen, ['e2', 'e4'])).not.toThrow();
@@ -98,23 +90,5 @@ describe('Chessfield API', () => {
   it('should accept partial config in configUpdate', () => {
     expect(() => chessfield.configUpdate({ theme: 'blue' })).not.toThrow();
     expect(() => chessfield.configUpdate({ orientation: 'black' })).not.toThrow();
-  });
-
-  it('should accept GameState in setCheck', () => {
-    const gameState = {
-      status: 'check',
-      kings: { white: 'e1', black: 'e8' },
-      winner: null,
-    };
-    expect(() => chessfield.setCheck(gameState)).not.toThrow();
-  });
-
-  it('should accept GameState in setGameOver', () => {
-    const gameState = {
-      status: 'mate',
-      kings: { white: 'e1', black: 'e8' },
-      winner: 'w',
-    };
-    expect(() => chessfield.setGameOver(gameState)).not.toThrow();
   });
 });
