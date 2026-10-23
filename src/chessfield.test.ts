@@ -21,6 +21,11 @@ vi.mock('./provider/renderer.provider.ts', () => {
         domElement: document.createElement('canvas'),
       };
     }
+    getRenderPipeline() {
+      return {
+        outputColorTransform: false,
+      };
+    }
   }
   return { RendererProvider: MockRendererProvider };
 });
