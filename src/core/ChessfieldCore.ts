@@ -2,20 +2,9 @@ import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
 import { EventWiring } from '../events/EventWiring.ts';
-import { type CameraProvider } from '../provider/camera.provider.ts';
-import { type ControlsProvider } from '../provider/controls.provider.ts';
-import { type LoadingManagerProvider } from '../provider/loadingManager.provider.ts';
-import { type RendererProvider } from '../provider/renderer.provider.ts';
 import { Store } from '../provider/store.ts';
-import { type ThemeProvider } from '../provider/theme.provider.ts';
-import { type BoardService } from '../service/board.service.ts';
 import { EventsService } from '../service/events.service.ts';
-import { type GamePieceService } from '../service/game-piece.service.ts';
-import { type ShapesService } from '../service/shapes.service.ts';
-import { type StateService } from '../service/state.service.ts';
-import { type TextService } from '../service/text/text.service.ts';
 
-import { type AnimationLoop } from './AnimationLoop.ts';
 import { type Container } from './Container.ts';
 import { SceneComposer } from './SceneComposer.ts';
 
@@ -25,18 +14,6 @@ export class ChessfieldCore {
   constructor(
     private _container: Container,
     private _cfElement: HTMLElement | null,
-    private store: Store,
-    private themeProvider: ThemeProvider,
-    private cameraProvider: CameraProvider,
-    private rendererProvider: RendererProvider,
-    private controlsProvider: ControlsProvider,
-    private animationLoop: AnimationLoop,
-    private loadingManagerProvider: LoadingManagerProvider,
-    private gamePieceService: GamePieceService,
-    private shapesService: ShapesService,
-    private stateService: StateService,
-    private boardService: BoardService,
-    private textService: TextService,
   ) {}
 
   async start(): Promise<void> {
@@ -54,38 +31,44 @@ export class ChessfieldCore {
     };
 
     // Scene
-    const mode = Store.modes[this.store.getConfig().mode ?? 'light'];
+    const mode = Store.modes[this._container.getStore().getConfig().mode ?? 'light'];
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(mode.light);
-    this.store.setScene(scene);
+    this._container.getStore().setScene(scene);
 
     // Camera
     // Save camera references for direct updates
-    this.store.camera = this.cameraProvider.getCamera(sizes);
-    this.store.camGroup = this.cameraProvider.getCameraGroup(this.store.camera);
-    this.store.getScene().add(this.store.camGroup);
+    this._container.getStore().camera = this._container.getCameraProvider().getCamera(sizes);
+    this._container.getStore().camGroup = this._container
+      .getCameraProvider()
+      .getCameraGroup(this._container.getStore().camera);
+    this._container.getStore().getScene().add(this._container.getStore().camGroup);
 
     // Canvas & Renderer
-    this.store.canvas = this.rendererProvider.getCanvas();
-    this.store.renderer = this.rendererProvider.getRenderer(sizes, this.store.canvas);
-    this.store.renderPipeline = this.rendererProvider.getRenderPipeline(this.store.renderer);
+    this._container.getStore().canvas = this._container.getRendererProvider().getCanvas();
+    this._container.getStore().renderer = this._container
+      .getRendererProvider()
+      .getRenderer(sizes, this._container.getStore().canvas);
+    this._container.getStore().renderPipeline = this._container
+      .getRendererProvider()
+      .getRenderPipeline(this._container.getStore().renderer);
 
-    this._cfElement.appendChild(this.store.renderer.domElement);
+    this._cfElement.appendChild(this._container.getStore().renderer.domElement);
 
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
-      this.store.renderer.inspector = new Inspector();
+      this._container.getStore().renderer.inspector = new Inspector();
     }
 
     // Loading Management
-    const font = this.loadingManagerProvider.font;
+    const font = this._container.getLoadingManagerProvider().font;
 
-    this.loadingManagerProvider.getLoadingManager().onError = e => {
+    this._container.getLoadingManagerProvider().getLoadingManager().onError = e => {
       console.error('error', e);
     };
 
-    if (this.store.getScene()) {
-      this.loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(this, font);
+    if (this._container.getStore().getScene()) {
+      this._container.getLoadingManagerProvider().getLoadingManager().onLoad = this.onLoad.bind(this, font);
     }
   }
 
@@ -97,28 +80,30 @@ export class ChessfieldCore {
 
     // 1. Compose the scene: decor, chessboard, etc.
     SceneComposer.compose(
-      this.store,
-      this.themeProvider,
-      this.boardService,
-      this.shapesService,
-      this.stateService,
-      this.textService,
-      this.store.getScene(),
+      this._container.getStore(),
+      this._container.getThemeProvider(),
+      this._container.getBoardService(),
+      this._container.getShapesService(),
+      this._container.getStateService(),
+      this._container.getTextService(),
+      this._container.getStore().getScene(),
       font,
     );
 
     // 2. Update pieces
-    this.gamePieceService.updatePieces();
+    this._container.getGamePieceService().updatePieces();
 
     // . Setup events: interactions with chessboard
     this.setupEvents(this._cfElement);
 
     // Controls
-    this.store.controls = this.controlsProvider.getControls(this.store.camera, this.store.canvas);
+    this._container.getStore().controls = this._container
+      .getControlsProvider()
+      .getControls(this._container.getStore().camera, this._container.getStore().canvas);
 
     // . Start animation loop
-    // this.animationLoop.start(this.store, controls, renderer, renderPipeline, scene, camera);
-    this.animationLoop.start(this.store);
+    // this.animationLoop.start(this._container.getStore(), controls, renderer, renderPipeline, scene, camera);
+    this._container.getAnimationLoop().start(this._container.getStore());
   }
 
   public setupEvents(cfElement: HTMLElement): void {

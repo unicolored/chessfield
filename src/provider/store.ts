@@ -15,7 +15,7 @@ import { SimpleObservable, SimpleSubject } from './observable.ts';
 export class Store {
   private scene: THREE.Scene | null = null;
   camera!: THREE.PerspectiveCamera;
-  camGroup: THREE.Group | null = null;
+  camGroup!: THREE.Group;
   canvas!: HTMLCanvasElement;
   renderer!: THREE.WebGPURenderer;
   renderPipeline!: THREE.RenderPipeline;

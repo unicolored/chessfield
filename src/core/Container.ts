@@ -54,22 +54,7 @@ export class Container {
 
   getCore(): ChessfieldCore {
     if (!this.core) {
-      this.core = new ChessfieldCore(
-        this,
-        this._cfElement,
-        this.getStore(),
-        this.getThemeProvider(),
-        this.getCameraProvider(),
-        this.getRendererProvider(),
-        this.getControlsProvider(),
-        this.getAnimationLoop(),
-        this.getLoadingManagerProvider(),
-        this.getGamePieceService(),
-        this.getShapesService(),
-        this.getStateService(),
-        this.getBoardService(),
-        this.getTextService(),
-      );
+      this.core = new ChessfieldCore(this, this._cfElement);
     }
 
     return this.core;
@@ -167,7 +152,7 @@ export class Container {
   getTextService(): TextService {
     if (!this.textService) {
       const backend = this._config?.text?.backend ?? 'canvas-sprite';
-      this.textService = new TextService(this.store.scene, backend);
+      this.textService = new TextService(this.store.getScene(), backend);
     }
 
     return this.textService;
