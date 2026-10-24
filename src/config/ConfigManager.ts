@@ -36,7 +36,7 @@ export class ConfigManager {
           ...partialConfig.text,
           ...textOptions,
         } as TextConfig,
-        textGroup,
+        this.container.getStore().getTextGroup(),
       );
     }
 
