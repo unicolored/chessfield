@@ -77,10 +77,6 @@ export class ChessfieldCore {
       this.store.renderer.inspector = new Inspector();
     }
 
-    // Controls
-    const controls = this.controlsProvider.getControls(this.store.camera, this.store.canvas);
-    this.store.controls = controls;
-
     // Loading Management
     const font = this.loadingManagerProvider.font;
 
@@ -89,26 +85,17 @@ export class ChessfieldCore {
     };
 
     if (this.store.getScene()) {
-      this.loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
-        this,
-        this.store.camera,
-        this.store.getScene(),
-        font,
-      );
+      this.loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(this, font);
     }
   }
 
-  private async onLoad(
-    camera: THREE.PerspectiveCamera,
-    scene: THREE.Scene,
-    font: Font | null,
-  ): Promise<void> {
+  private async onLoad(font: Font | null): Promise<void> {
     if (!this._cfElement) {
       console.error('Onload: Chessfield HtmlElement is missing.');
       return;
     }
 
-    // 1. Compose the scene
+    // 1. Compose the scene: decor, chessboard, etc.
     SceneComposer.compose(
       this.store,
       this.themeProvider,
@@ -116,7 +103,7 @@ export class ChessfieldCore {
       this.shapesService,
       this.stateService,
       this.textService,
-      scene,
+      this.store.getScene(),
       font,
     );
 
@@ -126,13 +113,12 @@ export class ChessfieldCore {
     // . Setup events: interactions with chessboard
     this.setupEvents(this._cfElement);
 
+    // Controls
+    this.store.controls = this.controlsProvider.getControls(this.store.camera, this.store.canvas);
+
     // . Start animation loop
-    const controls = this.store.controls;
-    const renderer = this.store.renderer;
-    const renderPipeline = this.store.renderPipeline;
-    if (controls && renderer) {
-      this.animationLoop.start(controls, renderer, renderPipeline, scene, camera);
-    }
+    // this.animationLoop.start(this.store, controls, renderer, renderPipeline, scene, camera);
+    this.animationLoop.start(this.store);
   }
 
   public setupEvents(cfElement: HTMLElement): void {

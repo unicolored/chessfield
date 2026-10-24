@@ -1,26 +1,30 @@
-// import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
-import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { pass, renderOutput } from 'three/tsl';
 import * as THREE from 'three/webgpu';
+import { Store } from '../provider/store';
 
 export class AnimationLoop {
   private animationLoop: (() => void) | null = null;
   private timer: THREE.Timer | null = null;
 
   start(
-    controls: OrbitControls,
-    renderer: THREE.WebGPURenderer,
-    renderPipeline: THREE.RenderPipeline,
-    scene: THREE.Scene,
-    camera: THREE.PerspectiveCamera,
+    store: Store,
+    // controls: OrbitControls,
+    // renderer: THREE.WebGPURenderer,
+    // renderPipeline: THREE.RenderPipeline,
+    // scene: THREE.Scene,
+    // camera: THREE.PerspectiveCamera,
   ): void {
+    if (!store.controls || !store.renderer) {
+      return;
+    }
+
     this.timer = new THREE.Timer();
     this.timer.connect(document);
 
     // Scene pass
-    const scenePass = pass(scene, camera);
-    renderPipeline.outputNode = scenePass;
+    const scenePass = pass(store.getScene(), store.camera);
+    store.renderPipeline.outputNode = scenePass;
 
     // Bloom pass
     // const bloomPass = bloom(scenePass);
@@ -29,23 +33,23 @@ export class AnimationLoop {
     // renderPipeline.outputNode = scenePass.add(bloomPass);
 
     // Color transform pass
-    renderPipeline.outputNode = renderOutput(renderPipeline.outputNode);
+    store.renderPipeline.outputNode = renderOutput(store.renderPipeline.outputNode);
 
     // FXAA pass
-    const fxaaPass = fxaa(renderPipeline.outputNode);
-    renderPipeline.outputNode = fxaaPass;
+    const fxaaPass = fxaa(store.renderPipeline.outputNode);
+    store.renderPipeline.outputNode = fxaaPass;
 
     const tick = () => {
       if (!this.timer) return;
       this.timer.update();
 
-      controls.update();
+      store.controls.update();
       // renderer.render(scene, camera);
-      renderPipeline.render();
+      store.renderPipeline.render();
     };
 
     this.animationLoop = tick;
-    renderer.setAnimationLoop(tick);
+    store.renderer.setAnimationLoop(tick);
   }
 
   stop(renderer: THREE.WebGPURenderer): void {
