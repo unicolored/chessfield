@@ -3,10 +3,10 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 
 import { Container } from './core/Container.ts';
-import { Store } from './provider/store.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
+import { type ShaderName } from './shader/index.ts';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
 export * from './resource/chessfield.types';
@@ -25,13 +25,13 @@ export class Chessfield implements ChessfieldApi {
 
     this.container = new Container(this.cfElement, config);
 
-    // Set initial FEN
-    const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
-    const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
-
-    this.setFen(initialFen, initialLastMove);
-
     this.container.getCore().start();
+
+    // // Set initial FEN
+    // const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
+    // const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
+    //
+    // this.setFen(initialFen, initialLastMove);
   }
 
   public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[]) {
@@ -76,11 +76,7 @@ export class Chessfield implements ChessfieldApi {
     this.container.getShapeController().addRing(rank, file, shape);
   }
 
-  public clearShape(rank?: number, file?: number, shaderName?: string): void {
+  public clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
     this.container.getShapeController().clearShape(rank, file, shaderName);
   }
-
-  // updateBackground(scene: THREE.Scene, backgroundColor: string | number): void {
-  //   scene.background = new THREE.Color(backgroundColor);
-  // }
 }

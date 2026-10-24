@@ -1,11 +1,12 @@
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import type * as THREE from 'three/webgpu';
+import * as THREE from 'three/webgpu';
 
+import { EventWiring } from '../events/EventWiring.ts';
 import { type CameraProvider } from '../provider/camera.provider.ts';
 import { type ControlsProvider } from '../provider/controls.provider.ts';
 import { type LoadingManagerProvider } from '../provider/loadingManager.provider.ts';
 import { type RendererProvider } from '../provider/renderer.provider.ts';
-import { type Store } from '../provider/store.ts';
+import { Store } from '../provider/store.ts';
 import { type ThemeProvider } from '../provider/theme.provider.ts';
 import { type BoardService } from '../service/board.service.ts';
 import { EventsService } from '../service/events.service.ts';
@@ -15,13 +16,14 @@ import { type StateService } from '../service/state.service.ts';
 import { type TextService } from '../service/text/text.service.ts';
 
 import { type AnimationLoop } from './AnimationLoop.ts';
+import { type Container } from './Container.ts';
 import { SceneComposer } from './SceneComposer.ts';
 
 export class ChessfieldCore {
   public eventsService!: EventsService;
 
   constructor(
-    // private _container: Container,
+    private _container: Container,
     private _cfElement: HTMLElement | null,
     private store: Store,
     private themeProvider: ThemeProvider,
@@ -43,7 +45,7 @@ export class ChessfieldCore {
       return;
     }
 
-    this._cfElement.classList.add('cf-chessfield-container');
+    this._cfElement.classList.add('cf-chessfield._container');
 
     const rect = this._cfElement.getBoundingClientRect();
     const sizes = {
@@ -52,15 +54,16 @@ export class ChessfieldCore {
     };
 
     // Scene
-    const backgroundColor = this.themeProvider.getBackgroundColor();
-    this.store.scene = this.store.getScene(backgroundColor);
+    const mode = Store.modes[this.store.getConfig().mode ?? 'light'];
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(mode.light);
+    this.store.setScene(scene);
 
     // Camera
-
     // Save camera references for direct updates
     this.store.camera = this.cameraProvider.getCamera(sizes);
     this.store.camGroup = this.cameraProvider.getCameraGroup(this.store.camera);
-    this.store.scene?.add(this.store.camGroup);
+    this.store.getScene().add(this.store.camGroup);
 
     // Canvas & Renderer
     this.store.canvas = this.rendererProvider.getCanvas();
@@ -78,9 +81,6 @@ export class ChessfieldCore {
     const controls = this.controlsProvider.getControls(this.store.camera, this.store.canvas);
     this.store.controls = controls;
 
-    // Create EventsService now that canvas, camera, and scene are available
-    this.eventsService = new EventsService(this.store, this._cfElement);
-
     // Loading Management
     const font = this.loadingManagerProvider.font;
 
@@ -88,11 +88,11 @@ export class ChessfieldCore {
       console.error('error', e);
     };
 
-    if (this.store.scene) {
+    if (this.store.getScene()) {
       this.loadingManagerProvider.getLoadingManager().onLoad = this.onLoad.bind(
         this,
         this.store.camera,
-        this.store.scene,
+        this.store.getScene(),
         font,
       );
     }
@@ -108,7 +108,7 @@ export class ChessfieldCore {
       return;
     }
 
-    // Compose the scene
+    // 1. Compose the scene
     SceneComposer.compose(
       this.store,
       this.themeProvider,
@@ -120,38 +120,30 @@ export class ChessfieldCore {
       font,
     );
 
-    // Update pieces
+    // 2. Update pieces
     this.gamePieceService.updatePieces();
 
-    // Setup events
-    this.eventsService!.onSquareHover = (rank, file) => {
-      this.store.chessboard?.highlightSquareCursor(rank, file);
-    };
+    // . Setup events: interactions with chessboard
+    this.setupEvents(this._cfElement);
 
-    this.eventsService!.onSquareRightClick = this.gamePieceService.addRingAt.bind(this.gamePieceService);
-
-    this.eventsService!.onLeftClickClear = () => this.shapesService.clearAll();
-
-    this.eventsService!.onResize = async () => {
-      if (!this._cfElement) {
-        return;
-      }
-
-      const rect = this._cfElement.getBoundingClientRect();
-      const sizes = { width: rect.width, height: rect.height };
-      this.store.renderer?.setSize(sizes.width, sizes.height);
-      camera.aspect = sizes.width / sizes.height;
-      camera.updateProjectionMatrix();
-    };
-
-    this.eventsService.init();
-
-    // Start animation loop
+    // . Start animation loop
     const controls = this.store.controls;
     const renderer = this.store.renderer;
     const renderPipeline = this.store.renderPipeline;
     if (controls && renderer) {
       this.animationLoop.start(controls, renderer, renderPipeline, scene, camera);
     }
+  }
+
+  public setupEvents(cfElement: HTMLElement): void {
+    // Create EventsService now that canvas, camera, and scene are available
+    const eventsService = new EventsService(this._container.getStore(), cfElement);
+
+    EventWiring.setup(
+      this._container.getStore(),
+      eventsService,
+      this._container.getShapeController(),
+      this._container.getShapesService(),
+    );
   }
 }

@@ -10,7 +10,6 @@ export class EventsService {
   private readonly canvas: HTMLCanvasElement;
   private readonly camera: THREE.PerspectiveCamera | null;
   private readonly scene: THREE.Scene | null;
-  // private readonly _shapesService: ShapesService;
 
   private readonly raycaster = new THREE.Raycaster();
   private lastRaycastTime = 0;
@@ -27,10 +26,7 @@ export class EventsService {
   ) {
     this.canvas = store.canvas;
     this.camera = store.camera;
-    this.scene = store.scene;
-    // this._shapesService = params.shapesService;
-    // _shapesService is used by Chessfield callbacks, not directly in this service
-    // void this._shapesService;
+    this.scene = store.getScene();
   }
 
   init(): void {
@@ -38,7 +34,6 @@ export class EventsService {
     this.cfElement.addEventListener('mouseleave', this.handleMouseLeave);
     this.canvas.addEventListener('contextmenu', this.handleContextMenu);
     this.canvas.addEventListener('mousedown', this.handleMouseDown);
-    window.addEventListener('resize', this.handleResize);
   }
 
   dispose(): void {
@@ -46,7 +41,6 @@ export class EventsService {
     this.cfElement.removeEventListener('mouseleave', this.handleMouseLeave);
     this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
     this.canvas.removeEventListener('mousedown', this.handleMouseDown);
-    window.removeEventListener('resize', this.handleResize);
   }
 
   private handleMouseMove = (event: MouseEvent): void => {
@@ -79,7 +73,7 @@ export class EventsService {
       return;
     }
 
-    const square = this.getSquareFromIntersect(intersects[0]);
+    const square = this.getSquareFromMouse(this.mouse);
     if (square) {
       this.onSquareHover?.(square.rank, square.file);
     }
@@ -148,9 +142,5 @@ export class EventsService {
     if (event.button === 0) {
       this.onLeftClickClear?.();
     }
-  };
-
-  private handleResize = (): void => {
-    this.onResize?.();
   };
 }

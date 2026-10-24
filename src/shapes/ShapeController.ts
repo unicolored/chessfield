@@ -1,7 +1,7 @@
 import type { ThemeProvider } from '../provider/theme.provider.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { ShapesService } from '../service/shapes.service.ts';
-import { ShaderName } from '../shader/index.ts';
+import { type ShaderName } from '../shader/index.ts';
 
 export class ShapeController {
   constructor(

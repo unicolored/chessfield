@@ -3,10 +3,10 @@ import * as THREE from 'three/webgpu';
 import { CanvasSpriteBackend } from './canvas-sprite.backend.ts';
 import { TroikaTextBackend } from './troika-text.backend.ts';
 import {
-  type TextServiceInterface,
   type TextBackendType,
   type TextInstance,
   type TextOptions,
+  type TextServiceInterface,
 } from './types.ts';
 
 export class TextService implements TextServiceInterface {

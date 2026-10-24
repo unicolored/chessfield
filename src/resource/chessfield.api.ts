@@ -28,9 +28,6 @@ export interface ChessfieldApi {
   // get current theme colors (light, dark, highlight, etc.)
   getThemeColors(): ThemeColors;
 
-  // For player names
-  setPlayers(players: unknown): void;
-
   // click a square programmatically
   // selectSquare(key: cg.Key | null): void;
 }

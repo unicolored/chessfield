@@ -1,6 +1,6 @@
 import * as cg from '@lichess-org/chessground/types';
 import { type Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { uniform, vec2, vec4 } from 'three/tsl';
+import { uniform, vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
@@ -40,7 +40,7 @@ export class BoardService {
     // Create a box geometry and material
     const playerGeometry = new THREE.BoxGeometry(cm(8), cm(0.025), cm(0.025));
 
-    const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['light'].dark });
+    const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.modes['light'].dark });
     const player1 = new THREE.Mesh(playerGeometry, player1Material);
     player1.userData['decorType'] = 'player1';
     // Position the box in the scene
@@ -50,7 +50,7 @@ export class BoardService {
     this.decorMeshes.push(player1);
 
     // Create a box geometry and material
-    const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.themes['dark'].dark });
+    const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.modes['dark'].dark });
     const player2 = new THREE.Mesh(playerGeometry, player2Material);
     player2.userData['decorType'] = 'player2';
     // Position the box in the scene
@@ -191,12 +191,15 @@ export class BoardService {
     const uLightColor = uniform(new THREE.Color(1, 0, 0));
     const uDarkColor = uniform(new THREE.Color(0, 1, 0));
 
+    const uHighlightPosCursor = uniform(new THREE.Vector2(-1, -1)); // -1 to hide initially
+
     const cbConfig = {
       lightColor: uLightColor,
       darkColor: uDarkColor,
       highlightColor: uHighlightColor,
       posStart: uHighlightPosStart,
       posEnd: uHighlightPosEnd,
+      posCursor: uHighlightPosCursor,
     };
 
     material.colorNode = vec4(cbShader(cbConfig), 1.0);
@@ -221,13 +224,8 @@ export class BoardService {
       uHighlightColor.value.set(new THREE.Color(hex));
     };
 
-    // chessboard.setHighlightStatusMateColor = function (hex: string | number = '#aa0000') {
-    //   const [r, g, b] = hexToRgb(hex);
-    //   material.userData['u_highlightStatusMateColor'] = vec3(r, g, b);
-    // };
-
     chessboard.highlightSquareCursor = function (x: number, y: number) {
-      material.userData['u_highlightPosCursor'] = vec2(x, y);
+      uHighlightPosCursor.value.set(x, y);
     };
 
     chessboard.rotation.x = -Math.PI / 2;

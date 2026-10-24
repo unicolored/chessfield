@@ -55,6 +55,7 @@ export class Container {
   getCore(): ChessfieldCore {
     if (!this.core) {
       this.core = new ChessfieldCore(
+        this,
         this._cfElement,
         this.getStore(),
         this.getThemeProvider(),

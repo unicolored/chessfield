@@ -77,7 +77,6 @@ declare module 'three/webgpu' {
     setHighlightColor: (hex: string | number) => void;
     setStatusCheckColor: (hex: string | number) => void;
     highlightSquareCursor: (x: number, y: number) => void;
-    // setStatusMate: (x: number, y: number) => void;
     setShape: (index: number, colorHex: string, show?: boolean) => void;
     setShapeAt: (rank: number, file: number, colorHex: string, show?: boolean) => void;
     clearShape: (index?: number) => void;
@@ -86,11 +85,3 @@ declare module 'three/webgpu' {
 }
 
 export type ExtendedMesh = THREE.Mesh;
-// export interface ExtendedMesh extends Mesh {
-// setSquareColors: (light: string | number, dark: string | number) => void;
-// highlightSquareStart: (x: number, y: number) => void;
-// highlightSquareEnd: (x: number, y: number) => void;
-// highlightSquareSelected: (x: number, y: number) => void;
-// setHighlightColor: (hex: string | number) => void;
-// highlightSquareCursor: (x: number, y: number) => void;
-// }

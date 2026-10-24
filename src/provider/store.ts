@@ -13,7 +13,7 @@ import type { Themes } from '../resource/chessfield.types.ts';
 import { SimpleObservable, SimpleSubject } from './observable.ts';
 
 export class Store {
-  scene: THREE.Scene | null = null;
+  private scene: THREE.Scene | null = null;
   camera: THREE.PerspectiveCamera | null = null;
   camGroup: THREE.Group | null = null;
   canvas!: HTMLCanvasElement;
@@ -33,18 +33,7 @@ export class Store {
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
   static readonly initialFen = `${initial} w KQkq - 0 1`;
-  static themes: Themes = {
-    default: {
-      light: '#efd9b5',
-      dark: '#b58862',
-      highlight: '#cdd16a',
-      statusCheck: '#aa0000',
-      selected: '',
-      ring: '#73a45d',
-      ringCtrlAlt: '#f0b24d',
-      ringAlt: '#66799f',
-      ringCtrl: '#b86f60',
-    },
+  static modes: Themes = {
     light: {
       light: '#f5f5f3',
       dark: '#eeebe8',
@@ -58,6 +47,19 @@ export class Store {
       highlight: '',
       statusCheck: '#aa0000',
       selected: '',
+    },
+  };
+  static themes: Themes = {
+    default: {
+      light: '#efd9b5',
+      dark: '#b58862',
+      highlight: '#cdd16a',
+      statusCheck: '#aa0000',
+      selected: '',
+      ring: '#73a45d',
+      ringCtrlAlt: '#f0b24d',
+      ringAlt: '#66799f',
+      ringCtrl: '#b86f60',
     },
     blue: {
       light: '#bfcfdd',
@@ -180,24 +182,22 @@ export class Store {
       this.textGroup = new THREE.Group();
       this.getScene().add(this.textGroup);
     }
+
+    return this.textGroup;
   }
 
   setTextGroup(textGroup: THREE.Group): void {
     this.textGroup = textGroup;
   }
 
-  getScene(backgroundColor: string | number): THREE.Scene {
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(backgroundColor);
-
-    return scene;
-  }
-
   getScene(): THREE.Scene {
     if (!this.scene) {
       this.scene = new THREE.Scene();
-      this.getScene().add(this.textGroup);
+      const mode = Store.modes[this.config?.mode ?? 'light'];
+      this.scene.background = new THREE.Color(mode.light);
     }
+
+    return this.scene;
   }
 
   setScene(scene: THREE.Scene): void {

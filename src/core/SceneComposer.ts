@@ -73,6 +73,10 @@ export class SceneComposer {
 
     // Text Service
     if (store.getConfig().playerNames) {
+      const textColor = themeProvider.getInvertColor();
+      const textOptions = store.getConfig().text ?? {};
+      textOptions.color = textColor;
+
       boardService.addPlayerNames(
         textService,
         {

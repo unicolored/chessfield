@@ -6,6 +6,7 @@ export const cbShader = Fn(
     highlightColor = color('yellow'),
     posStart = vec2(-1, -1),
     posEnd = vec2(-1, -1),
+    posCursor = vec2(-1, -1),
   }) => {
     // TSL Graph
     const squareSize = float(0.125);
@@ -21,6 +22,10 @@ export const cbShader = Fn(
     // Check End Square
     const isEndSquare = floor(coord.x).equal(posEnd.x).and(floor(coord.y).equal(posEnd.y));
 
+    // Check Position of Cursor
+    // posCursor
+    const isCursorSquare = floor(coord.x).equal(posCursor.x).and(floor(coord.y).equal(posCursor.y));
+
     // Determine if square is light or dark
     const isLightSquare = chess.equal(float(0));
 
@@ -32,6 +37,8 @@ export const cbShader = Fn(
     // Chain select() calls to apply highlights
     const mixStart = select(isStartSquare, highlightMix, baseMix);
 
-    return vec3(select(isEndSquare, highlightMix, mixStart));
+    const mixEnd = select(isEndSquare, highlightMix, mixStart);
+
+    return vec3(select(isCursorSquare, highlightMix, mixEnd));
   },
 );

@@ -22,6 +22,9 @@ export class ConfigManager {
     // Handle player names change
     if (partialConfig.playerNames) {
       this.container.getTextService().removeAll();
+      const textColor = this.container.getThemeProvider().getInvertColor();
+      const textOptions = this.container.getStore().getConfig().text ?? {};
+      textOptions.color = textColor;
       await this.container.getBoardService().addPlayerNames(
         this.container.getTextService(),
         {
@@ -31,6 +34,7 @@ export class ConfigManager {
         {
           ...currentConfig.text,
           ...partialConfig.text,
+          ...textOptions,
         } as TextConfig,
         textGroup,
       );
