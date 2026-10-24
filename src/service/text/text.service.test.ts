@@ -29,11 +29,12 @@ class MockVector3 {
 
 class MockEuler {
   copy = vi.fn();
+  set = vi.fn();
 }
 
 class MockSprite {
   position: MockVector3;
-  scale = { set: vi.fn() };
+  scale = { set: vi.fn(), x: 1, y: 1, z: 1 };
   rotation: MockEuler;
   material: any;
   constructor(material: any) {
@@ -61,7 +62,59 @@ class MockColor {
   getHex = () => 0xff_ff_ff;
 }
 
+class MockObject3D {
+  position = new MockVector3(0, 0, 0);
+  rotation = new MockEuler();
+  scale = { set: vi.fn(), x: 1, y: 1, z: 1 };
+  copy = vi.fn();
+  sync = vi.fn();
+  dispose = vi.fn();
+  font = '';
+  text = '';
+  fontSize = 0.4;
+  color = 0xff_ff_ff;
+  anchorX = 'center';
+  anchorY = 'center';
+  maxWidth = undefined;
+  fontWeight = '400';
+  outlineWidth = 0;
+  outlineColor = 0x00_00_00;
+}
+
+// Mock Troika Text constructor
+class MockTroikaText extends MockObject3D {}
+
 // Apply mocks using vi.doMock to avoid hoisting issues
+vi.doMock('three', () => ({
+  Scene: MockScene,
+  Group: MockGroup,
+  Vector3: MockVector3,
+  Euler: MockEuler,
+  Sprite: MockSprite,
+  SpriteMaterial: MockSpriteMaterial,
+  CanvasTexture: MockCanvasTexture,
+  Color: MockColor,
+  Object3D: MockObject3D,
+  Texture: vi.fn(),
+  LinearFilter: 1001,
+  RGBAFormat: 1022,
+  FloatType: 1024,
+  DynamicDrawUsage: 35_048,
+  InstancedBufferGeometry: vi.fn(),
+  Sphere: vi.fn(),
+  Box3: vi.fn(),
+  InstancedBufferAttribute: vi.fn(),
+  PlaneGeometry: vi.fn(),
+  Vector2: vi.fn(),
+  Vector4: vi.fn(),
+  Matrix3: vi.fn(),
+  Mesh: vi.fn(),
+  MeshBasicMaterial: vi.fn(),
+  DoubleSide: 2,
+  Matrix4: vi.fn(),
+  DataTexture: vi.fn(),
+}));
+
 vi.doMock('three/webgpu', () => ({
   Scene: MockScene,
   Group: MockGroup,
@@ -73,6 +126,35 @@ vi.doMock('three/webgpu', () => ({
   Color: MockColor,
 }));
 
+vi.doMock('troika-three-text', () => ({
+  Text: MockTroikaText,
+}));
+
+vi.doMock('webgl-sdf-generator', () => ({
+  __esModule: true,
+  default: vi.fn(() =>
+    Promise.resolve({
+      generate: vi.fn(),
+      dispose: vi.fn(),
+    }),
+  ),
+}));
+
+vi.doMock('troika-worker-utils', () => ({
+  defineWorkerModule: vi.fn(),
+  terminateWorker: vi.fn(),
+}));
+
+vi.doMock('bidi-js', () => ({
+  __esModule: true,
+  default: vi.fn(),
+}));
+
+vi.doMock('troika-three-utils', () => ({
+  createDerivedMaterial: vi.fn(),
+  voidMainRegExp: /void\s+main\s*\(/,
+}));
+
 describe('TextService', () => {
   let scene: any;
   let textService: TextService;
@@ -80,7 +162,6 @@ describe('TextService', () => {
   beforeEach(() => {
     scene = new MockScene();
     textService = new TextService(scene, 'canvas-sprite');
-    // textService.setScene(scene);
   });
 
   afterEach(() => {
