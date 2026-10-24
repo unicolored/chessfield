@@ -1,7 +1,8 @@
 import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
 import { pass, renderOutput } from 'three/tsl';
 import * as THREE from 'three/webgpu';
-import { Store } from '../provider/store';
+
+import { type Store } from '../provider/store';
 
 export class AnimationLoop {
   private animationLoop: (() => void) | null = null;
