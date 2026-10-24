@@ -8,10 +8,19 @@ import { GameProvider } from '../provider/game.provider.ts';
 import type { GameState } from '../resource/chessfield.state.ts';
 
 export class GamePieceService {
+  private fenSubscription: (() => void) | null = null;
   private movesSubscription: (() => void) | null = null;
   // private foundLastMove: { lastMove: cg.Key[] } | null = null;
 
   constructor(private container: Container) {}
+
+  getFenSubscription(): (() => void) | null {
+    return this.fenSubscription;
+  }
+
+  setFenSubscription(sub: (() => void) | null): void {
+    this.fenSubscription = sub;
+  }
 
   getMovesSubscription(): (() => void) | null {
     return this.movesSubscription;
@@ -30,15 +39,18 @@ export class GamePieceService {
   // }
 
   updatePieces(): void {
-    if (this.movesSubscription) {
-      this.movesSubscription();
+    if (this.fenSubscription) {
+      this.fenSubscription();
     }
 
-    this.movesSubscription = this.container.getStore().movesSubject$.subscribe((moves: any) => {
-      // Robust cleanup: remove previous pieces group from scene
+    this.fenSubscription = this.container.getStore().fenSubject$.subscribe((moves: any) => {
+      // TODO: create a unique fen id, linked to lichess game
+      // and that will allow to save all the moves
+      // so an UI on chesspop will allow to go back and forth into the moves list
+
       const piecesGroup = this.container.getStore().piecesGroup;
       if (piecesGroup) {
-        this.container.getStore().scene?.remove(piecesGroup);
+        this.container.getStore().getScene()?.remove(piecesGroup);
         piecesGroup.clear();
       }
 
@@ -65,7 +77,67 @@ export class GamePieceService {
       this.container.getStore().piecesGroup = newPiecesGroup;
       this.container.getStore().boardPieces = boardPieces;
       this.container.getStore().piecesObjects = this.container.getStore().getBoardPiecesObjectsMap();
-      this.container.getStore().scene?.add(newPiecesGroup);
+      this.container.getStore().getScene().add(newPiecesGroup);
+
+      // Handle game state
+      const gameState = this.container.getStore().gameState;
+
+      if (gameState) {
+        if (gameState.mate || gameState.draw) {
+          this.addShapes(gameState);
+        }
+
+        if (gameState.check) {
+          gameState.check.forEach((key: cg.Key | string) => {
+            if (key) {
+              const kingVec = coordToVector2(key);
+              this.container.getStateService().setStateAt(kingVec.x, kingVec.y);
+            }
+          });
+        }
+      } else {
+        this.container.getStateService().clearAll(['check']);
+      }
+    });
+
+    if (this.movesSubscription) {
+      this.movesSubscription();
+    }
+
+    this.movesSubscription = this.container.getStore().movesSubject$.subscribe((moves: any) => {
+      // TODO: Move just one piece
+
+      // Robust cleanup: remove previous pieces group from scene
+      const piecesGroup = this.container.getStore().piecesGroup;
+      if (piecesGroup) {
+        this.container.getStore().getScene()?.remove(piecesGroup);
+        piecesGroup.clear();
+      }
+
+      const move = GameProvider.findLastMove(moves.moves);
+      // this.foundLastMove = move?.lastMove ? { lastMove: move.lastMove } : null;
+
+      let boardPieces: any[] = [];
+
+      if (move) {
+        boardPieces = this.container.getGameProvider().initGamePieces(move);
+
+        const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
+        if (lastMoveToCoordinates.length > 1) {
+          this.container
+            .getStore()
+            .chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+          this.container
+            .getStore()
+            .chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+        }
+      }
+
+      const newPiecesGroup = this.container.getPieceProvider().updateGamePositions(boardPieces);
+      this.container.getStore().piecesGroup = newPiecesGroup;
+      this.container.getStore().boardPieces = boardPieces;
+      this.container.getStore().piecesObjects = this.container.getStore().getBoardPiecesObjectsMap();
+      this.container.getStore().getScene().add(newPiecesGroup);
 
       // Handle game state
       const gameState = this.container.getStore().gameState;

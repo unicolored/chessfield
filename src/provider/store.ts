@@ -124,6 +124,16 @@ export class Store {
     this.config = config;
   }
 
+  private fenSubject = new SimpleSubject<cf.Moves>({
+    moves: [
+      {
+        fen: Store.initialFen,
+        lastMove: [],
+      },
+    ],
+  });
+  fenSubject$ = new SimpleObservable(this.fenSubject);
+
   private movesSubject = new SimpleSubject<cf.Moves>({
     moves: [
       {
@@ -135,6 +145,21 @@ export class Store {
   movesSubject$ = new SimpleObservable(this.movesSubject);
 
   setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[]) => {
+    if (fen && FenParser.isFen(fen)) {
+      const moves: cf.Moves = {
+        moves: [
+          {
+            fen,
+            lastMove,
+          },
+        ],
+      };
+
+      this.movesSubject.next(moves);
+    }
+  };
+
+  setMove = (lastMove: cg.Key[] | string[], fen: cg.FEN) => {
     if (fen && FenParser.isFen(fen)) {
       const moves: cf.Moves = {
         moves: [

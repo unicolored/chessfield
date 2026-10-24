@@ -60,7 +60,8 @@ try {
       chess.move(move);
       const history = chess.history({ verbose: true });
       const lastMove = [history[history.length - 1].from, history[history.length - 1].to];
-      board1.setFen(chess.fen(), lastMove);
+      // board1.setFen(chess.fen(), lastMove);
+      board1.setMove(lastMove, chess.fen());
 
       if (chess.isGameOver()) {
         if (chess.isCheckmate()) {

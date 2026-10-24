@@ -39,6 +39,11 @@ export class Chessfield implements ChessfieldApi {
     this.container.getStore().setFen(fen, lastMove);
   }
 
+  public setMove(lastMove?: cg.Key[] | string[], fen: cg.FEN) {
+    this.container.getStore().gameState = null;
+    this.container.getStore().setMove(lastMove, fen);
+  }
+
   public setState(state: GameState): void {
     this.container.getStore().gameState = state;
     this.container.getGamePieceService().updatePieces();
