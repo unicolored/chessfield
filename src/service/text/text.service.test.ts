@@ -93,7 +93,7 @@ describe('TextService', () => {
   });
 
   it('should instantiate with troika-text backend', () => {
-    const service = new TextService('troika-text');
+    const service = new TextService(null, 'troika-text');
     expect(service.backendType).toBe('troika-text');
     service.dispose();
   });
