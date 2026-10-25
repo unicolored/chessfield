@@ -1,6 +1,6 @@
 import { FenParser } from '@chess-fu/fen-parser';
 import { initial } from '@lichess-org/chessground/fen';
-import type * as cg from '@lichess-org/chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import { type OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as THREE from 'three/webgpu';
 
@@ -22,7 +22,7 @@ export class Store {
   controls!: OrbitControls;
   chessboard!: cf.ExtendedMesh;
   casesGroup!: THREE.Group;
-  piecesGroup: THREE.Group | null = null;
+  piecesGroup!: THREE.Group;
   textGroup!: THREE.Group;
   state!: THREE.InstancedMesh;
   shapesRing!: THREE.InstancedMesh;
@@ -30,6 +30,7 @@ export class Store {
   gameState: GameState | null = null;
   private boardPieces: cf.BoardPiece[] = [];
   piecesObjects: cf.ColorPieceNameObjectMap | null = null;
+  private squarePositionsVec3!: Map<string, THREE.Vector3>;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
@@ -98,7 +99,6 @@ export class Store {
 
   private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
 
-  // private loader: GLTFLoader;
   private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
 
   setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry>) {
@@ -135,16 +135,6 @@ export class Store {
   });
   fenSubject$ = new SimpleObservable(this.fenSubject);
 
-  // private movesSubject = new SimpleSubject<cf.Moves>({
-  //   moves: [
-  //     {
-  //       fen: Store.initialFen,
-  //       lastMove: [],
-  //     },
-  //   ],
-  // });
-  // movesSubject$ = new SimpleObservable(this.movesSubject);
-
   setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null): void => {
     if (!FenParser.isFen(fen)) {
       return;
@@ -155,8 +145,17 @@ export class Store {
       lastMove,
     };
 
+    console.log('setFen', fen, lastMove, previousFen);
+
     if (!previousFen) {
       this.moves = [];
+      this.moves.push({
+        fen: Store.initialFen,
+      });
+    } else if (this.moves.length < 1) {
+      this.moves.push({
+        fen: previousFen,
+      });
     }
 
     this.moves.push(move);
@@ -165,26 +164,10 @@ export class Store {
       moves: this.moves,
     };
 
-    console.log(this.moves);
+    console.log('setFen after moves', this.moves);
 
     this.fenSubject.next(moves);
   };
-
-  //
-  // setMove = (lastMove: cg.Key[] | string[], fen: cg.FEN) => {
-  //   if (fen && FenParser.isFen(fen)) {
-  //     const moves: cf.Moves = {
-  //       moves: [
-  //         {
-  //           fen,
-  //           lastMove,
-  //         },
-  //       ],
-  //     };
-  //
-  //     this.movesSubject.next(moves);
-  //   }
-  // };
 
   getBoardPieces(): cf.BoardPiece[] {
     return this.boardPieces;
@@ -247,5 +230,38 @@ export class Store {
 
   setScene(scene: THREE.Scene): void {
     this.scene = scene;
+  }
+
+  getSquarePositionsVec3(): Map<string, THREE.Vector3> {
+    return this.squarePositionsVec3;
+  }
+
+  initSquarePositionsVec3(): void {
+    const piecesPositions = new Map<string, THREE.Vector3>();
+
+    for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
+      for (let colInt = 0; colInt < Store.boardSize; colInt++) {
+        const square = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
+
+        const x = cm(rankInt - Store.boardSize / 2 + 0.5);
+        const y = cm(Store.squareHeight / 2);
+        const z = cm(colInt - Store.boardSize / 2 + 0.5);
+
+        piecesPositions.set(square, new THREE.Vector3(x, y, z));
+      }
+    }
+
+    this.squarePositionsVec3 = piecesPositions;
+  }
+
+  getPiecesGroup(): THREE.Group {
+    if (!this.piecesGroup) {
+      // Pieces Group
+      this.piecesGroup = new THREE.Group();
+      this.piecesGroup.name = '🟢 Pièces Group';
+      this.getScene().add(this.piecesGroup);
+    }
+
+    return this.piecesGroup;
   }
 }

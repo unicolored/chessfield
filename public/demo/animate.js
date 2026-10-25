@@ -38,7 +38,7 @@ try {
       if (chess.isCheckmate()) {
         // Winner is the OPPOSITE of the side to move (they just got checkmated)
         const winner = chess.turn() === WHITE ? BLACK : WHITE;
-        const loser = winner === WHITE ? BLACK : WHITE;
+        // const loser = winner === WHITE ? BLACK : WHITE;
         console.log(`Checkmate! Winner: ${winner}`);
 
         const findBlackKing = chess.findPiece({ type: KING, color: BLACK });

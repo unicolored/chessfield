@@ -1,10 +1,9 @@
-import * as cg from '@lichess-org/chessground/types';
-import * as THREE from 'three/webgpu';
+import type * as cg from '@lichess-org/chessground/types';
+import type * as THREE from 'three/webgpu';
 
-import { cm } from '../helper.ts';
 import * as cf from '../resource/chessfield.types.ts';
 
-import { Store } from './store.ts';
+import { type Store } from './store.ts';
 
 export class PieceProvider {
   static getPiece(pieceId: string): cg.Role {
@@ -12,20 +11,15 @@ export class PieceProvider {
     return cf.PiecesTypes[stdPiece];
   }
 
-  private piecesPositions!: Map<string, THREE.Vector3>;
-
   constructor(private readonly store: Store) {}
 
-  updateGamePositions(boardPieces: cf.BoardPiece[]): THREE.Group {
-    const piecesGroup = new THREE.Group();
-    piecesGroup.name = '🟢 Pièces Group';
-
-    const squaresVector3: Map<string, THREE.Vector3> = this.getSquaresVector3();
+  updateGamePositions(boardPieces: cf.BoardPiece[], removePieces: cf.BoardPiece[]): void {
+    const squaresVector3: Map<string, THREE.Vector3> = this.store.getSquarePositionsVec3();
     const piecesObjects: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
     // const matrixes: Map<string, { mesh: THREE.Mesh; pos: THREE.Vector3; square: cg.Key }[]> = new Map();
 
-    const coordAttrs = new Map<THREE.Mesh, THREE.InstancedBufferAttribute>();
+    // const coordAttrs = new Map<THREE.Mesh, THREE.InstancedBufferAttribute>();
 
     // Pieces Rotations
     const pieceRotations: { [k: string]: number } = {
@@ -36,19 +30,32 @@ export class PieceProvider {
       'black-pawn-black-pawn': -3,
     };
 
+    console.log(removePieces);
+
+    this.store.getPieces().forEach((t: THREE.Mesh) => {
+      const matchRemovePiece = removePieces.find(p => {
+        console.log(p.square, t.userData['square'], `${p.square}` === t.userData['square']);
+        return `${p.square}` === t.userData['square'];
+      });
+      if (matchRemovePiece) {
+        // TODO: remove mesh
+        t.removeFromParent();
+      }
+    });
+
     boardPieces.forEach((boardPiece: cf.BoardPiece) => {
       if (boardPiece.square && boardPiece.objectKey) {
         const pos = squaresVector3.get(boardPiece.square);
         if (pos) {
-          const mesh = piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.square}`) as THREE.Mesh;
+          const mesh = piecesObjects.get(`${boardPiece.square}`) as THREE.Mesh;
 
           if (mesh) {
-            piecesGroup.add(mesh);
+            this.store.getPiecesGroup().add(mesh);
 
-            const count = mesh.count;
-            const attr = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
-            mesh.geometry.setAttribute('instanceCoord', attr);
-            coordAttrs.set(mesh, attr);
+            // const count = mesh.count;
+            // const attr = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+            // mesh.geometry.setAttribute('instanceCoord', attr);
+            // coordAttrs.set(mesh, attr);
             // const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
             // updateMatrix.push({ mesh, pos, square: boardPiece.square });
             // matrixes.set(boardPiece.objectKey, updateMatrix);
@@ -103,24 +110,24 @@ export class PieceProvider {
     //   }
     // });
 
-    return piecesGroup;
+    // return piecesGroup;
   }
 
-  private getSquaresVector3(): Map<string, THREE.Vector3> {
-    this.piecesPositions = new Map<string, THREE.Vector3>();
-
-    for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
-      for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-        const square = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
-
-        const x = cm(rankInt - Store.boardSize / 2 + 0.5);
-        const y = cm(Store.squareHeight / 2);
-        const z = cm(colInt - Store.boardSize / 2 + 0.5);
-
-        this.piecesPositions.set(square, new THREE.Vector3(x, y, z));
-      }
-    }
-
-    return this.piecesPositions;
-  }
+  // getSquaresVector3(): Map<string, THREE.Vector3> {
+  //   const piecesPositions = new Map<string, THREE.Vector3>();
+  //
+  //   for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
+  //     for (let colInt = 0; colInt < Store.boardSize; colInt++) {
+  //       const square = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
+  //
+  //       const x = cm(rankInt - Store.boardSize / 2 + 0.5);
+  //       const y = cm(Store.squareHeight / 2);
+  //       const z = cm(colInt - Store.boardSize / 2 + 0.5);
+  //
+  //       this.piecesPositions.set(square, new THREE.Vector3(x, y, z));
+  //     }
+  //   }
+  //
+  //   this.store.setSquarePositionsVec3(piecesPositions);
+  // }
 }

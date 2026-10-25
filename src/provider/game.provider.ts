@@ -28,7 +28,7 @@ export class GameProvider {
 
   constructor(private store: Store) {}
 
-  private setBoardPieces(move?: cf.Move): BoardPiece[] {
+  setBoardPieces(move?: cf.Move | null): BoardPiece[] {
     if (!move) {
       return [];
     }
@@ -83,21 +83,33 @@ export class GameProvider {
     return boardPieces;
   }
 
-  compareToPreviousFen(previousMove: cf.Move, move: cf.Move) {
+  compareToPreviousFen(
+    previousMove: cf.Move | null,
+    move: cf.Move,
+  ): Map<cf.Square, { previous: BoardPiece | undefined; now: BoardPiece | undefined }> {
     const previousBoardPieces = this.setBoardPieces(previousMove);
     const boardPieces = this.setBoardPieces(move);
 
     const map = new Map<cf.Square, { previous: BoardPiece | undefined; now: BoardPiece | undefined }>();
+    const mapDiff = new Map<cf.Square, { previous: BoardPiece | undefined; now: BoardPiece | undefined }>();
 
-    // Runtime loop:
     for (const square of cf.SQUARES) {
-      map.set(square, {
-        previous: previousBoardPieces.find(b => b.square === square),
-        now: boardPieces.find(b => b.square === square),
-      });
+      const previous = previousBoardPieces.find(b => b.square === square);
+      const previousId = `${previous?.square}-${previous?.objectKey}`;
+      const now = boardPieces.find(b => b.square === square);
+      const nowId = `${now?.square}-${now?.objectKey}`;
+      map.set(square, { previous, now });
+      if (nowId !== previousId)
+        mapDiff.set(square, {
+          previous,
+          now,
+        });
     }
 
     console.log(map);
+    console.log(mapDiff);
+
+    return mapDiff;
   }
 
   initGamePieces(move: cf.Move): cf.BoardPiece[] {
@@ -136,15 +148,12 @@ export class GameProvider {
       mesh.add(spriteMesh);
       mesh.castShadow = false;
       mesh.receiveShadow = false;
-      const name = `${piece.objectKey}-${piece.square}`;
-      mesh.name = name;
+      mesh.name = `${piece.objectKey}-${piece.square}`;
       mesh.userData['color'] = piece.color;
       mesh.userData['role'] = piece.role;
       mesh.userData['square'] = piece.square;
-      // }
-      // }
 
-      boardPiecesObjectsMap.set(name, mesh);
+      boardPiecesObjectsMap.set(`${piece.square}`, mesh);
     });
 
     this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
@@ -153,7 +162,7 @@ export class GameProvider {
     return boardPieces;
   }
 
-  moveGamePieces(previousMove: cf.Move, move: cf.Move): cf.BoardPiece[] {
+  moveGamePieces(move: cf.Move, previousMove?: cf.Move | null): cf.BoardPiece[] {
     const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
 
     const boardPiecesUpdated: BoardPiece[] = [];

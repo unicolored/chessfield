@@ -3,6 +3,7 @@ import './chessfield.css';
 import type * as cg from '@lichess-org/chessground/types';
 
 import { Container } from './core/Container.ts';
+import { Store } from './provider/store.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
@@ -24,18 +25,18 @@ export class Chessfield implements ChessfieldApi {
     }
 
     this.container = new Container(this.cfElement, config);
+    this.container.getStore().initSquarePositionsVec3();
 
     this.container.getCore().start();
 
-    // // Set initial FEN
-    // const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
-    // const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
-    //
-    // this.setFen(initialFen, initialLastMove);
+    // Set initial FEN
+    const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
+    const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
+
+    this.setFen(initialFen, initialLastMove, Store.initialFen);
   }
 
-  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null) {
-    console.log(previousFen, fen);
+  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN = Store.initialFen) {
     this.container.getStore().gameState = null;
     this.container.getStore().setFen(fen, lastMove, previousFen);
   }
