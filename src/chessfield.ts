@@ -34,15 +34,16 @@ export class Chessfield implements ChessfieldApi {
     // this.setFen(initialFen, initialLastMove);
   }
 
-  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[]) {
+  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null) {
+    console.log(previousFen, fen);
     this.container.getStore().gameState = null;
-    this.container.getStore().setFen(fen, lastMove);
+    this.container.getStore().setFen(fen, lastMove, previousFen);
   }
 
-  public setMove(lastMove?: cg.Key[] | string[], fen: cg.FEN) {
-    this.container.getStore().gameState = null;
-    this.container.getStore().setMove(lastMove, fen);
-  }
+  // public setMove(lastMove: cg.Key[] | string[], fen: cg.FEN) {
+  //   this.container.getStore().gameState = null;
+  //   this.container.getStore().setMove(lastMove, fen);
+  // }
 
   public setState(state: GameState): void {
     this.container.getStore().gameState = state;

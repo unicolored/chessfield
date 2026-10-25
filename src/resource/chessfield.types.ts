@@ -1,4 +1,4 @@
-import type * as cg from '@lichess-org/chessground/types';
+import * as cg from '@lichess-org/chessground/types';
 import type * as THREE from 'three/webgpu';
 
 export type Mode = 'light' | 'dark';
@@ -60,13 +60,17 @@ export interface ThemeColors {
 }
 
 export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
-export type ColorPieceNameObjectMap = Map<string, THREE.Mesh | THREE.InstancedMesh | THREE.Group | undefined>;
+export type ColorPieceNameObjectMap = Map<string, THREE.Mesh | THREE.Group | undefined>;
 
 export interface BoardPiece extends cg.Piece {
   square?: cg.Key | null;
   objectKey?: PieceColorRole | null;
   count: number;
 }
+
+export const SQUARES = cg.files.flatMap(file => cg.ranks.map(rank => `${file}${rank}`));
+
+export type Square = (typeof SQUARES)[number]; // "a1" | "a2" | ... | "h8"
 
 declare module 'three/webgpu' {
   interface Mesh {

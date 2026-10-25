@@ -75,10 +75,10 @@ export class BoardService {
           material.colorNode = vec4(new THREE.Color(modeColors.dark), 1.0);
           break;
         case 'player1':
-          material.colorNode = vec4(new THREE.Color(Store.themes['light'].dark), 1.0);
+          material.colorNode = vec4(new THREE.Color(Store.modes['light'].dark), 1.0);
           break;
         case 'player2':
-          material.colorNode = vec4(new THREE.Color(Store.themes['dark'].dark), 1.0);
+          material.colorNode = vec4(new THREE.Color(Store.modes['dark'].dark), 1.0);
           break;
       }
     }

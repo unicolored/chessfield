@@ -24,10 +24,10 @@ export class ResourceDisposal {
     // Note: This is handled by the caller since it's a class property
 
     // Clean up pieces group from current scene
-    if (store.piecesGroup && store.scene) {
-      store.scene.remove(store.piecesGroup);
-      store.piecesGroup.clear();
-    }
+    // if (store.piecesGroup && store.getScene()) {
+    //   store.getScene().remove(store.piecesGroup);
+    //   store.piecesGroup.clear();
+    // }
 
     // Dispose old renderer (stops animation loop and releases WebGPU resources)
     // if (renderer) {
@@ -49,8 +49,8 @@ export class ResourceDisposal {
     gameProvider?.disposeOldMeshes?.();
 
     // Clean up scene - traverse and dispose remaining geometries/materials
-    if (store.scene) {
-      store.scene.traverse(object => {
+    if (store.getScene()) {
+      store.getScene().traverse(object => {
         if (object instanceof THREE.Mesh) {
           object.geometry?.dispose();
           if (Array.isArray(object.material)) {
@@ -60,7 +60,7 @@ export class ResourceDisposal {
           }
         }
       });
-      store.scene.clear();
+      store.getScene().clear();
     }
 
     if (canvas && canvas.parentNode) {

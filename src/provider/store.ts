@@ -26,8 +26,9 @@ export class Store {
   textGroup!: THREE.Group;
   state!: THREE.InstancedMesh;
   shapesRing!: THREE.InstancedMesh;
+  moves: cf.Move[] = [];
   gameState: GameState | null = null;
-  boardPieces: cf.BoardPiece[] = [];
+  private boardPieces: cf.BoardPiece[] = [];
   piecesObjects: cf.ColorPieceNameObjectMap | null = null;
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
@@ -134,47 +135,66 @@ export class Store {
   });
   fenSubject$ = new SimpleObservable(this.fenSubject);
 
-  private movesSubject = new SimpleSubject<cf.Moves>({
-    moves: [
-      {
-        fen: Store.initialFen,
-        lastMove: [],
-      },
-    ],
-  });
-  movesSubject$ = new SimpleObservable(this.movesSubject);
+  // private movesSubject = new SimpleSubject<cf.Moves>({
+  //   moves: [
+  //     {
+  //       fen: Store.initialFen,
+  //       lastMove: [],
+  //     },
+  //   ],
+  // });
+  // movesSubject$ = new SimpleObservable(this.movesSubject);
 
-  setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[]) => {
-    if (fen && FenParser.isFen(fen)) {
-      const moves: cf.Moves = {
-        moves: [
-          {
-            fen,
-            lastMove,
-          },
-        ],
-      };
-
-      this.movesSubject.next(moves);
+  setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null): void => {
+    if (!FenParser.isFen(fen)) {
+      return;
     }
+
+    const move = {
+      fen,
+      lastMove,
+    };
+
+    if (!previousFen) {
+      this.moves = [];
+    }
+
+    this.moves.push(move);
+
+    const moves: cf.Moves = {
+      moves: this.moves,
+    };
+
+    console.log(this.moves);
+
+    this.fenSubject.next(moves);
   };
 
-  setMove = (lastMove: cg.Key[] | string[], fen: cg.FEN) => {
-    if (fen && FenParser.isFen(fen)) {
-      const moves: cf.Moves = {
-        moves: [
-          {
-            fen,
-            lastMove,
-          },
-        ],
-      };
+  //
+  // setMove = (lastMove: cg.Key[] | string[], fen: cg.FEN) => {
+  //   if (fen && FenParser.isFen(fen)) {
+  //     const moves: cf.Moves = {
+  //       moves: [
+  //         {
+  //           fen,
+  //           lastMove,
+  //         },
+  //       ],
+  //     };
+  //
+  //     this.movesSubject.next(moves);
+  //   }
+  // };
 
-      this.movesSubject.next(moves);
-    }
-  };
+  getBoardPieces(): cf.BoardPiece[] {
+    return this.boardPieces;
+  }
 
-  setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap) {
+  setBoardPieces(boardPieces: cf.BoardPiece[]): void {
+    this.boardPieces = boardPieces;
+  }
+
+  setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap): void {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
   }
 

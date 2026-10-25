@@ -41,10 +41,10 @@ export class ConfigManager {
     }
 
     // Clean up moves subscription before restarting
-    if (this.container.getGamePieceService().getMovesSubscription()) {
-      this.container.getGamePieceService().getMovesSubscription()!();
-      this.container.getGamePieceService().setMovesSubscription(null);
-    }
+    // if (this.container.getGamePieceService().getMovesSubscription()) {
+    //   this.container.getGamePieceService().getMovesSubscription()!();
+    //   this.container.getGamePieceService().setMovesSubscription(null);
+    // }
 
     // Dispose resources
     this.resourceDisposal.dispose({

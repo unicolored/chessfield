@@ -22,28 +22,10 @@ export class PieceProvider {
 
     const squaresVector3: Map<string, THREE.Vector3> = this.getSquaresVector3();
     const piecesObjects: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
-    console.log(piecesObjects);
 
-    const matrixes: Map<string, { mesh: THREE.Mesh; pos: THREE.Vector3; square: cg.Key }[]> = new Map();
+    // const matrixes: Map<string, { mesh: THREE.Mesh; pos: THREE.Vector3; square: cg.Key }[]> = new Map();
 
-    boardPieces.forEach((boardPiece: cf.BoardPiece) => {
-      if (boardPiece.square && boardPiece.objectKey) {
-        const pos = squaresVector3.get(boardPiece.square);
-        if (pos) {
-          const mesh = piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.square}`) as THREE.Mesh;
-
-          if (mesh) {
-            // const instanceMesh = mesh as THREE.Mesh;
-            piecesGroup.add(mesh);
-            // if (mesh.count) {
-            const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
-            updateMatrix.push({ mesh, pos, square: boardPiece.square });
-            matrixes.set(boardPiece.objectKey, updateMatrix);
-            // }
-          }
-        }
-      }
-    });
+    const coordAttrs = new Map<THREE.Mesh, THREE.InstancedBufferAttribute>();
 
     // Pieces Rotations
     const pieceRotations: { [k: string]: number } = {
@@ -54,51 +36,72 @@ export class PieceProvider {
       'black-pawn-black-pawn': -3,
     };
 
-    const coordAttrs = new Map<THREE.Mesh, THREE.InstancedBufferAttribute>();
-    matrixes.forEach(meshes => {
-      const mesh = meshes[0].mesh;
-      const count = mesh.count;
-      const attr = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
-      mesh.geometry.setAttribute('instanceCoord', attr);
-      coordAttrs.set(mesh, attr);
-    });
+    boardPieces.forEach((boardPiece: cf.BoardPiece) => {
+      if (boardPiece.square && boardPiece.objectKey) {
+        const pos = squaresVector3.get(boardPiece.square);
+        if (pos) {
+          const mesh = piecesObjects.get(`${boardPiece.objectKey}-${boardPiece.square}`) as THREE.Mesh;
 
-    matrixes.forEach(meshes => {
-      for (const { mesh, pos, square } of meshes) {
-        const matrix = new THREE.Matrix4();
+          if (mesh) {
+            piecesGroup.add(mesh);
 
-        // Check if this piece needs rotation
-        if (pieceRotations[mesh.name]) {
-          const rotationAngle = pieceRotations[mesh.name];
-          // Combine position and rotation in one step
-          matrix.makeRotationY(rotationAngle);
-          matrix.setPosition(pos);
-        } else {
-          // Just set position for pieces without rotation
-          matrix.setPosition(pos);
+            const count = mesh.count;
+            const attr = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+            mesh.geometry.setAttribute('instanceCoord', attr);
+            coordAttrs.set(mesh, attr);
+            // const updateMatrix = matrixes.get(boardPiece.objectKey) ?? [];
+            // updateMatrix.push({ mesh, pos, square: boardPiece.square });
+            // matrixes.set(boardPiece.objectKey, updateMatrix);
+
+            // Check if this piece needs rotation
+            if (pieceRotations[mesh.name]) {
+              const rotationAngle = pieceRotations[mesh.name];
+              // Combine position and rotation in one step
+              mesh.rotateX(rotationAngle);
+            }
+            mesh.position.set(pos.x, pos.y, pos.z);
+
+            mesh.userData['square'] = boardPiece.square;
+            mesh.userData['pos'] = pos;
+          }
         }
-
-        // if (mesh instanceof THREE.InstancedMesh) {
-        //   mesh.setMatrixAt(index, matrix);
-        //
-        //   const coordAttr = coordAttrs.get(mesh);
-        //   if (coordAttr) {
-        //     const vec = coordToVector2(coord);
-        //     coordAttr.setXY(index, vec.x, vec.y);
-        //   }
-        //
-        //   index++;
-        // } else {
-        const meshM = mesh as THREE.Mesh;
-        // meshM.position.set(pos.x, pos.y, pos.z);
-        matrix.setPosition(pos);
-        meshM.userData['square'] = square;
-        meshM.userData['pos'] = pos;
-        meshM.userData['matrix'] = matrix;
-        meshM.applyMatrix4(matrix);
-        // }
       }
     });
+
+    // console.log('matrixes', matrixes);
+
+    // const coordAttrs = new Map<THREE.Mesh, THREE.InstancedBufferAttribute>();
+    // matrixes.forEach(meshes => {
+    //   const mesh = meshes[0].mesh;
+    //   const count = mesh.count;
+    //   const attr = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+    //   mesh.geometry.setAttribute('instanceCoord', attr);
+    //   coordAttrs.set(mesh, attr);
+    // });
+
+    // matrixes.forEach(meshes => {
+    //   for (const { mesh, pos, square } of meshes) {
+    //     const matrix = new THREE.Matrix4();
+    //
+    //     // Check if this piece needs rotation
+    //     if (pieceRotations[mesh.name]) {
+    //       const rotationAngle = pieceRotations[mesh.name];
+    //       // Combine position and rotation in one step
+    //       matrix.makeRotationY(rotationAngle);
+    //       matrix.setPosition(pos);
+    //     } else {
+    //       // Just set position for pieces without rotation
+    //       matrix.setPosition(pos);
+    //     }
+    //
+    //     const meshM = mesh as THREE.Mesh;
+    //     matrix.setPosition(pos);
+    //     meshM.userData['square'] = square;
+    //     meshM.userData['pos'] = pos;
+    //     meshM.userData['matrix'] = matrix;
+    //     meshM.applyMatrix4(matrix);
+    //   }
+    // });
 
     return piecesGroup;
   }
