@@ -75,7 +75,7 @@ export class Container {
 
   getPieceProvider(): PieceProvider {
     if (!this.pieceProvider) {
-      this.pieceProvider = new PieceProvider(this.getStore());
+      this.pieceProvider = new PieceProvider(this.getStore(), this.getGameProvider());
     }
 
     return this.pieceProvider;

@@ -18,7 +18,7 @@ export interface Move {
 }
 
 export type ColorMaterial = {
-  [key in cg.Color]: THREE.Material | THREE.TextureNode | null;
+  [key in cg.Color]: THREE.Material | null;
 };
 
 export type PieceColorRole = 'white-knight' | `${cg.Color}-${cg.Role}`;
@@ -61,6 +61,7 @@ export interface ThemeColors {
 
 export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
 export type ColorPieceNameObjectMap = Map<string, THREE.Mesh | THREE.Group | undefined>;
+export type SquareMeshMap = Map<cg.Key, THREE.Mesh>;
 
 export interface BoardPiece extends cg.Piece {
   square?: cg.Key | null;

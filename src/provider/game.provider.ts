@@ -2,14 +2,12 @@ import { FenParser } from '@chess-fu/fen-parser';
 import * as cg from '@lichess-org/chessground/types';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { userData } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
-import { cm, objKey } from '../helper.ts';
-import * as cf from '../resource/chessfield.types.ts';
+import { objKey } from '../helper.ts';
+import type * as cf from '../resource/chessfield.types.ts';
 import type { BoardPiece } from '../resource/chessfield.types.ts';
-import { stateSprite } from '../shader/stateSprite.ts';
 
 import { PieceProvider } from './piece.provider';
 import { Store } from './store.ts';
@@ -83,141 +81,6 @@ export class GameProvider {
     return boardPieces;
   }
 
-  compareToPreviousFen(
-    previousMove: cf.Move | null,
-    move: cf.Move,
-  ): Map<cf.Square, { previous: BoardPiece | undefined; now: BoardPiece | undefined }> {
-    const previousBoardPieces = this.setBoardPieces(previousMove);
-    const boardPieces = this.setBoardPieces(move);
-
-    const map = new Map<cf.Square, { previous: BoardPiece | undefined; now: BoardPiece | undefined }>();
-    const mapDiff = new Map<cf.Square, { previous: BoardPiece | undefined; now: BoardPiece | undefined }>();
-
-    for (const square of cf.SQUARES) {
-      const previous = previousBoardPieces.find(b => b.square === square);
-      const previousId = `${previous?.square}-${previous?.objectKey}`;
-      const now = boardPieces.find(b => b.square === square);
-      const nowId = `${now?.square}-${now?.objectKey}`;
-      map.set(square, { previous, now });
-      if (nowId !== previousId)
-        mapDiff.set(square, {
-          previous,
-          now,
-        });
-    }
-
-    console.log(map);
-    console.log(mapDiff);
-
-    return mapDiff;
-  }
-
-  initGamePieces(move: cf.Move): cf.BoardPiece[] {
-    // Dispose old meshes before creating new ones to prevent memory leak
-    this.disposeOldMeshes();
-
-    const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
-
-    const boardPieces = this.setBoardPieces(move);
-
-    boardPieces.forEach((piece: BoardPiece) => {
-      const baseGeometry: THREE.BufferGeometry | undefined = this.store
-        .getPiecesGeometriesGltfMap()
-        .get(piece.role);
-      const geometry = baseGeometry ? baseGeometry.clone() : undefined;
-      const material = this.pieceMaterials[piece.color] ?? this.fallbackMaterial;
-
-      const spriteMaterial = new THREE.SpriteNodeMaterial({
-        transparent: true,
-      });
-
-      const userDataShow = userData('showSprite', 'bool');
-      const userDataWinner = userData('lostState', 'bool');
-      spriteMaterial.colorNode = stateSprite({ lost: userDataWinner, show: userDataShow });
-
-      const mesh = new THREE.Mesh(geometry, material);
-
-      const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
-
-      const spriteMesh = new THREE.Mesh(sprite, spriteMaterial);
-      spriteMesh.name = 'stateSprite';
-
-      const boundingBox = new THREE.Box3().setFromObject(mesh);
-      const highestY = boundingBox.max.y;
-      spriteMesh.position.set(0, highestY + cm(0.33), 0);
-      mesh.add(spriteMesh);
-      mesh.castShadow = false;
-      mesh.receiveShadow = false;
-      mesh.name = `${piece.objectKey}-${piece.square}`;
-      mesh.userData['color'] = piece.color;
-      mesh.userData['role'] = piece.role;
-      mesh.userData['square'] = piece.square;
-
-      boardPiecesObjectsMap.set(`${piece.square}`, mesh);
-    });
-
-    this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
-    this.store.setBoardPieces(boardPieces);
-
-    return boardPieces;
-  }
-
-  moveGamePieces(move: cf.Move, previousMove?: cf.Move | null): cf.BoardPiece[] {
-    const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = this.store.getBoardPiecesObjectsMap();
-
-    const boardPiecesUpdated: BoardPiece[] = [];
-
-    this.store.getBoardPieces().forEach((piece: BoardPiece) => {
-      const name = `${piece.objectKey}-${piece.square}`;
-      const mesh = boardPiecesObjectsMap.get(name);
-
-      if (mesh) {
-        //  FIXME: set the updated square
-        mesh.userData['square'] = piece.square;
-      }
-      // }
-      // }
-
-      boardPiecesObjectsMap.set(name, mesh);
-      boardPiecesUpdated.push(piece);
-    });
-
-    this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
-    this.store.setBoardPieces(boardPiecesUpdated);
-
-    return boardPiecesUpdated;
-  }
-
-  public disposeOldMeshes(): void {
-    const oldMap = this.store.getBoardPiecesObjectsMap();
-    oldMap.forEach(oldMesh => {
-      // Only dispose Mesh/InstancedMesh types (not Group)
-      if (!(oldMesh instanceof THREE.Mesh)) return;
-
-      // Dispose geometry
-      oldMesh.geometry?.dispose();
-
-      // Dispose material(s)
-      const mats = Array.isArray(oldMesh.material) ? oldMesh.material : [oldMesh.material];
-      mats.forEach((mat: THREE.Material) => mat?.dispose());
-
-      // Dispose InstancedMesh buffers
-      // if (oldMesh instanceof THREE.InstancedMesh) {
-      //   oldMesh.instanceMatrix?.dispose();
-      //   oldMesh.instanceColor?.dispose();
-      // }
-
-      // Dispose children (spriteMesh)
-      oldMesh.children.forEach(child => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry?.dispose();
-          const childMats = Array.isArray(child.material) ? child.material : [child.material];
-          childMats.forEach((mat: THREE.Material) => mat?.dispose());
-        }
-      });
-    });
-  }
-
   public loadGlbGeometry(loadingManager: THREE.LoadingManager): void {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
@@ -243,17 +106,6 @@ export class GameProvider {
     );
 
     this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
-  }
-
-  static findPreviousMove(moves: cf.Move[]): cf.Move | null {
-    for (let i = moves.length - 2; i >= 0; i--) {
-      const move = moves[i];
-      if (FenParser.isFen(move.fen)) {
-        return move;
-      }
-    }
-
-    return null;
   }
 
   static findLastMove(moves: cf.Move[]): cf.Move | null {

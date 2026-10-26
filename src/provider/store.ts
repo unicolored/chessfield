@@ -31,7 +31,7 @@ export class Store {
   gameState: GameState | null = null;
 
   private boardPieces: cf.BoardPiece[] = [];
-  private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
+  private boardPiecesObjectsMap: cf.SquareMeshMap = new Map();
   private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
   private squarePositionsVec3!: Map<string, THREE.Vector3>;
 
@@ -169,11 +169,11 @@ export class Store {
     this.boardPieces = boardPieces;
   }
 
-  setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.ColorPieceNameObjectMap): void {
+  setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.SquareMeshMap): void {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
   }
 
-  getBoardPiecesObjectsMap(): cf.ColorPieceNameObjectMap {
+  getBoardPiecesObjectsMap(): cf.SquareMeshMap {
     return this.boardPiecesObjectsMap;
   }
 
