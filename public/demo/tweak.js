@@ -55,7 +55,7 @@ board1.addRing(7, 5, 'ringCtrlAlt');
 
 // const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'; // e4
 const fen = 'rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1'; // e3
-board1.setFen(fen, ['e2', 'e3']);
+// board1.setFen(fen, ['e2', 'e3']);
 
 board1.configUpdate({
   playerNames: {

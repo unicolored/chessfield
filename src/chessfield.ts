@@ -27,6 +27,8 @@ export class Chessfield implements ChessfieldApi {
     this.container = new Container(this.cfElement, config);
     this.container.getStore().initSquarePositionsVec3();
 
+    // this.configUpdate(config)
+
     this.container.getCore().start();
 
     // Set initial FEN

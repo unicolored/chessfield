@@ -6,30 +6,6 @@ vi.mock('three/addons/inspector/Inspector.js', () => {
   return { Inspector: MockInspector };
 });
 
-// Mock renderer provider to avoid WebGPU initialization in tests
-vi.mock('./provider/renderer.provider.ts', () => {
-  class MockRendererProvider {
-    getCanvas() {
-      return document.createElement('canvas');
-    }
-    getRenderer() {
-      return {
-        init: vi.fn().mockResolvedValue(undefined),
-        setSize: vi.fn(),
-        setAnimationLoop: vi.fn(),
-        render: vi.fn(),
-        domElement: document.createElement('canvas'),
-      };
-    }
-    getRenderPipeline() {
-      return {
-        outputColorTransform: false,
-      };
-    }
-  }
-  return { RendererProvider: MockRendererProvider };
-});
-
 // Mock loading manager provider to avoid GLTF loading errors
 vi.mock('./provider/loadingManager.provider.ts', () => {
   class MockLoadingManagerProvider {

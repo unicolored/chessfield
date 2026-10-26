@@ -16,7 +16,7 @@ export class AnimationLoop {
     // scene: THREE.Scene,
     // camera: THREE.PerspectiveCamera,
   ): void {
-    if (!store.controls || !store.renderer) {
+    if (!store.controls || !store.renderPipeline.renderer) {
       return;
     }
 
@@ -31,7 +31,7 @@ export class AnimationLoop {
     // const bloomPass = bloom(scenePass);
     // bloomPass.threshold.value = 0.95;
     // bloomPass.strength.value = 0.15;
-    // renderPipeline.outputNode = scenePass.add(bloomPass);
+    // store.renderPipeline.outputNode = scenePass.add(bloomPass);
 
     // Color transform pass
     store.renderPipeline.outputNode = renderOutput(store.renderPipeline.outputNode);
@@ -50,7 +50,7 @@ export class AnimationLoop {
     };
 
     this.animationLoop = tick;
-    store.renderer.setAnimationLoop(tick);
+    store.renderPipeline.renderer.setAnimationLoop(tick);
   }
 
   stop(renderer: THREE.WebGPURenderer): void {

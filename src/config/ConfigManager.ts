@@ -1,12 +1,11 @@
 import { type Container } from '../core/Container.ts';
-import type { ResourceDisposal } from '../lifecycle/ResourceDisposal.ts';
 import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
 import type { TextConfig } from '../service/text/text.service.ts';
 
 export class ConfigManager {
   constructor(
     private readonly container: Container,
-    private resourceDisposal: typeof ResourceDisposal,
+    // private resourceDisposal: typeof ResourceDisposal,
   ) {}
 
   async configUpdate(partialConfig: Partial<ChessfieldConfig>): Promise<void> {
@@ -41,21 +40,21 @@ export class ConfigManager {
     }
 
     // Clean up moves subscription before restarting
-    // if (this.container.getGamePieceService().getMovesSubscription()) {
-    //   this.container.getGamePieceService().getMovesSubscription()!();
-    //   this.container.getGamePieceService().setMovesSubscription(null);
+    // if (this.container.getGamePieceService().getFenSubscription()) {
+    //   this.container.getGamePieceService().getFenSubscription()!();
+    //   this.container.getGamePieceService().setFenSubscription(null);
     // }
 
     // Dispose resources
-    this.resourceDisposal.dispose({
-      store: this.container.getStore(),
-      shapesService: this.container.getShapesService(),
-      stateService: this.container.getStateService(),
-      gameProvider: this.container.getGameProvider(),
-      renderer: this.container.getStore().renderer,
-      controls: this.container.getStore().controls,
-      canvas: this.container.getStore().canvas,
-    });
+    // this.resourceDisposal.dispose({
+    //   store: this.container.getStore(),
+    //   shapesService: this.container.getShapesService(),
+    //   stateService: this.container.getStateService(),
+    //   gameProvider: this.container.getGameProvider(),
+    //   renderer: this.container.getStore().renderer,
+    //   controls: this.container.getStore().controls,
+    //   canvas: this.container.getStore().canvas,
+    // });
 
     // Restart
     await this.container.getCore().start();

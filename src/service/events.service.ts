@@ -24,7 +24,7 @@ export class EventsService {
     private readonly store: Store,
     private readonly cfElement: HTMLElement,
   ) {
-    this.canvas = store.canvas;
+    this.canvas = store.getCanvas();
     this.camera = store.camera;
     this.scene = store.getScene();
   }

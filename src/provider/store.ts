@@ -13,12 +13,13 @@ import type { Themes } from '../resource/chessfield.types.ts';
 import { SimpleObservable, SimpleSubject } from './observable.ts';
 
 export class Store {
-  private scene: THREE.Scene | null = null;
+  private canvas!: HTMLCanvasElement;
+  private scene!: THREE.Scene;
   camera!: THREE.PerspectiveCamera;
   camGroup!: THREE.Group;
-  canvas!: HTMLCanvasElement;
-  renderer!: THREE.WebGPURenderer;
-  renderPipeline!: THREE.RenderPipeline;
+  // static enableAntialias = window.devicePixelRatio < 2;
+  // renderer!: THREE.WebGPURenderer;
+  private renderPipeline!: THREE.RenderPipeline;
   controls!: OrbitControls;
   chessboard!: cf.ExtendedMesh;
   casesGroup!: THREE.Group;
@@ -261,5 +262,34 @@ export class Store {
     }
 
     return this.piecesGroup;
+  }
+
+  getCanvas(): HTMLCanvasElement {
+    if (!this.canvas) {
+      this.canvas = document.createElement('canvas') as HTMLCanvasElement;
+    }
+
+    return this.canvas;
+  }
+
+  getRenderPipeline(): THREE.RenderPipeline {
+    return this.renderPipeline;
+  }
+
+  initRenderPipeline(canvas: HTMLCanvasElement, sizes: { width: number; height: number }): void {
+    const renderer = new THREE.WebGPURenderer({
+      canvas,
+      // powerPreference: 'high-performance',
+      // antialias: RendererProvider.enableAntialias,
+      antialias: false,
+      forceWebGL: false,
+    });
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    /**
+     * Post-processing
+     */
+    this.renderPipeline = new THREE.RenderPipeline(renderer);
+    this.renderPipeline.outputColorTransform = false;
   }
 }

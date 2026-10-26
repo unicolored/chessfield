@@ -44,7 +44,8 @@ export class GamePieceService {
       this.fenSubscription();
     }
 
-    this.fenSubscription = this.container.getStore().fenSubject$.subscribe((moves: any) => {
+    this.fenSubscription = this.container.getStore().fenSubject$.subscribe((moves: cf.Moves) => {
+      console.log(moves);
       // TODO: create a unique fen id, linked to lichess game
       // and that will allow to save all the moves
       // so an UI on chesspop will allow to go back and forth into the moves list
@@ -57,7 +58,7 @@ export class GamePieceService {
 
       const move = GameProvider.findLastMove(moves.moves);
       const previousMove = GameProvider.findPreviousMove(moves.moves);
-      console.log('previousMove', previousMove);
+      console.log('updatePices sub previousMove', previousMove);
       // this.foundLastMove = move?.lastMove ? { lastMove: move.lastMove } : null;
 
       let boardPieces: any[] = [];
@@ -74,7 +75,7 @@ export class GamePieceService {
           previousBoardPieces = this.container.getGameProvider().setBoardPieces(previousMove);
           console.log('boardPieces previous', boardPieces);
         }
-
+        console.log('cBP', compareBoardPieces.size);
         if (compareBoardPieces.size > 0) {
           // compareBoardPieces.forEach((b: BoardPiece) => {
           //   console.log(compareBoardPieces, b);
@@ -89,7 +90,7 @@ export class GamePieceService {
               return false;
             }
             const compared = compareBoardPieces.get(p.square);
-            console.log(p.square, compared);
+            // console.log(p.square, compared);
             if (!compared) {
               return false;
             }

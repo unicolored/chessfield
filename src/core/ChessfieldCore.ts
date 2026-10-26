@@ -45,19 +45,13 @@ export class ChessfieldCore {
     this._container.getStore().getScene().add(this._container.getStore().camGroup);
 
     // Canvas & Renderer
-    this._container.getStore().canvas = this._container.getRendererProvider().getCanvas();
-    this._container.getStore().renderer = this._container
-      .getRendererProvider()
-      .getRenderer(sizes, this._container.getStore().canvas);
-    this._container.getStore().renderPipeline = this._container
-      .getRendererProvider()
-      .getRenderPipeline(this._container.getStore().renderer);
-
-    this._cfElement.appendChild(this._container.getStore().renderer.domElement);
+    this._container.getStore().initRenderPipeline(this._container.getStore().getCanvas(), sizes);
+    const renderPipeline = this._container.getStore().getRenderPipeline();
+    this._cfElement.appendChild(renderPipeline.renderer.domElement);
 
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
-      this._container.getStore().renderer.inspector = new Inspector();
+      renderPipeline.renderer.inspector = new Inspector();
     }
 
     // Loading Management
@@ -99,7 +93,7 @@ export class ChessfieldCore {
     // Controls
     this._container.getStore().controls = this._container
       .getControlsProvider()
-      .getControls(this._container.getStore().camera, this._container.getStore().canvas);
+      .getControls(this._container.getStore().camera, this._container.getStore().getCanvas());
 
     // . Start animation loop
     // this.animationLoop.start(this._container.getStore(), controls, renderer, renderPipeline, scene, camera);

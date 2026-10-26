@@ -2,13 +2,11 @@ import { type ChessfieldConfig, type ThemeColors } from '../chessfield';
 import { CameraController } from '../config/CameraController';
 import { ConfigManager } from '../config/ConfigManager';
 import { ThemeController } from '../config/ThemeController';
-import { ResourceDisposal } from '../lifecycle/ResourceDisposal';
 import { CameraProvider } from '../provider/camera.provider';
 import { ControlsProvider } from '../provider/controls.provider';
 import { GameProvider } from '../provider/game.provider';
 import { LoadingManagerProvider } from '../provider/loadingManager.provider';
 import { PieceProvider } from '../provider/piece.provider';
-import { RendererProvider } from '../provider/renderer.provider';
 import { Store } from '../provider/store';
 import { ThemeProvider } from '../provider/theme.provider';
 import { BoardService } from '../service/board.service';
@@ -26,7 +24,6 @@ export class Container {
   private store!: Store;
 
   private cameraProvider!: CameraProvider;
-  private rendererProvider!: RendererProvider;
   private controlsProvider!: ControlsProvider;
   private animationLoop!: AnimationLoop;
 
@@ -108,14 +105,6 @@ export class Container {
     return this.themeProvider;
   }
 
-  getRendererProvider(): RendererProvider {
-    if (!this.rendererProvider) {
-      this.rendererProvider = new RendererProvider();
-    }
-
-    return this.rendererProvider;
-  }
-
   getLoadingManagerProvider(): LoadingManagerProvider {
     if (!this.loadingManagerProvider) {
       this.loadingManagerProvider = new LoadingManagerProvider(this._config, this.getGameProvider());
@@ -176,7 +165,7 @@ export class Container {
 
   getConfigManager(): ConfigManager {
     if (!this.configManager) {
-      this.configManager = new ConfigManager(this, ResourceDisposal);
+      this.configManager = new ConfigManager(this);
     }
 
     return this.configManager;
