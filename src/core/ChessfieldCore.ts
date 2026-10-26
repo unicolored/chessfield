@@ -84,8 +84,8 @@ export class ChessfieldCore {
       font,
     );
 
-    // 2. Update pieces
-    this._container.getGamePieceService().updatePieces();
+    // 2. Subscribe to FEN changes and render the current position
+    this._container.getGamePieceService().start();
 
     // . Setup events: interactions with chessboard
     this.setupEvents(this._cfElement);

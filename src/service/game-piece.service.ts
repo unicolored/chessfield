@@ -40,107 +40,123 @@ export class GamePieceService {
   //   this.foundLastMove = move;
   // }
 
-  updatePieces(): void {
+  /** Subscribe to FEN updates once, and render the current position. */
+  start(): void {
+    if (this.fenSubscription) {
+      return;
+    }
+
     this.fenSubscription = this.container.getStore().fenSubject$.subscribe((moves: cf.Moves | null) => {
-      console.log('🟣 fenSubject$ subscribe moves', moves);
-      if (!moves) {
-        return;
-      }
-      // TODO: create a unique fen id, linked to lichess game
-      // and that will allow to save all the moves
-      // so an UI on chesspop will allow to go back and forth into the moves list
-
-      // const piecesGroup = this.container.getStore().piecesGroup;
-      // if (piecesGroup) {
-      //   this.container.getStore().getScene()?.remove(piecesGroup);
-      //   piecesGroup.clear();
-      // }
-
-      const move = GameProvider.findLastMove(moves.moves);
-      const previousMove = GameProvider.findPreviousMove(moves.moves);
-      console.log('last', move);
-      console.log('previous', previousMove);
-
-      let boardPieces: any[] = [];
-      let previousBoardPieces: any[] = [];
-      let removePieces: any[] = [];
-
-      if (move) {
-        boardPieces = this.container.getGameProvider().initGamePieces(move);
-        console.log('boardPieces now', boardPieces);
-
-        if (previousMove) {
-          const compareBoardPieces = this.container
-            .getGameProvider()
-            .compareToPreviousFen(previousMove, move);
-          console.log('compareBoardPieces', compareBoardPieces);
-
-          previousBoardPieces = this.container.getGameProvider().setBoardPieces(previousMove);
-
-          if (compareBoardPieces.size > 0) {
-            removePieces = previousBoardPieces.filter((p: BoardPiece) => {
-              if (!p.square) {
-                return false;
-              }
-              const compared = compareBoardPieces.get(p.square);
-              if (!compared) {
-                return false;
-              }
-              return compared.now === undefined;
-            });
-            boardPieces.forEach((b: BoardPiece) => {
-              const checkSquare = b.square;
-              const previousPieceOnThatSquare = previousBoardPieces.find(
-                (b: BoardPiece) => b.square === checkSquare,
-              );
-              if (previousPieceOnThatSquare) {
-                //removePieces.push(previousBoardPieces);
-              }
-            });
-            console.log('boardPieces to remove', removePieces);
-            boardPieces = boardPieces.filter((p: BoardPiece) => compareBoardPieces.has(`${p.square}`));
-            console.log('boardPieces to move', boardPieces);
-          }
-        }
-
-        const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
-        if (lastMoveToCoordinates.length > 1) {
-          this.container
-            .getStore()
-            .chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-          this.container
-            .getStore()
-            .chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
-        }
-
-        this.container.getPieceProvider().updateGamePositions(boardPieces, removePieces);
-        // this.container.getStore().piecesGroup = newPiecesGroup;
-        // this.container.getStore().boardPieces = boardPieces;
-        // this.container.getStore().piecesObjects = this.container.getStore().getBoardPiecesObjectsMap();
-        // this.container.getStore().getScene().add(this.container.getStore().piecesGroup);
-
-        // Handle game state
-        const gameState = this.container.getStore().gameState;
-
-        if (gameState) {
-          if (gameState.mate || gameState.draw) {
-            this.addShapes(gameState);
-            console.log('All moves', moves);
-          }
-
-          if (gameState.check) {
-            gameState.check.forEach((key: cg.Key | string) => {
-              if (key) {
-                const kingVec = coordToVector2(key);
-                this.container.getStateService().setStateAt(kingVec.x, kingVec.y);
-              }
-            });
-          }
-        } else {
-          this.container.getStateService().clearAll(['check']);
-        }
-      }
+      this.render(moves);
     });
+  }
+
+  /** Re-render the current position and game state, e.g. after setState(). */
+  refresh(): void {
+    if (!this.fenSubscription) {
+      return;
+    }
+
+    this.render(this.container.getStore().fenSubject$.value);
+  }
+
+  private render(moves: cf.Moves | null): void {
+    console.log('🟣 fenSubject$ subscribe moves', moves);
+    if (!moves) {
+      return;
+    }
+    // TODO: create a unique fen id, linked to lichess game
+    // and that will allow to save all the moves
+    // so an UI on chesspop will allow to go back and forth into the moves list
+
+    // const piecesGroup = this.container.getStore().piecesGroup;
+    // if (piecesGroup) {
+    //   this.container.getStore().getScene()?.remove(piecesGroup);
+    //   piecesGroup.clear();
+    // }
+
+    const move = GameProvider.findLastMove(moves.moves);
+    const previousMove = GameProvider.findPreviousMove(moves.moves);
+    console.log('last', move);
+    console.log('previous', previousMove);
+
+    let boardPieces: any[] = [];
+    let previousBoardPieces: any[] = [];
+    let removePieces: any[] = [];
+
+    if (move) {
+      boardPieces = this.container.getGameProvider().initGamePieces(move);
+      console.log('boardPieces now', boardPieces);
+
+      if (previousMove) {
+        const compareBoardPieces = this.container.getGameProvider().compareToPreviousFen(previousMove, move);
+        console.log('compareBoardPieces', compareBoardPieces);
+
+        previousBoardPieces = this.container.getGameProvider().setBoardPieces(previousMove);
+
+        if (compareBoardPieces.size > 0) {
+          removePieces = previousBoardPieces.filter((p: BoardPiece) => {
+            if (!p.square) {
+              return false;
+            }
+            const compared = compareBoardPieces.get(p.square);
+            if (!compared) {
+              return false;
+            }
+            return compared.now === undefined;
+          });
+          boardPieces.forEach((b: BoardPiece) => {
+            const checkSquare = b.square;
+            const previousPieceOnThatSquare = previousBoardPieces.find(
+              (b: BoardPiece) => b.square === checkSquare,
+            );
+            if (previousPieceOnThatSquare) {
+              //removePieces.push(previousBoardPieces);
+            }
+          });
+          console.log('boardPieces to remove', removePieces);
+          boardPieces = boardPieces.filter((p: BoardPiece) => compareBoardPieces.has(`${p.square}`));
+          console.log('boardPieces to move', boardPieces);
+        }
+      }
+
+      const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
+      if (lastMoveToCoordinates.length > 1) {
+        this.container
+          .getStore()
+          .chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+        this.container
+          .getStore()
+          .chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+      }
+
+      this.container.getPieceProvider().updateGamePositions(boardPieces, removePieces);
+      // this.container.getStore().piecesGroup = newPiecesGroup;
+      // this.container.getStore().boardPieces = boardPieces;
+      // this.container.getStore().piecesObjects = this.container.getStore().getBoardPiecesObjectsMap();
+      // this.container.getStore().getScene().add(this.container.getStore().piecesGroup);
+
+      // Handle game state
+      const gameState = this.container.getStore().gameState;
+
+      if (gameState) {
+        if (gameState.mate || gameState.draw) {
+          this.addShapes(gameState);
+          console.log('All moves', moves);
+        }
+
+        if (gameState.check) {
+          gameState.check.forEach((key: cg.Key | string) => {
+            if (key) {
+              const kingVec = coordToVector2(key);
+              this.container.getStateService().setStateAt(kingVec.x, kingVec.y);
+            }
+          });
+        }
+      } else {
+        this.container.getStateService().clearAll(['check']);
+      }
+    }
   }
 
   addShapes(state: GameState | null): void {

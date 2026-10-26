@@ -50,7 +50,7 @@ export class Chessfield implements ChessfieldApi {
 
   public setState(state: GameState): void {
     this.container.getStore().gameState = state;
-    this.container.getGamePieceService().updatePieces();
+    this.container.getGamePieceService().refresh();
   }
 
   public async configUpdate(partialConfig: Partial<ChessfieldConfig>) {
