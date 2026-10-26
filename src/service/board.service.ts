@@ -12,75 +12,51 @@ import { cbShader } from '../shader/cbShader.ts';
 import { type TextConfig, type TextService } from './text/text.service.ts';
 
 export class BoardService {
-  private decorGroup: THREE.Group | null = null;
-  private decorMeshes: THREE.Mesh[] = [];
+  // Shared with the frame material's uniform: mutating it needs no shader rebuild.
+  private frameColor = new THREE.Color();
 
   public decor(mode: ThemeColors): THREE.Group {
     const decorGroup = new THREE.Group();
-    this.decorGroup = decorGroup;
-    this.decorMeshes = [];
 
     // Create a box geometry and material
     const frameGeometry = new THREE.BoxGeometry(cm(10), cm(0.025), cm(10));
-    const frameColor = mode.dark;
-    const frameMaterial = new THREE.MeshBasicNodeMaterial({ color: frameColor });
+    this.frameColor.set(mode.dark);
+    const frameMaterial = new THREE.MeshBasicNodeMaterial();
+    frameMaterial.colorNode = vec4(uniform(this.frameColor), 1.0);
     const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-    frame.userData['decorType'] = 'frame';
     // Position the box in the scene
     frame.position.set(0, cm(-0.1), cm(0));
     // Add the box to the scene
     decorGroup.add(frame);
-    this.decorMeshes.push(frame);
 
     // const gridHelper = new GridHelper(0.1, 10, gridColor, gridColor);
     // gridHelper.position.y = cm(0.045);
     // decorGroup.add(gridHelper);
 
-    // Create a box geometry and material
+    // Player bars keep their fixed light/dark indicator colors, whatever the mode.
     const playerGeometry = new THREE.BoxGeometry(cm(8), cm(0.025), cm(0.025));
 
     const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.modes['light'].dark });
     const player1 = new THREE.Mesh(playerGeometry, player1Material);
-    player1.userData['decorType'] = 'player1';
     // Position the box in the scene
     player1.position.set(0, cm(0), cm(4.5));
     // Add the box to the scene
     decorGroup.add(player1);
-    this.decorMeshes.push(player1);
 
     // Create a box geometry and material
     const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.modes['dark'].dark });
     const player2 = new THREE.Mesh(playerGeometry, player2Material);
-    player2.userData['decorType'] = 'player2';
     // Position the box in the scene
     player2.position.set(0, cm(0), cm(-4.5));
     // Add the box to the scene
     decorGroup.add(player2);
-    this.decorMeshes.push(player2);
 
     return decorGroup;
   }
 
+  // The frame follows the mode; player bars keep their fixed indicator colors.
   public updateDecorColors(modeColors: ThemeColors): void {
-    if (!this.decorGroup) return;
-
-    for (const mesh of this.decorMeshes) {
-      const material = mesh.material as THREE.MeshBasicNodeMaterial;
-      if (!material) continue;
-
-      const decorType = mesh.userData['decorType'] as string | undefined;
-      switch (decorType) {
-        case 'frame':
-          material.colorNode = vec4(new THREE.Color(modeColors.dark), 1.0);
-          break;
-        case 'player1':
-          material.colorNode = vec4(new THREE.Color(Store.modes['light'].dark), 1.0);
-          break;
-        case 'player2':
-          material.colorNode = vec4(new THREE.Color(Store.modes['dark'].dark), 1.0);
-          break;
-      }
-    }
+    this.frameColor.set(modeColors.dark);
   }
 
   public createCases(font: Font | null): THREE.Group {

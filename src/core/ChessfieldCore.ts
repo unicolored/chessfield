@@ -49,6 +49,12 @@ export class ChessfieldCore {
     const renderPipeline = this._container.getStore().getRenderPipeline();
     this._cfElement.appendChild(renderPipeline.renderer.domElement);
 
+    // Keep renderer and camera in sync with the container size (fullscreen, layout changes).
+    // ResizeObserver is absent in jsdom, so tests keep the single initial size.
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => this.resize()).observe(this._cfElement);
+    }
+
     if (!import.meta.env.PROD && import.meta.env.MODE === 'development') {
       const { Inspector } = await import('three/addons/inspector/Inspector.js');
       renderPipeline.renderer.inspector = new Inspector();
@@ -64,6 +70,24 @@ export class ChessfieldCore {
     if (this._container.getStore().getScene()) {
       this._container.getLoadingManagerProvider().getLoadingManager().onLoad = this.onLoad.bind(this, font);
     }
+  }
+
+  // Match the drawing buffer and the camera frustum to the container's current size.
+  private resize(): void {
+    if (!this._cfElement) {
+      return;
+    }
+
+    const { width, height } = this._cfElement.getBoundingClientRect();
+    if (!width || !height) {
+      return;
+    }
+
+    const store = this._container.getStore();
+    store.getRenderPipeline().renderer.setSize(width, height);
+    store.camera.aspect = width / height;
+    store.camera.updateProjectionMatrix();
+    store.requestRender();
   }
 
   private async onLoad(font: Font | null): Promise<void> {

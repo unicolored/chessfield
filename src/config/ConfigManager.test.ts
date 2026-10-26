@@ -1,3 +1,4 @@
+import * as THREE from 'three/webgpu';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Container } from '../core/Container.ts';
@@ -14,12 +15,14 @@ function createHarness(config: ChessfieldConfig = {}) {
     config,
     chessboard: undefined as unknown,
     textGroup: { name: '📝 Player Names' },
+    scene: { background: null as unknown },
     moveSubject$: { value: null as { fen: string; lastMove?: string[] } | null },
     requestRender: vi.fn(),
     getConfig: () => store.config,
     setConfig: (next: ChessfieldConfig) => {
       store.config = next;
     },
+    getScene: () => store.scene,
     getTextGroup: () => store.textGroup,
   };
 
@@ -120,6 +123,7 @@ describe('ConfigManager.configUpdate', () => {
     expect(names).toEqual({ white: 'Alice', black: 'Bob' });
     expect(textConfig.fontSize).toBe(0.7);
     expect(textConfig.color).toBe(h.themeProvider.getInvertColor());
+    expect(h.store.scene.background).toEqual(new THREE.Color(h.themeProvider.getBackgroundColor()));
   });
 
   it('keeps an explicit text color and merges partial player names', async () => {

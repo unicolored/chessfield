@@ -1,3 +1,5 @@
+import * as THREE from 'three/webgpu';
+
 import { type Container } from '../core/Container.ts';
 import { Store } from '../provider/store.ts';
 import type { ThemeColors } from '../resource/chessfield.types.ts';
@@ -45,9 +47,9 @@ export class ThemeController {
     this.container.getStore().chessboard?.setSquareColors(themeColors.light, themeColors.dark);
     this.container.getStore().chessboard?.setHighlightColor(themeColors.highlight);
 
-    // 2. Scene background
-    // const bgColor = this.container.getThemeProvider().getBackgroundColor();
-    // this.container.getSceneProvider().updateBackground(this.container.getStore().scene!, bgColor);
+    // 2. Scene background (owned by the mode, not the theme)
+    const backgroundColor = this.container.getThemeProvider().getBackgroundColor();
+    this.container.getStore().getScene().background = new THREE.Color(backgroundColor);
 
     // 3. Decor (frame, player indicators) - update via TSL userData
     this.container.getBoardService().updateDecorColors(modeColors);

@@ -2,7 +2,9 @@ import { BLACK, Chess, KING, QUEEN, WHITE } from 'https://cdn.jsdelivr.net/npm/c
 
 import { Chessfield } from '../../src/chessfield.ts';
 
-const board1 = new Chessfield(document.getElementById('board-1'), {
+const board1El = document.getElementById('board-1');
+
+const board1 = new Chessfield(board1El, {
   orientation: 'white',
   camera: 'white',
   angle: 'right',
@@ -15,7 +17,6 @@ const board1 = new Chessfield(document.getElementById('board-1'), {
     backend: 'canvas-sprite',
     fontSize: 0.006,
     offset: 0.07,
-    color: '#000',
   },
   plugins: {
     themes: {
@@ -41,6 +42,59 @@ if (switchThemeBtn) {
   });
 }
 
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+const isBoardFullscreen = () => document.fullscreenElement === board1El;
+
+if (fullscreenBtn && board1El) {
+  fullscreenBtn.addEventListener('click', () => {
+    if (isBoardFullscreen()) {
+      void document.exitFullscreen();
+
+      return;
+    }
+
+    board1El.requestFullscreen().catch(e => console.error('Fullscreen failed', e));
+  });
+
+  // Escape exits fullscreen natively: only the button label has to follow.
+  document.addEventListener('fullscreenchange', () => {
+    fullscreenBtn.textContent = isBoardFullscreen() ? 'Exit Fullscreen' : 'Fullscreen';
+  });
+}
+
+const switchCameraBtn = document.getElementById('switch-camera-btn');
+
+if (switchCameraBtn) {
+  const syncCameraLabel = () => {
+    switchCameraBtn.textContent = `Camera: ${board1.getCurrentCamera()}`;
+  };
+
+  syncCameraLabel();
+  switchCameraBtn.addEventListener('click', () => {
+    board1.switchCamera();
+    syncCameraLabel();
+  });
+}
+
+const switchModeBtn = document.getElementById('switch-mode-btn');
+
+if (switchModeBtn) {
+  const syncModeLabel = () => {
+    switchModeBtn.textContent = `Mode: ${board1.getCurrentMode()}`;
+  };
+
+  syncModeLabel();
+  switchModeBtn.addEventListener('click', () => {
+    const nextMode = board1.getCurrentMode() === 'light' ? 'dark' : 'light';
+
+    // configUpdate (not switchMode) so the player-name labels are rebuilt with the mode contrast color.
+    board1
+      .configUpdate({ mode: nextMode })
+      .then(syncModeLabel)
+      .catch(e => console.error('Mode switch failed', e));
+  });
+}
+
 board1.addRing(6, 2, 'ring');
 board1.addRing(7, 2, 'ring');
 
@@ -57,12 +111,12 @@ board1.addRing(7, 5, 'ringCtrlAlt');
 const fen = 'rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1'; // e3
 board1.setFen(fen, ['e2', 'e3']);
 
-// board1.configUpdate({
-//   playerNames: {
-//     white: 'GM Magnus Carlsen',
-//     black: 'GM Hikaru Nakamura',
-//   },
-// });
+board1.configUpdate({
+  playerNames: {
+    white: 'GM Magnus Carlsen',
+    black: 'GM Hikaru Nakamura',
+  },
+});
 
 try {
   const chess = new Chess();
