@@ -261,6 +261,8 @@ await chessfield.configUpdate({
 
 ## Dynamic Configuration Updates
 
+Updates are applied to the existing board in place — the scene, canvas and animation loop are not recreated.
+
 ```typescript
 // Update multiple settings at once
 await chessfield.configUpdate({
@@ -323,14 +325,7 @@ window.dispatchEvent(new Event('resize'));
 
 ## Cleanup
 
-```typescript
-// Dispose WebGL resources when done
-chessfield.configUpdate({}); // Triggers full cleanup + restart
-
-// Or if you need manual disposal (not exposed directly, but):
-// The Chessfield class doesn't expose dispose() publicly.
-// Use configUpdate({}) to trigger full teardown/reinit.
-```
+The current API does not expose a `dispose()` method, and `configUpdate({})` does not dispose or restart anything — it is a safe no-op that keeps the current scene. Remove the container element only when you are done with the board.
 
 ## Complete Example: Interactive Game
 

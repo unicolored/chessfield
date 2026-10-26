@@ -83,7 +83,7 @@ export class Container {
 
   getCameraProvider(): CameraProvider {
     if (!this.cameraProvider) {
-      this.cameraProvider = new CameraProvider(this._config);
+      this.cameraProvider = new CameraProvider(this.getStore().getConfig());
     }
 
     return this.cameraProvider;
@@ -91,7 +91,7 @@ export class Container {
 
   getControlsProvider(): ControlsProvider {
     if (!this.controlsProvider) {
-      this.controlsProvider = new ControlsProvider(this._config);
+      this.controlsProvider = new ControlsProvider(this.getStore().getConfig());
     }
 
     return this.controlsProvider;
@@ -99,7 +99,8 @@ export class Container {
 
   getThemeProvider(): ThemeProvider {
     if (!this.themeProvider) {
-      this.themeProvider = new ThemeProvider(this._config.mode, this._config.theme);
+      const config = this.getStore().getConfig();
+      this.themeProvider = new ThemeProvider(config.mode, config.theme);
     }
 
     return this.themeProvider;
@@ -107,7 +108,10 @@ export class Container {
 
   getLoadingManagerProvider(): LoadingManagerProvider {
     if (!this.loadingManagerProvider) {
-      this.loadingManagerProvider = new LoadingManagerProvider(this._config, this.getGameProvider());
+      this.loadingManagerProvider = new LoadingManagerProvider(
+        this.getStore().getConfig(),
+        this.getGameProvider(),
+      );
     }
 
     return this.loadingManagerProvider;
@@ -140,11 +144,9 @@ export class Container {
 
   getTextService(): TextService {
     if (!this.textService) {
-      const backend = this._config?.text?.backend ?? 'canvas-sprite';
+      const backend = this.getStore().getConfig().text?.backend ?? 'canvas-sprite';
       // The callback lets async text (and troika glyph syncing) repaint the idle loop.
-      this.textService = new TextService(this.store.getScene(), backend, () =>
-        this.getStore().requestRender(),
-      );
+      this.textService = new TextService(backend, () => this.getStore().requestRender());
     }
 
     return this.textService;

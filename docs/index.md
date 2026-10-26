@@ -217,14 +217,13 @@ const fieldRef = useRef<Chessfield>(null);
 useEffect(() => {
 if (!ref.current) return;
 fieldRef.current = new Chessfield(ref.current, { fen, theme });
-return () => fieldRef.current?.dispose?.();
 }, [fen, theme]);
 
 return <div ref={ref} style={{ width: 600, height: 600 }} />;
 }
 </code></pre>
 <pre><code>// Vue 3
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Chessfield } from 'chessfield';
 import 'chessfield/style.css';
 
@@ -234,25 +233,23 @@ let chessfield: Chessfield;
 onMounted(() => {
   chessfield = new Chessfield(boardRef.value!, { theme: 'blue' });
 });
-onUnmounted(() => chessfield?.dispose?.());
 
 // Template: <div ref="boardRef" style="width: 600px; height: 600px" />
 </code></pre>
 <pre><code>// Angular
-import { Component, ElementRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { Chessfield } from 'chessfield';
 
 @Component({
   template: '<div #board style="width: 600px; height: 600px"></div>'
 })
-export class ChessboardComponent implements OnInit, OnDestroy {
+export class ChessboardComponent implements OnInit {
   @ViewChild('board') boardRef!: ElementRef<HTMLDivElement>;
   chessfield!: Chessfield;
 
   ngOnInit() {
     this.chessfield = new Chessfield(this.boardRef.nativeElement, { theme: 'brown' });
   }
-  ngOnDestroy() { this.chessfield?.dispose?.(); }
 }
 </code></pre>
 </div>

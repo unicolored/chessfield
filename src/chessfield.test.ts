@@ -25,6 +25,7 @@ vi.mock('./provider/loadingManager.provider.ts', () => {
 });
 
 import { Chessfield } from './chessfield.ts';
+import { Store } from './provider/store.ts';
 
 describe('Chessfield API', () => {
   let container: HTMLDivElement;
@@ -71,5 +72,31 @@ describe('Chessfield API', () => {
   it('should accept partial config in configUpdate', () => {
     expect(() => chessfield.configUpdate({ theme: 'blue' })).not.toThrow();
     expect(() => chessfield.configUpdate({ orientation: 'black' })).not.toThrow();
+  });
+
+  it('applies theme and mode changes without recreating the scene', async () => {
+    const canvas = container.querySelector('canvas');
+
+    await chessfield.configUpdate({ mode: 'dark', theme: 'blue' });
+
+    expect(container.querySelector('canvas')).toBe(canvas);
+    expect(chessfield.getCurrentMode()).toBe('dark');
+    expect(chessfield.getThemeColors().light).toBe(Store.themes['blue'].light);
+  });
+
+  it('applies camera changes to the live board', async () => {
+    await chessfield.configUpdate({ camera: 'top' });
+
+    expect(chessfield.getCurrentCamera()).toBe('top');
+  });
+
+  it('treats an empty update as a no-op', async () => {
+    const canvas = container.querySelector('canvas');
+    const mode = chessfield.getCurrentMode();
+
+    await chessfield.configUpdate({});
+
+    expect(container.querySelector('canvas')).toBe(canvas);
+    expect(chessfield.getCurrentMode()).toBe(mode);
   });
 });

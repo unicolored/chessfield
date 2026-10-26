@@ -25,6 +25,23 @@ export class GamePieceService {
     });
   }
 
+  /** Replace the current position and its last-move highlight on the live board. */
+  setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[]): void {
+    const store = this.container.getStore();
+    store.gameState = null;
+
+    if (store.setFen(fen, lastMove)) {
+      return;
+    }
+
+    // Same FEN: only the highlight can change; without one, repaint the cleared state.
+    if (lastMove === undefined) {
+      this.refresh();
+    } else {
+      store.setLastMove(lastMove);
+    }
+  }
+
   /** Re-render the current position and game state, e.g. after setState(). */
   refresh(): void {
     if (!this.moveSubscription) {
@@ -48,17 +65,14 @@ export class GamePieceService {
       const boardPieces = this.container.getGameProvider().setBoardPieces(move);
       // Reconcile meshes with the parsed board; the provider applies only the needed deltas.
       pieceProvider.sync(boardPieces);
-
-      const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
-      if (lastMoveToCoordinates.length > 1) {
-        this.container
-          .getStore()
-          .chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-        this.container
-          .getStore()
-          .chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
-      }
     }
+
+    // The highlight can change without the position (lastMove-only updates).
+    const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
+    const start = lastMoveToCoordinates[0] ?? { x: -1, y: -1 };
+    const end = lastMoveToCoordinates[1] ?? start;
+    this.container.getStore().chessboard?.highlightSquareStart(start.x, start.y);
+    this.container.getStore().chessboard?.highlightSquareEnd(end.x, end.y);
 
     // State flags are presentation of the current game state, not of the position.
     pieceProvider.clearStateFlags();

@@ -147,6 +147,16 @@ export class Store {
     return true;
   };
 
+  // Replace only the highlight of the current position; the pieces do not need a re-parse.
+  setLastMove(lastMove?: cg.Key[] | string[]): void {
+    const move = this.moveSubject.value;
+    if (!move) {
+      return;
+    }
+
+    this.moveSubject.next({ ...move, lastMove });
+  }
+
   setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.SquareMeshMap): void {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
   }
@@ -158,6 +168,7 @@ export class Store {
   getTextGroup(): THREE.Group {
     if (!this.textGroup) {
       this.textGroup = new THREE.Group();
+      this.textGroup.name = '📝 Player Names';
       this.getScene().add(this.textGroup);
     }
 

@@ -87,11 +87,6 @@ export function Chessboard({ fen, theme = 'green', camera = 'white', playerNames
       camera,
       playerNames,
     });
-
-    return () => {
-      fieldRef.current?.dispose?.();
-      fieldRef.current = null;
-    };
   }, [fen, theme, camera, playerNames]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '600px', maxWidth: '600px' }} />;
@@ -139,7 +134,7 @@ watch([() => props.fen, () => props.theme, () => props.camera], ([fen, theme, ca
 });
 
 onUnmounted(() => {
-  chessfield?.dispose?.();
+  chessfield = null;
 });
 </script>
 
@@ -152,7 +147,7 @@ onUnmounted(() => {
 
 ```typescript
 // chessboard.component.ts
-import { Component, ElementRef, ViewChild, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { Chessfield } from 'chessfield';
 
 @Component({
@@ -168,7 +163,7 @@ import { Chessfield } from 'chessfield';
     `,
   ],
 })
-export class ChessboardComponent implements OnInit, OnDestroy {
+export class ChessboardComponent implements OnInit, OnChanges {
   @ViewChild('board') boardRef!: ElementRef<HTMLDivElement>;
 
   @Input() fen?: string;
@@ -196,10 +191,6 @@ export class ChessboardComponent implements OnInit, OnDestroy {
       this.chessfield.configUpdate({ playerNames: changes['playerNames'].currentValue });
     }
   }
-
-  ngOnDestroy() {
-    this.chessfield?.dispose?.();
-  }
 }
 ```
 
@@ -220,7 +211,7 @@ export class ChessboardModule {}
 ```svelte
 <!-- Chessboard.svelte -->
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import { Chessfield } from 'chessfield';
   import 'chessfield/style.css';
 
@@ -241,8 +232,6 @@ export class ChessboardModule {}
     if (theme) chessfield.switchTheme(theme);
     if (camera) chessfield.switchCamera(camera);
   }
-
-  onDestroy(() => chessfield?.dispose?.());
 </script>
 
 <div bind:this={boardRef} style="width: 100%; height: 600px; max-width: 600px" />

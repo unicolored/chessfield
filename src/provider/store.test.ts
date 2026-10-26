@@ -51,6 +51,20 @@ describe('Store.setFen', () => {
     expect(store.setFen('not a fen')).toBe(false);
     expect(store.moveSubject$.value?.fen).toBe(startFen);
   });
+
+  it('updates only the last move without changing the position', () => {
+    const store = new Store();
+    store.setFen(startFen, ['e2', 'e4']);
+    const seen: (string | null)[] = [];
+    store.moveSubject$.subscribe(move => seen.push(move?.fen ?? null));
+
+    store.setLastMove(['d2', 'd4']);
+
+    expect(store.moveSubject$.value?.fen).toBe(startFen);
+    expect(store.moveSubject$.value?.lastMove).toEqual(['d2', 'd4']);
+    // The observer replays the current position, then receives the highlight update.
+    expect(seen).toEqual([startFen, startFen]);
+  });
 });
 
 describe('Store render requests', () => {

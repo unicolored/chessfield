@@ -156,12 +156,10 @@ vi.doMock('troika-three-utils', () => ({
 }));
 
 describe('TextService', () => {
-  let scene: any;
   let textService: TextService;
 
   beforeEach(() => {
-    scene = new MockScene();
-    textService = new TextService(scene, 'canvas-sprite');
+    textService = new TextService('canvas-sprite');
   });
 
   afterEach(() => {
@@ -174,7 +172,7 @@ describe('TextService', () => {
   });
 
   it('should instantiate with troika-text backend', () => {
-    const service = new TextService(null, 'troika-text');
+    const service = new TextService('troika-text');
     expect(service.backendType).toBe('troika-text');
     service.dispose();
   });
@@ -247,6 +245,30 @@ describe('TextService', () => {
     await textService.setBackend('troika-text');
     expect(textService.backendType).toBe('troika-text');
     expect(textService.getAll().length).toBe(2);
+  });
+
+  it('should reattach recreated text to the parent that held the old object', async () => {
+    const instance = await textService.add({ text: 'White', position: new MockVector3(0, 0, 5) });
+    const parent = new MockGroup();
+    // The mocked Object3D does not wire parents, so emulate the scene graph link.
+    instance.object.parent = parent as any;
+
+    await textService.setBackend('troika-text');
+
+    const recreated = textService.getAll()[0];
+    expect(recreated).not.toBe(instance);
+    expect(parent.remove).toHaveBeenCalledWith(instance.object);
+    expect(parent.add).toHaveBeenCalledWith(recreated.object);
+  });
+
+  it('should remove text from the parent it was attached to', async () => {
+    const instance = await textService.add({ text: 'White', position: new MockVector3(0, 0, 5) });
+    const parent = new MockGroup();
+    instance.object.parent = parent as any;
+
+    textService.remove(instance.id);
+
+    expect(parent.remove).toHaveBeenCalledWith(instance.object);
   });
 
   it('should dispose cleanly', async () => {

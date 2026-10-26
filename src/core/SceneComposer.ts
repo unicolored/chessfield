@@ -47,9 +47,7 @@ export class SceneComposer {
     shapesGroup.name = '🟣 Shapes Group';
     scene.add(shapesGroup);
 
-    const textGroup = new THREE.Group();
-    textGroup.name = '📝 Player Names';
-    scene.add(textGroup);
+    const textGroup = store.getTextGroup();
 
     // Chessboard
     store.chessboard = boardService.createChessboard();
@@ -73,9 +71,9 @@ export class SceneComposer {
 
     // Text Service
     if (store.getConfig().playerNames) {
-      const textColor = themeProvider.getInvertColor();
-      const textOptions = store.getConfig().text ?? {};
-      textOptions.color = textColor;
+      const textConfig = { ...store.getConfig().text };
+      // An explicit text color wins; otherwise use the mode-contrasting default.
+      textConfig.color ??= themeProvider.getInvertColor();
 
       boardService.addPlayerNames(
         textService,
@@ -83,7 +81,7 @@ export class SceneComposer {
           white: store.getConfig().playerNames?.white ?? 'White',
           black: store.getConfig().playerNames?.black ?? 'Black',
         },
-        store.getConfig().text ?? {},
+        textConfig,
         textGroup,
       );
     }
