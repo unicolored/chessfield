@@ -1,7 +1,7 @@
 import type * as cg from '@lichess-org/chessground/types';
 import * as THREE from 'three/webgpu';
 
-import { lmToCoordinates, vector2ToCoord } from '../helper';
+import { lmToCoordinates } from '../helper';
 import { type Store } from '../provider/store';
 
 export class EventsService {
@@ -9,9 +9,10 @@ export class EventsService {
 
   private readonly canvas: HTMLCanvasElement;
   private readonly camera: THREE.PerspectiveCamera | null;
-  private readonly scene: THREE.Scene | null;
 
   private readonly raycaster = new THREE.Raycaster();
+  // Raycast targets are the two board groups, built once instead of per mouse event.
+  private raycastTargets: THREE.Object3D[] | null = null;
   private lastRaycastTime = 0;
   private readonly RAYCAST_INTERVAL = 33;
 
@@ -26,7 +27,6 @@ export class EventsService {
   ) {
     this.canvas = store.getCanvas();
     this.camera = store.camera;
-    this.scene = store.getScene();
   }
 
   init(): void {
@@ -60,48 +60,20 @@ export class EventsService {
   };
 
   private raycastAndHover(): void {
-    if (!this.scene || !this.camera) return;
+    // One raycast per mouse event; the same hit now provides the hovered square.
+    const square = this.getSquareFromMouse(this.mouse);
 
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersects = this.raycaster.intersectObjects(
-      [...this.store.getPieces(), ...this.store.getBoardCases()],
-      false,
-    );
-
-    if (intersects.length === 0) {
+    if (!square) {
       this.onSquareHover?.(-1, -1);
       return;
     }
 
-    const square = this.getSquareFromMouse(this.mouse);
-    if (square) {
-      this.onSquareHover?.(square.rank, square.file);
-    }
+    this.onSquareHover?.(square.rank, square.file);
   }
 
   private getSquareFromIntersect(intersect: THREE.Intersection): { rank: number; file: number } | null {
-    let coord: string | null = null;
-
-    if (intersect.object.parent?.name.includes('Pièces')) {
-      const mesh = intersect.object;
-      const instanceId = intersect.instanceId;
-      if (mesh instanceof THREE.InstancedMesh && instanceId !== undefined) {
-        const coordAttr = mesh.geometry.getAttribute('instanceCoord') as
-          | THREE.InstancedBufferAttribute
-          | undefined;
-        if (coordAttr) {
-          const file = coordAttr.getX(instanceId);
-          const rank = coordAttr.getY(instanceId);
-          coord = vector2ToCoord(new THREE.Vector2(file, rank));
-        } else {
-          coord = mesh.userData['square'] as string;
-        }
-      } else {
-        coord = mesh.userData['square'] as string;
-      }
-    } else {
-      coord = intersect.object.parent?.userData['square'] as string;
-    }
+    // Piece meshes and case hit-boxes both store their square on the mesh itself.
+    const coord = intersect.object.userData['square'] as string | undefined;
 
     if (!coord) return null;
     const coords = lmToCoordinates(['a1', coord as cg.Key]);
@@ -127,15 +99,25 @@ export class EventsService {
   };
 
   private getSquareFromMouse(mouse: THREE.Vector2): { rank: number; file: number } | null {
-    if (!this.scene || !this.camera) return null;
+    if (!this.camera) return null;
 
     this.raycaster.setFromCamera(mouse, this.camera);
-    const intersects = this.raycaster
-      .intersectObjects([...this.store.getPieces(), ...this.store.getBoardCases()], false)
-      .filter((m: THREE.Intersection) => m.object.name !== 'stateSprite');
 
-    if (intersects.length === 0) return null;
-    return this.getSquareFromIntersect(intersects[0]);
+    // Recursive against the cached groups: hidden case hit-boxes still intersect.
+    const [intersect] = this.raycaster.intersectObjects(this.getRaycastTargets(), true);
+
+    return intersect ? this.getSquareFromIntersect(intersect) : null;
+  }
+
+  private getRaycastTargets(): THREE.Object3D[] {
+    if (!this.raycastTargets) {
+      // Only the groups are cached: their children change as pieces move, the groups do not.
+      this.raycastTargets = [this.store.piecesGroup, this.store.casesGroup].filter(
+        (target): target is THREE.Group => Boolean(target),
+      );
+    }
+
+    return this.raycastTargets;
   }
 
   private handleMouseDown = (event: MouseEvent): void => {

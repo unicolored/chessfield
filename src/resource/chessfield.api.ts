@@ -5,7 +5,7 @@ import { type Camera, type Mode, type ThemeColors } from './chessfield.types.ts'
 
 export interface ChessfieldApi {
   // set a fen with flags, and optionally squares part of the last move
-  setFen(fen: cg.FEN, lastMove?: cg.Key[], previousFen?: cg.FEN | null): void;
+  setFen(fen: cg.FEN, lastMove?: cg.Key[]): void;
 
   // set a move, and the fen
   // setMove(lastMove: cg.Key[] | string[], fen?: cg.FEN): void;

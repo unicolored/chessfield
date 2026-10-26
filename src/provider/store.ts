@@ -27,10 +27,10 @@ export class Store {
   textGroup!: THREE.Group;
   state!: THREE.InstancedMesh;
   shapesRing!: THREE.InstancedMesh;
-  moves: cf.Move[] = [];
   gameState: GameState | null = null;
+  // Starts dirty so the first animation-loop frame always draws.
+  private renderRequested = true;
 
-  private boardPieces: cf.BoardPiece[] = [];
   private boardPiecesObjectsMap: cf.SquareMeshMap = new Map();
   private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
   private squarePositionsVec3!: Map<string, THREE.Vector3>;
@@ -125,49 +125,27 @@ export class Store {
     this.config = config;
   }
 
-  private fenSubject = new SimpleSubject<cf.Moves | null>(null);
-  fenSubject$ = new SimpleObservable(this.fenSubject);
+  // Only the current move is kept: no move history, so memory stays constant.
+  private moveSubject = new SimpleSubject<cf.Move | null>(null);
+  moveSubject$ = new SimpleObservable(this.moveSubject);
 
-  setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null): void => {
-    console.log('⭐ setFen');
+  // Set the current position; returns false when the FEN was already the current one.
+  setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[]): boolean => {
     if (!FenParser.isFen(fen)) {
       console.error('Invalid FEN', fen);
-      return;
+      return false;
     }
 
-    const howmanymoves = this.moves.length;
-    const previousIsIdentical = previousFen === fen;
-    previousFen = previousIsIdentical ? null : previousFen;
-
-    if (howmanymoves === 0) {
-      if (previousFen && !previousIsIdentical) {
-        this.moves.push({ fen: previousFen });
-      }
-
-      this.moves.push({
-        fen,
-        lastMove,
-      });
-    } else {
-      const previousMove = this.moves[this.moves.length - 1];
-      const previousIsIdentical = previousMove.fen === fen;
-      if (!previousIsIdentical) {
-        this.moves.push({ fen, lastMove });
-      }
+    // Compare with the stored move instead of a history list (the history no longer exists).
+    if (this.moveSubject.value?.fen === fen) {
+      return false;
     }
 
-    console.log('store', this.moves);
+    // Replace (never append) the stored move, so a single object is retained at most.
+    this.moveSubject.next({ fen, lastMove });
 
-    this.fenSubject.next({ moves: this.moves });
+    return true;
   };
-
-  getBoardPieces(): cf.BoardPiece[] {
-    return this.boardPieces;
-  }
-
-  setBoardPieces(boardPieces: cf.BoardPiece[]): void {
-    this.boardPieces = boardPieces;
-  }
 
   setBoardPiecesObjectsMap(boardPiecesObjectsMap: cf.SquareMeshMap): void {
     this.boardPiecesObjectsMap = boardPiecesObjectsMap;
@@ -175,26 +153,6 @@ export class Store {
 
   getBoardPiecesObjectsMap(): cf.SquareMeshMap {
     return this.boardPiecesObjectsMap;
-  }
-
-  getBoardCases(): THREE.Mesh[] {
-    const cases: THREE.Mesh[] = [];
-
-    this.casesGroup?.traverse((child: THREE.Object3D) => {
-      if (child instanceof THREE.Mesh) cases.push(child);
-    });
-
-    return cases;
-  }
-
-  getPieces(): THREE.Mesh[] {
-    const pieces: THREE.Mesh[] = [];
-
-    this.piecesGroup?.traverse((child: THREE.Object3D) => {
-      if (child instanceof THREE.Mesh) pieces.push(child);
-    });
-
-    return pieces;
   }
 
   getTextGroup(): THREE.Group {
@@ -267,6 +225,22 @@ export class Store {
 
   getRenderPipeline(): THREE.RenderPipeline {
     return this.renderPipeline;
+  }
+
+  // Mark the scene as changed; the animation loop skips frames while nothing is pending.
+  requestRender(): void {
+    this.renderRequested = true;
+  }
+
+  // Consume one pending render request from the animation loop (idle frames draw nothing).
+  consumeRenderRequest(): boolean {
+    if (!this.renderRequested) {
+      return false;
+    }
+
+    this.renderRequested = false;
+
+    return true;
   }
 
   initRenderPipeline(canvas: HTMLCanvasElement, sizes: { width: number; height: number }): void {

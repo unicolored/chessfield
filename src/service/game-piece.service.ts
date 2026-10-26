@@ -3,57 +3,61 @@ import type * as THREE from 'three/webgpu';
 
 import { type Container } from '../core/Container.ts';
 import { coordToVector2, lmToCoordinates } from '../helper.ts';
-import { GameProvider } from '../provider/game.provider.ts';
 import type { GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 
 export class GamePieceService {
-  private fenSubscription: (() => void) | null = null;
+  private moveSubscription: (() => void) | null = null;
+  // Last FEN sent to the piece reconciler, so state-only updates skip the parse/sync.
+  private lastRenderedFen: cg.FEN | null = null;
 
   constructor(private container: Container) {}
 
   /** Subscribe to FEN updates once, and render the current position. */
   start(): void {
-    if (this.fenSubscription) {
+    if (this.moveSubscription) {
       return;
     }
 
-    this.fenSubscription = this.container.getStore().fenSubject$.subscribe((moves: cf.Moves | null) => {
-      this.render(moves);
+    // The subject now emits the single current move instead of a move history.
+    this.moveSubscription = this.container.getStore().moveSubject$.subscribe((move: cf.Move | null) => {
+      this.render(move);
     });
   }
 
   /** Re-render the current position and game state, e.g. after setState(). */
   refresh(): void {
-    if (!this.fenSubscription) {
+    if (!this.moveSubscription) {
       return;
     }
 
-    this.render(this.container.getStore().fenSubject$.value);
+    this.render(this.container.getStore().moveSubject$.value);
   }
 
-  private render(moves: cf.Moves | null): void {
-    if (!moves) {
-      return;
-    }
-
-    const move = GameProvider.findLastMove(moves.moves);
+  private render(move: cf.Move | null): void {
     if (!move) {
       return;
     }
 
     const pieceProvider = this.container.getPieceProvider();
-    const boardPieces = this.container.getGameProvider().setBoardPieces(move);
-    pieceProvider.sync(boardPieces);
 
-    const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
-    if (lastMoveToCoordinates.length > 1) {
-      this.container
-        .getStore()
-        .chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
-      this.container
-        .getStore()
-        .chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+    // Position work only when the FEN changed; setState() alone must not re-parse the board.
+    if (move.fen !== this.lastRenderedFen) {
+      this.lastRenderedFen = move.fen;
+
+      const boardPieces = this.container.getGameProvider().setBoardPieces(move);
+      // Reconcile meshes with the parsed board; the provider applies only the needed deltas.
+      pieceProvider.sync(boardPieces);
+
+      const lastMoveToCoordinates = lmToCoordinates(move.lastMove);
+      if (lastMoveToCoordinates.length > 1) {
+        this.container
+          .getStore()
+          .chessboard?.highlightSquareStart(lastMoveToCoordinates[0].x, lastMoveToCoordinates[0].y);
+        this.container
+          .getStore()
+          .chessboard?.highlightSquareEnd(lastMoveToCoordinates[1].x, lastMoveToCoordinates[1].y);
+      }
     }
 
     // State flags are presentation of the current game state, not of the position.
@@ -77,6 +81,9 @@ export class GamePieceService {
     } else {
       this.container.getStateService().clearAll(['check']);
     }
+
+    // Highlights, check and sprites changed: ask for one frame on the idle animation loop.
+    this.container.getStore().requestRender();
   }
 
   addShapes(state: GameState | null): void {
@@ -111,6 +118,8 @@ export class GamePieceService {
           if (spriteFound) {
             spriteFound.userData['showSprite'] = true;
             spriteFound.userData['lostState'] = true;
+            // Sprites stay hidden (no draw call) until a state actually shows them.
+            spriteFound.visible = true;
           }
         }
       }
@@ -125,33 +134,12 @@ export class GamePieceService {
             if (spriteFound) {
               spriteFound.userData['showSprite'] = true;
               spriteFound.userData['lostState'] = false;
+              // Sprites stay hidden (no draw call) until a state actually shows them.
+              spriteFound.visible = true;
             }
           }
         }
       });
-    }
-  }
-
-  addRingAt(rank: number, file: number, shape: string): void {
-    const shapesService = this.container.getShapesService();
-    const themeColors = this.container.getThemeProvider().getThemeColors();
-
-    const index = rank * 8 + file;
-
-    const color =
-      (themeColors as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
-
-    const isVisible = shapesService.getVisible(index, 'ring');
-
-    if (!isVisible) {
-      shapesService.setShapeAt(rank, file, color, true, 'ring');
-    } else {
-      const currentColor = shapesService.getColor(index, 'ring');
-      if (currentColor.toLowerCase() === color.toLowerCase()) {
-        shapesService.clearShape(index, 'ring');
-      } else {
-        shapesService.setShapeAt(rank, file, color, true, 'ring');
-      }
     }
   }
 }

@@ -31,9 +31,6 @@ export class GameProvider {
       return [];
     }
 
-    const whitePiecesListMap: cf.CoordPieceNameMap = new Map();
-    const blackPiecesListMap: cf.CoordPieceNameMap = new Map();
-
     const fen = move.fen;
 
     // const useGltf = false;
@@ -43,40 +40,36 @@ export class GameProvider {
     const fenParsed = new FenParser(fen);
 
     const boardPieces: cf.BoardPiece[] = [];
+    // Hoisted: the file letters are constant and were rebuilt for every square before.
+    const files = cg.files;
+
     fenParsed.ranks.forEach((rank: string, index: number) => {
       const rankIndex = Store.boardSize - index;
 
-      Array.from(rank).forEach((pieceStr: string, index: number) => {
-        if (pieceStr !== '-') {
-          const letters = Object.values(cg.files);
-          const square: cg.Key = `${letters[index]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
+      // Walk the 8-character rank directly instead of allocating an array per rank.
+      for (let file = 0; file < rank.length; file++) {
+        const pieceStr = rank[file];
 
-          const color: cg.Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as cg.Color;
-
-          const role: cg.Role = PieceProvider.getPiece(pieceStr as cf.PieceKey);
-          // const pieceGroup = this.getOnePiece(pieceGeometries[pieceKey], pieceMaterials[color]);
-
-          if (color === 'white') {
-            whitePiecesListMap.set(square, role);
-          } else if (color === 'black') {
-            blackPiecesListMap.set(square, role);
-          }
-
-          boardPieces.push({
-            square,
-            role,
-            color,
-            objectKey: objKey(color, role),
-            count: 1,
-          });
-          // }
+        if (pieceStr === '-') {
+          continue;
         }
-      });
-    });
 
-    // const whiteCountsMap = this.countPieces(whitePiecesListMap, 'white');
-    // const blackCountsMap = this.countPieces(blackPiecesListMap, 'black');
-    // const mergedMap = new Map([...whiteCountsMap, ...blackCountsMap]);
+        const square: cg.Key = `${files[file]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
+
+        const color: cg.Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as cg.Color;
+
+        const role: cg.Role = PieceProvider.getPiece(pieceStr as cf.PieceKey);
+
+        // The per-colour square lists were never read (counting is disabled), so they are gone.
+        boardPieces.push({
+          square,
+          role,
+          color,
+          objectKey: objKey(color, role),
+          count: 1,
+        });
+      }
+    });
 
     return boardPieces;
   }
@@ -106,16 +99,5 @@ export class GameProvider {
     );
 
     this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
-  }
-
-  static findLastMove(moves: cf.Move[]): cf.Move | null {
-    for (let i = moves.length - 1; i >= 0; i--) {
-      const move = moves[i];
-      if (FenParser.isFen(move.fen)) {
-        return move;
-      }
-    }
-
-    return null;
   }
 }

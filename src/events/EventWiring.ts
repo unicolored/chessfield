@@ -19,11 +19,17 @@ export class EventWiring {
   ): void {
     eventsService.onSquareHover = (rank, file) => {
       store.chessboard?.highlightSquareCursor(rank, file);
+      // The cursor highlight is a shader uniform: request a frame only when it changes.
+      store.requestRender();
     };
 
     eventsService.onSquareRightClick = shapeController.addRingAt.bind(shapeController);
 
-    eventsService.onLeftClickClear = () => shapesService.clearAll();
+    eventsService.onLeftClickClear = () => {
+      shapesService.clearAll();
+      // Rings were cleared outside the controller: ask for one frame.
+      store.requestRender();
+    };
 
     eventsService.init();
   }

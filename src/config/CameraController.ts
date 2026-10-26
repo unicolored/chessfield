@@ -48,6 +48,9 @@ export class CameraController {
     }
 
     this.store.setConfig({ ...this.store.getConfig(), camera: targetCamera, angle });
+
+    // The camera transform changed outside the animation loop: draw the next frame.
+    this.store.requestRender();
   }
 
   getCurrentCamera(): Camera {

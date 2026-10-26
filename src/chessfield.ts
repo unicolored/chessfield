@@ -35,12 +35,19 @@ export class Chessfield implements ChessfieldApi {
     const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
     const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
     //
-    this.setFen(initialFen, initialLastMove, Store.initialFen);
+    // The previous FEN is no longer tracked: only the current position is stored.
+    this.setFen(initialFen, initialLastMove);
   }
 
-  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN = Store.initialFen) {
+  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[]) {
     this.container.getStore().gameState = null;
-    this.container.getStore().setFen(fen, lastMove, previousFen);
+
+    const changed = this.container.getStore().setFen(fen, lastMove);
+
+    // A repeated FEN emits nothing, but the cleared state still has to be repainted.
+    if (!changed) {
+      this.container.getGamePieceService().refresh();
+    }
   }
 
   // public setMove(lastMove: cg.Key[] | string[], fen: cg.FEN) {

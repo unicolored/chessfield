@@ -1,12 +1,11 @@
 import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
 import { pass, renderOutput } from 'three/tsl';
-import * as THREE from 'three/webgpu';
+import type * as THREE from 'three/webgpu';
 
 import { type Store } from '../provider/store';
 
 export class AnimationLoop {
   private animationLoop: (() => void) | null = null;
-  private timer: THREE.Timer | null = null;
 
   start(
     store: Store,
@@ -16,16 +15,16 @@ export class AnimationLoop {
     // scene: THREE.Scene,
     // camera: THREE.PerspectiveCamera,
   ): void {
-    if (!store.controls || !store.renderPipeline.renderer) {
+    // Use the public getter instead of reaching into the store's private pipeline.
+    const renderPipeline = store.getRenderPipeline();
+
+    if (!store.controls || !renderPipeline?.renderer) {
       return;
     }
 
-    this.timer = new THREE.Timer();
-    this.timer.connect(document);
-
     // Scene pass
     const scenePass = pass(store.getScene(), store.camera);
-    store.renderPipeline.outputNode = scenePass;
+    renderPipeline.outputNode = scenePass;
 
     // Bloom pass
     // const bloomPass = bloom(scenePass);
@@ -34,31 +33,35 @@ export class AnimationLoop {
     // store.renderPipeline.outputNode = scenePass.add(bloomPass);
 
     // Color transform pass
-    store.renderPipeline.outputNode = renderOutput(store.renderPipeline.outputNode);
+    renderPipeline.outputNode = renderOutput(renderPipeline.outputNode);
 
     // FXAA pass
-    const fxaaPass = fxaa(store.renderPipeline.outputNode);
-    store.renderPipeline.outputNode = fxaaPass;
+    const fxaaPass = fxaa(renderPipeline.outputNode);
+    renderPipeline.outputNode = fxaaPass;
 
     const tick = () => {
-      if (!this.timer) return;
-      this.timer.update();
+      // Consume pending changes first; requestRender() marks a single dirty frame.
+      const requested = store.consumeRenderRequest();
 
-      store.controls.update();
+      // OrbitControls.update() reports whether damping or user input moved the camera.
+      const cameraMoved = store.controls.update();
+
+      // Idle boards render nothing: only changed frames are submitted to the GPU.
+      if (!requested && !cameraMoved) {
+        return;
+      }
+
       // renderer.render(scene, camera);
-      store.renderPipeline.render();
+      renderPipeline.render();
     };
 
     this.animationLoop = tick;
-    store.renderPipeline.renderer.setAnimationLoop(tick);
+    renderPipeline.renderer.setAnimationLoop(tick);
   }
 
   stop(renderer: THREE.WebGPURenderer): void {
     renderer.setAnimationLoop(null);
     this.animationLoop = null;
-    if (this.timer) {
-      this.timer = null;
-    }
   }
 
   getTick(): (() => void) | null {

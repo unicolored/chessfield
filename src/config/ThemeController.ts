@@ -54,6 +54,9 @@ export class ThemeController {
 
     // 4. State/Check color
     // this.stateService.updateCheckColor(themeColors.statusCheck);
+
+    // Colours are uniforms: one frame is enough to show the new theme.
+    this.container.getStore().requestRender();
   }
 
   getThemeColors(): ThemeColors {

@@ -110,7 +110,8 @@ export class PieceProvider {
       actual.delete(square);
     }
 
-    this.store.setBoardPieces([...desired.values()]);
+    // Pieces changed: ask the idle animation loop for one frame.
+    this.store.requestRender();
   }
 
   /** Clear the state sprite flags, e.g. before applying a new game state. */
@@ -122,6 +123,8 @@ export class PieceProvider {
       }
       sprite.userData['showSprite'] = false;
       sprite.userData['lostState'] = false;
+      // Hidden sprites are not submitted, saving one draw call per piece.
+      sprite.visible = false;
     }
   }
 
@@ -154,6 +157,10 @@ export class PieceProvider {
     sprite.name = 'stateSprite';
     sprite.userData['showSprite'] = false;
     sprite.userData['lostState'] = false;
+    // Hidden until a state is applied: the shader discards it anyway, so skip the draw call.
+    sprite.visible = false;
+    // Sprites are decoration only and must never win a board raycast.
+    sprite.raycast = () => {};
     mesh.add(sprite);
 
     this.positionStateSprite(mesh);

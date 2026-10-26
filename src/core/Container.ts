@@ -141,7 +141,10 @@ export class Container {
   getTextService(): TextService {
     if (!this.textService) {
       const backend = this._config?.text?.backend ?? 'canvas-sprite';
-      this.textService = new TextService(this.store.getScene(), backend);
+      // The callback lets async text (and troika glyph syncing) repaint the idle loop.
+      this.textService = new TextService(this.store.getScene(), backend, () =>
+        this.getStore().requestRender(),
+      );
     }
 
     return this.textService;
@@ -181,7 +184,12 @@ export class Container {
 
   getShapeController(): ShapeController {
     if (!this.shapeController) {
-      this.shapeController = new ShapeController(this.getShapesService(), this.getThemeProvider());
+      // The controller needs the store to request a frame after changing shapes.
+      this.shapeController = new ShapeController(
+        this.getShapesService(),
+        this.getThemeProvider(),
+        this.getStore(),
+      );
     }
 
     return this.shapeController;

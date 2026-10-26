@@ -1,3 +1,4 @@
+import type { Store } from '../provider/store.ts';
 import type { ThemeProvider } from '../provider/theme.provider.ts';
 import type * as cf from '../resource/chessfield.types.ts';
 import type { ShapesService } from '../service/shapes.service.ts';
@@ -7,6 +8,7 @@ export class ShapeController {
   constructor(
     private shapesService: ShapesService,
     private themeProvider: ThemeProvider,
+    private store: Store,
   ) {}
 
   addRing(rank: number, file: number, shape: string): void {
@@ -32,6 +34,9 @@ export class ShapeController {
         this.shapesService.setShapeAt(rank, file, color, true, 'ring');
       }
     }
+
+    // Ring attributes are GPU buffers: draw one frame to show the change on an idle board.
+    this.store.requestRender();
   }
 
   clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
@@ -42,5 +47,8 @@ export class ShapeController {
         this.shapesService.clearAll(shaderName ? [shaderName] : undefined);
       }
     }
+
+    // Clearing shapes also changes GPU buffers, so request a frame.
+    this.store.requestRender();
   }
 }

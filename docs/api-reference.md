@@ -17,7 +17,6 @@ import {
   type ThemeColors,
   type TextBackendType,
   type Move,
-  type Moves,
 } from 'chessfield';
 ```
 
@@ -454,16 +453,12 @@ type TextBackendType = 'canvas-sprite' | 'troika-text';
 
 ---
 
-### `Move` / `Moves`
+### `Move`
 
 ```typescript
 interface Move {
   fen: cg.FEN;
   lastMove?: cg.Key[];
-}
-
-interface Moves {
-  moves: Move[];
 }
 ```
 

@@ -27,12 +27,12 @@ try {
     const move = moves[Math.floor(Math.random() * moves.length)];
 
     console.log(move);
-    const previousFen = chess.fen();
     chess.move(move);
     const currentFen = chess.fen();
     const history = chess.history({ verbose: true });
     const lastMove = [history[history.length - 1].from, history[history.length - 1].to];
-    board1.setFen(currentFen, lastMove, previousFen);
+    // Previous FEN is not needed: the board only stores the current position.
+    board1.setFen(currentFen, lastMove);
 
     if (chess.isGameOver()) {
       if (chess.isCheckmate()) {

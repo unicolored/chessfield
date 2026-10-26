@@ -9,7 +9,6 @@ import type * as cf from '../resource/chessfield.types.ts';
 import { type ThemeColors } from '../resource/chessfield.types.ts';
 import { cbShader } from '../shader/cbShader.ts';
 
-import { ShapesService } from './shapes.service.ts';
 import { type TextConfig, type TextService } from './text/text.service.ts';
 
 export class BoardService {
@@ -85,67 +84,42 @@ export class BoardService {
   }
 
   public createCases(font: Font | null): THREE.Group {
-    const shapesService = new ShapesService(['ring']);
-    shapesService.createShaderMaterial('ring');
-    // shapesService.createShaderMaterial('check');
+    // The unused ShapesService/shader instantiated here was removed: shapes are created once by the container.
 
     // Create the chessboard
     const casesGroup = new THREE.Group();
     casesGroup.name = '🔲🔳 Cases';
     // const checkCoord = vec2(2, 5);
+    // Hoisted: the file letters are constant and were rebuilt for every square before.
+    const files = cg.files;
+
+    // One shared geometry and material for all 64 hit-boxes (they are invisible and only serve raycasts).
+    const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
+    squareGeometry.scale(0.25, 0.25, 0.25);
+    const squareMaterial = new THREE.MeshBasicMaterial();
 
     for (let rankInt = 0; rankInt < Store.boardSize; rankInt++) {
       for (let colInt = 0; colInt < Store.boardSize; colInt++) {
-        const square = Object.values(cg.files)[rankInt] + (Store.boardSize - colInt);
-
-        // GROUP
-        const caseGroup = new THREE.Group();
-        caseGroup.name = square;
-        caseGroup.userData['square'] = square;
-
-        // SQUARE
-        const squareGeometry = new THREE.PlaneGeometry(Store.squareSize, Store.squareSize, 1, 1);
-        squareGeometry.scale(0.25, 0.25, 0.25);
-        const squareMaterial = new THREE.MeshBasicNodeMaterial({
-          color: 0xff_00_00,
-          wireframe: true,
-          transparent: true,
-          opacity: 0,
-        });
+        const square = files[rankInt] + (Store.boardSize - colInt);
 
         const squarePosition = new THREE.Vector3(
           cm(rankInt - Store.boardSize / 2 + 0.5),
           0.0001,
           cm(colInt - Store.boardSize / 2 + 0.5),
         );
-        // const instanceVisible = select(
-        //   checkCoord.x.equal(rankInt).and(checkCoord.y.equal(colInt)),
-        //   float(1.0),
-        //   float(0.0),
-        // );
 
-        // const instanceColor = new THREE.Color(0, 1, 1);
-        // const pattern = uv().sub(0.5).length().smoothstep(0.5, 0.33);
-        // const shader = new THREE.Color('crimson');
-        // squareMaterial.opacityNode = float(pattern);
-        // squareMaterial.colorNode = vec4(shader, instanceVisible);
-
+        // A flat mesh carries its square: the previous per-square Group wrapper is no longer needed.
         const squareMesh = new THREE.Mesh(squareGeometry, squareMaterial);
+        squareMesh.name = square;
+        squareMesh.userData['square'] = square;
         squareMesh.rotation.x = -Math.PI / 2;
-
         squareMesh.position.set(squarePosition.x, squarePosition.y, squarePosition.z);
         squareMesh.castShadow = false;
         squareMesh.receiveShadow = false;
+        // Hidden from rendering (saves 64 draw calls) while remaining raycastable.
+        squareMesh.visible = false;
 
-        // TEXT
-        // if (font) {
-        //   const textMesh = this.makeCoordText(font, square, { rankInt, colInt }, theme);
-        //
-        //   // ADD
-        //   squareMesh.add(textMesh);
-        // }
-        caseGroup.add(squareMesh);
-        casesGroup.add(caseGroup);
+        casesGroup.add(squareMesh);
       }
     }
 

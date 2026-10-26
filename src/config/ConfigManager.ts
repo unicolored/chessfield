@@ -39,11 +39,8 @@ export class ConfigManager {
       );
     }
 
-    // Clean up moves subscription before restarting
-    // if (this.container.getGamePieceService().getFenSubscription()) {
-    //   this.container.getGamePieceService().getFenSubscription()!();
-    //   this.container.getGamePieceService().setFenSubscription(null);
-    // }
+    // TODO: disposing the previous render pipeline/controls and re-composing the scene is still
+    // missing; restarting currently recreates the scene without restarting the animation loop.
 
     // Dispose resources
     // this.resourceDisposal.dispose({

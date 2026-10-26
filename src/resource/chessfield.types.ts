@@ -8,10 +8,6 @@ export type Camera = 'white' | 'right' | 'black' | 'left' | 'top';
 
 export type Angle = 'left' | 'center' | 'right';
 
-export interface Moves {
-  moves: Move[];
-}
-
 export interface Move {
   fen: cg.FEN;
   lastMove?: cg.Key[] | string[];
@@ -59,8 +55,6 @@ export interface ThemeColors {
   ringCtrl?: string | number;
 }
 
-export type CoordPieceNameMap = Map<cg.Key, cg.Role>;
-export type ColorPieceNameObjectMap = Map<string, THREE.Mesh | THREE.Group | undefined>;
 export type SquareMeshMap = Map<cg.Key, THREE.Mesh>;
 
 export interface BoardPiece extends cg.Piece {

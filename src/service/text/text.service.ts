@@ -20,7 +20,12 @@ export class TextService implements TextServiceInterface {
     return this._backendType;
   }
 
-  constructor(scene: THREE.Scene | null, backendType: TextBackendType = 'canvas-sprite') {
+  constructor(
+    scene: THREE.Scene | null,
+    backendType: TextBackendType = 'canvas-sprite',
+    // Notified whenever rendered text changes, so on-demand rendering can draw a frame.
+    private readonly onChange: () => void = () => {},
+  ) {
     this._backendType = backendType;
     this.backend = this.createBackend(backendType);
 
@@ -68,8 +73,12 @@ export class TextService implements TextServiceInterface {
     // }
 
     const instance = await (this.backend as any).create(options);
+    // Troika builds its glyph atlas asynchronously; repaint when it signals completion.
+    instance.object.addEventListener?.('synccomplete', () => this.onChange());
     // this.textGroup.add(instance.object);
     this.instances.set(instance.id, instance);
+    // Text changed: ask the idle animation loop for a frame.
+    this.onChange();
     return instance;
   }
 
@@ -79,6 +88,8 @@ export class TextService implements TextServiceInterface {
       this.textGroup?.remove(instance.object);
       instance.dispose();
       this.instances.delete(id);
+      // Removing text changes the scene: request a frame.
+      this.onChange();
     }
   }
 
@@ -88,12 +99,16 @@ export class TextService implements TextServiceInterface {
       instance.dispose();
     }
     this.instances.clear();
+    // Removing text changes the scene: request a frame.
+    this.onChange();
   }
 
   update(id: string, options: Partial<TextOptions>): void {
     const instance = this.instances.get(id);
     if (instance) {
       instance.update(options);
+      // Updated text changes the scene: request a frame.
+      this.onChange();
     }
   }
 
