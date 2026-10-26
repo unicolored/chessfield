@@ -85,12 +85,24 @@ export class GamePieceService {
           //   }
           // });
           removePieces = previousBoardPieces.filter((p: BoardPiece) => {
+            if (!p.square) {
+              return false;
+            }
             const compared = compareBoardPieces.get(p.square);
             console.log(p.square, compared);
             if (!compared) {
               return false;
             }
             return compared.now === undefined;
+          });
+          boardPieces.forEach((b: BoardPiece) => {
+            const checkSquare = b.square;
+            const previousPieceOnThatSquare = previousBoardPieces.find(
+              (b: BoardPiece) => b.square === checkSquare,
+            );
+            if (previousPieceOnThatSquare) {
+              removePieces.push(previousBoardPieces);
+            }
           });
           console.log('boardPieces to remove', removePieces);
           boardPieces = boardPieces.filter((p: BoardPiece) => compareBoardPieces.has(`${p.square}`));

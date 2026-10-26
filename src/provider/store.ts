@@ -137,36 +137,34 @@ export class Store {
 
   setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null): void => {
     if (!FenParser.isFen(fen)) {
+      console.error('Invalid FEN', fen);
       return;
     }
 
-    const move = {
-      fen,
-      lastMove,
-    };
+    const howmanymoves = this.moves.length;
+    const previousIsIdentical = previousFen === fen;
+    previousFen = previousIsIdentical ? null : previousFen;
 
-    console.log('setFen', fen, lastMove, previousFen);
+    if (howmanymoves === 0) {
+      if (previousFen && !previousIsIdentical) {
+        this.moves.push({ fen: previousFen });
+      }
 
-    if (!previousFen) {
-      this.moves = [];
       this.moves.push({
-        fen: Store.initialFen,
+        fen,
+        lastMove,
       });
-    } else if (this.moves.length < 1) {
-      this.moves.push({
-        fen: previousFen,
-      });
+    } else {
+      const previousMove = this.moves[this.moves.length - 1];
+      const previousIsIdentical = previousMove.fen === fen;
+      if (!previousIsIdentical) {
+        this.moves.push({ fen, lastMove });
+      }
     }
 
-    this.moves.push(move);
+    console.log(this.moves);
 
-    const moves: cf.Moves = {
-      moves: this.moves,
-    };
-
-    console.log('setFen after moves', this.moves);
-
-    this.fenSubject.next(moves);
+    this.fenSubject.next({ moves: this.moves });
   };
 
   getBoardPieces(): cf.BoardPiece[] {

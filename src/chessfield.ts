@@ -30,10 +30,10 @@ export class Chessfield implements ChessfieldApi {
     this.container.getCore().start();
 
     // Set initial FEN
-    const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
-    const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
-
-    this.setFen(initialFen, initialLastMove, Store.initialFen);
+    // const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
+    // const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
+    //
+    // this.setFen(initialFen, initialLastMove, Store.initialFen);
   }
 
   public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN = Store.initialFen) {
