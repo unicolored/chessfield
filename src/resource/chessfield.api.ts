@@ -1,7 +1,7 @@
 import type * as cg from '@lichess-org/chessground/types';
 
 import { type ChessfieldConfig } from './chessfield.config.ts';
-import { type Camera, type Mode, type ThemeColors } from './chessfield.types.ts';
+import { type Camera, type Mode, type Projection, type ThemeColors } from './chessfield.types.ts';
 
 export interface ChessfieldApi {
   // set a fen with flags, and optionally squares part of the last move
@@ -22,8 +22,14 @@ export interface ChessfieldApi {
   // switch mode (light/dark) - toggles if no mode provided
   switchMode(mode?: Mode): void;
 
+  // switch camera projection (perspective/isometric) - toggles if no projection provided
+  switchProjection(projection?: Projection): void;
+
   // get current camera position
   getCurrentCamera(): Camera | undefined;
+
+  // get current camera projection
+  getCurrentProjection(): Projection;
 
   // get current mode (light/dark)
   getCurrentMode(): Mode;

@@ -50,6 +50,44 @@ describe('CanvasSpriteBackend', () => {
     expect(instance.options.fontSize).toBe(0.5);
   });
 
+  it('keeps the shared cached texture alive when one instance is disposed', () => {
+    const options = { text: 'Shared', position: new THREE.Vector3(0, 0, 5) };
+    const first = backend.create(options);
+    const second = backend.create(options);
+
+    const texture = (first.object as THREE.Sprite).material.map!;
+    expect((second.object as THREE.Sprite).material.map).toBe(texture);
+    const dispose = vi.spyOn(texture, 'dispose');
+
+    first.dispose();
+
+    expect(dispose).not.toHaveBeenCalled();
+  });
+
+  it('does not dispose the cached texture when an instance is updated', () => {
+    const options = { text: 'One', position: new THREE.Vector3(0, 0, 5) };
+    const first = backend.create(options);
+    const second = backend.create(options);
+
+    const texture = (first.object as THREE.Sprite).material.map!;
+    const dispose = vi.spyOn(texture, 'dispose');
+
+    second.update({ text: 'Two' });
+
+    expect((second.object as THREE.Sprite).material.map).not.toBe(texture);
+    expect(dispose).not.toHaveBeenCalled();
+  });
+
+  it('disposes cached textures when the backend is disposed', () => {
+    const instance = backend.create({ text: 'Owned', position: new THREE.Vector3(0, 0, 5) });
+    const texture = (instance.object as THREE.Sprite).material.map!;
+    const dispose = vi.spyOn(texture, 'dispose');
+
+    backend.dispose();
+
+    expect(dispose).toHaveBeenCalled();
+  });
+
   it('should dispose cleanly', () => {
     backend.create({
       text: 'Test',

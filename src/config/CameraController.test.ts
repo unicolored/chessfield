@@ -1,47 +1,93 @@
 import * as THREE from 'three/webgpu';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CameraProvider } from '../provider/camera.provider.ts';
-import { Store } from '../provider/store.ts';
+import { CameraProvider } from '../provider/camera.provider.ts';
+import type { Store } from '../provider/store.ts';
+import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 
 import { CameraController } from './CameraController.ts';
 
-function createController(config: ConstructorParameters<typeof Store>[0]) {
-  const store = new Store(config);
-  store.camera = new THREE.PerspectiveCamera();
-  store.camGroup = new THREE.Group();
+const sizes = { width: 1200, height: 700 };
 
-  const provider = {
-    setConfig: vi.fn(),
-    getCameraPosition: vi.fn(() => new THREE.Vector3(1, 2, 3)),
-    getCameraGroupRotation: vi.fn(() => new THREE.Vector3(0, 0.5, 0)),
-  } as unknown as CameraProvider;
+function createHarness(config: ChessfieldConfig = {}) {
+  const provider = new CameraProvider(config);
+  const perspective = provider.getCamera(sizes);
+  const isometric = provider.getIsometricCamera(sizes);
+  provider.syncProjection(isometric, perspective);
 
-  return { store, provider, controller: new CameraController(provider, store) };
+  const store = {
+    config,
+    camera: perspective as THREE.PerspectiveCamera | THREE.OrthographicCamera,
+    camGroup: new THREE.Group(),
+    controls: undefined as { object: THREE.Camera } | undefined,
+    requestRender: vi.fn(),
+    getConfig: () => store.config,
+    setConfig: (next: ChessfieldConfig) => {
+      store.config = next;
+    },
+  };
+
+  store.camGroup.add(store.camera);
+
+  return {
+    provider,
+    store,
+    perspective,
+    isometric,
+    controller: new CameraController(provider, store as unknown as Store),
+  };
 }
 
-describe('CameraController.applyConfig', () => {
-  it('moves the live camera and group to the configured view', () => {
-    const { store, provider, controller } = createController({ camera: 'top', angle: 'center' });
-    store.requestRender = vi.fn();
+describe('CameraController.switchProjection', () => {
+  it('renders the isometric camera and keeps the orbit transform', () => {
+    const h = createHarness();
+    h.store.camera.position.set(0, 0.1, 0.2);
+    h.store.controls = { object: h.store.camera };
 
-    controller.applyConfig();
+    h.controller.switchProjection();
 
-    expect(provider.setConfig).toHaveBeenCalledWith(store.getConfig());
-    expect(provider.getCameraPosition).toHaveBeenCalledWith('top');
-    expect(provider.getCameraGroupRotation).toHaveBeenCalledWith('top', 'center');
-    expect(store.camera.position.toArray()).toEqual([1, 2, 3]);
-    expect(store.camGroup.rotation.toArray().slice(0, 3)).toEqual([0, 0.5, 0]);
-    expect(store.requestRender).toHaveBeenCalled();
+    expect(h.store.camera).toBe(h.isometric);
+    expect(h.store.getConfig().projection).toBe('isometric');
+    expect(h.store.controls.object).toBe(h.isometric);
+    expect(h.store.camGroup.children).toEqual([h.isometric]);
+    expect(h.store.camera.position.equals(new THREE.Vector3(0, 0.1, 0.2))).toBe(true);
+    expect(h.store.requestRender).toHaveBeenCalled();
   });
 
-  it('stores the next camera before applying it', () => {
-    const { store, controller } = createController({ camera: 'white' });
+  it('matches the apparent size so switching does not zoom the board', () => {
+    const h = createHarness();
+    h.store.camera.position.set(0, 0.1, 0.2);
 
-    controller.switchCamera();
+    h.controller.switchProjection();
 
-    expect(store.getConfig().camera).toBe('right');
-    // The provider receives the new camera through the shared apply path.
-    expect(store.camera.position).toBeDefined();
+    const iso = h.store.camera as THREE.OrthographicCamera;
+    const expectedHalfHeight =
+      h.store.camera.position.length() * Math.tan(THREE.MathUtils.degToRad(h.perspective.fov / 2));
+
+    expect((iso.top - iso.bottom) / 2).toBeCloseTo(expectedHalfHeight);
+    expect(iso.zoom).toBe(1);
+  });
+
+  it('toggles back to the perspective camera at the equivalent distance', () => {
+    const h = createHarness();
+    h.controller.switchProjection();
+
+    h.controller.switchProjection();
+
+    expect(h.store.camera).toBe(h.perspective);
+    expect(h.store.getConfig().projection).toBe('perspective');
+    // The perspective distance reproduces the isometric apparent height.
+    expect(h.perspective.position.length()).toBeCloseTo(0.14 * Math.SQRT2);
+  });
+
+  it('moves the active camera when the camera position changes', () => {
+    const h = createHarness();
+    h.controller.switchProjection('isometric');
+
+    h.controller.switchCamera('top');
+
+    expect(h.store.camera).toBe(h.isometric);
+    expect(h.isometric.position.y).toBeCloseTo(0.16);
+    expect(h.controller.getCurrentCamera()).toBe('top');
   });
 });

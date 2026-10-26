@@ -7,6 +7,7 @@ import { Store } from './provider/store.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
+import { type Projection } from './resource/chessfield.types.ts';
 import { type ShaderName } from './shader/index.ts';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
@@ -70,7 +71,12 @@ export class Chessfield implements ChessfieldApi {
   }
 
   public switchMode(mode?: 'light' | 'dark'): void {
-    this.container.getThemeController().switchMode(mode);
+    const currentMode = this.getCurrentMode();
+    const targetMode = mode ?? (currentMode === 'light' ? 'dark' : 'light');
+
+    // Go through configUpdate so the player-name labels are rebuilt with the new mode's
+    // contrast color; ThemeController alone only repaints the board and the decor.
+    void this.configUpdate({ mode: targetMode }).catch(error => console.error('Mode switch failed', error));
   }
 
   public getCurrentCamera() {
@@ -79,6 +85,14 @@ export class Chessfield implements ChessfieldApi {
 
   public switchCamera(camera?: string): void {
     this.container.getCameraController().switchCamera(camera as any);
+  }
+
+  public switchProjection(projection?: Projection): void {
+    this.container.getCameraController().switchProjection(projection);
+  }
+
+  public getCurrentProjection(): Projection {
+    return this.container.getCameraController().getCurrentProjection();
   }
 
   public addRing(rank: number, file: number, shape: string): void {

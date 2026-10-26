@@ -21,9 +21,12 @@ export class ThemeProvider {
     return this.getModeColors().light ?? '#bfcfdd';
   }
 
-  getInvertColor(): string | number {
-    const invertMode = this.mode === 'light' ? 'dark' : 'light';
-    return Store.modes[invertMode].light ?? '#bfcfdd';
+  /**
+   * Text color contrasting with the mode background.
+   * The mode owns it explicitly, so a background tweak cannot wash the labels out.
+   */
+  getTextColor(): string | number {
+    return this.mode === 'light' ? Store.modes['dark'].light : Store.modes['light'].light;
   }
 
   getCurrentTheme(): Theme {

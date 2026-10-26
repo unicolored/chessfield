@@ -15,7 +15,7 @@ import { SimpleObservable, SimpleSubject } from './observable.ts';
 export class Store {
   private canvas!: HTMLCanvasElement;
   private scene!: THREE.Scene;
-  camera!: THREE.PerspectiveCamera;
+  camera!: cf.ProjectionCamera;
   camGroup!: THREE.Group;
   // static enableAntialias = window.devicePixelRatio < 2;
   // renderer!: THREE.WebGPURenderer;

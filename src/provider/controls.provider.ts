@@ -28,7 +28,7 @@ export class ControlsProvider {
     controls.maxDistance = cm(this.zoomMaxDistance);
   }
 
-  getControls(camera: THREE.PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
+  getControls(camera: THREE.Camera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
     controls.mouseButtons = {

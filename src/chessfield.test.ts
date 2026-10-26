@@ -90,6 +90,31 @@ describe('Chessfield API', () => {
     expect(chessfield.getCurrentCamera()).toBe('top');
   });
 
+  it('switches the camera projection', async () => {
+    expect(chessfield.getCurrentProjection()).toBe('perspective');
+
+    chessfield.switchProjection();
+
+    expect(chessfield.getCurrentProjection()).toBe('isometric');
+
+    await chessfield.configUpdate({ projection: 'perspective' });
+
+    expect(chessfield.getCurrentProjection()).toBe('perspective');
+  });
+
+  it('switches the mode and rebuilds through configUpdate', () => {
+    expect(chessfield.getCurrentMode()).toBe('light');
+
+    chessfield.switchMode();
+    expect(chessfield.getCurrentMode()).toBe('dark');
+
+    chessfield.switchMode();
+    expect(chessfield.getCurrentMode()).toBe('light');
+
+    chessfield.switchMode('dark');
+    expect(chessfield.getCurrentMode()).toBe('dark');
+  });
+
   it('treats an empty update as a no-op', async () => {
     const canvas = container.querySelector('canvas');
     const mode = chessfield.getCurrentMode();

@@ -85,13 +85,22 @@ if (switchModeBtn) {
 
   syncModeLabel();
   switchModeBtn.addEventListener('click', () => {
-    const nextMode = board1.getCurrentMode() === 'light' ? 'dark' : 'light';
+    board1.switchMode();
+    syncModeLabel();
+  });
+}
 
-    // configUpdate (not switchMode) so the player-name labels are rebuilt with the mode contrast color.
-    board1
-      .configUpdate({ mode: nextMode })
-      .then(syncModeLabel)
-      .catch(e => console.error('Mode switch failed', e));
+const switchProjectionBtn = document.getElementById('switch-projection-btn');
+
+if (switchProjectionBtn) {
+  const syncProjectionLabel = () => {
+    switchProjectionBtn.textContent = `Projection: ${board1.getCurrentProjection()}`;
+  };
+
+  syncProjectionLabel();
+  switchProjectionBtn.addEventListener('click', () => {
+    board1.switchProjection();
+    syncProjectionLabel();
   });
 }
 

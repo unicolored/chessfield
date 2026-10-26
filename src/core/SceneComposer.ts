@@ -73,7 +73,7 @@ export class SceneComposer {
     if (store.getConfig().playerNames) {
       const textConfig = { ...store.getConfig().text };
       // An explicit text color wins; otherwise use the mode-contrasting default.
-      textConfig.color ??= themeProvider.getInvertColor();
+      textConfig.color ??= themeProvider.getTextColor();
 
       boardService.addPlayerNames(
         textService,

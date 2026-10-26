@@ -2,6 +2,7 @@ import * as THREE from 'three/webgpu';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Container } from '../core/Container.ts';
+import { Store } from '../provider/store.ts';
 import { ThemeProvider } from '../provider/theme.provider.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 
@@ -83,7 +84,7 @@ describe('ConfigManager.configUpdate', () => {
   it('applies camera and control changes in place', async () => {
     const h = createHarness({ camera: 'white' });
 
-    await h.manager.configUpdate({ camera: 'top', controlsEnabled: false });
+    await h.manager.configUpdate({ camera: 'top', controlsEnabled: false, projection: 'isometric' });
 
     expect(h.cameraController.applyConfig).toHaveBeenCalled();
     expect(h.controlsProvider.apply).toHaveBeenCalledWith(h.store.getConfig(), undefined);
@@ -122,8 +123,21 @@ describe('ConfigManager.configUpdate', () => {
     const [, names, textConfig] = h.boardService.addPlayerNames.mock.calls[0] as any[];
     expect(names).toEqual({ white: 'Alice', black: 'Bob' });
     expect(textConfig.fontSize).toBe(0.7);
-    expect(textConfig.color).toBe(h.themeProvider.getInvertColor());
+    expect(textConfig.color).toBe(h.themeProvider.getTextColor());
     expect(h.store.scene.background).toEqual(new THREE.Color(h.themeProvider.getBackgroundColor()));
+  });
+
+  it('rebuilds player names in dark text when switching back to light', async () => {
+    const h = createHarness({
+      mode: 'dark',
+      playerNames: { white: 'Alice', black: 'Bob' },
+    });
+    (h.store as any).chessboard = { setSquareColors: vi.fn(), setHighlightColor: vi.fn() };
+
+    await h.manager.configUpdate({ mode: 'light' });
+
+    const [, , textConfig] = h.boardService.addPlayerNames.mock.calls[0] as any[];
+    expect(textConfig.color).toBe(Store.modes['dark'].light);
   });
 
   it('keeps an explicit text color and merges partial player names', async () => {

@@ -43,11 +43,12 @@ export class ConfigManager {
 
     store.setConfig(updatedConfig);
 
-    // Camera positions depend on the camera, angle and orientation.
+    // Camera positions depend on the camera, angle, orientation and projection.
     if (
       partialConfig.camera !== undefined ||
       partialConfig.angle !== undefined ||
-      partialConfig.orientation !== undefined
+      partialConfig.orientation !== undefined ||
+      partialConfig.projection !== undefined
     ) {
       this.container.getCameraController().applyConfig();
     }
@@ -95,7 +96,7 @@ export class ConfigManager {
 
     const textConfig = { ...config.text };
     // An explicit text color wins; otherwise use the mode-contrasting default.
-    textConfig.color ??= this.container.getThemeProvider().getInvertColor();
+    textConfig.color ??= this.container.getThemeProvider().getTextColor();
 
     await this.container.getBoardService().addPlayerNames(
       textService,

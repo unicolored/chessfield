@@ -37,12 +37,17 @@ export class ChessfieldCore {
     this._container.getStore().setScene(scene);
 
     // Camera
-    // Save camera references for direct updates
-    this._container.getStore().camera = this._container.getCameraProvider().getCamera(sizes);
-    this._container.getStore().camGroup = this._container
-      .getCameraProvider()
-      .getCameraGroup(this._container.getStore().camera);
-    this._container.getStore().getScene().add(this._container.getStore().camGroup);
+    // Both projections exist up front: switching only swaps which one is rendered.
+    const cameraProvider = this._container.getCameraProvider();
+    const store = this._container.getStore();
+    const perspectiveCamera = cameraProvider.getCamera(sizes);
+    const isometricCamera = cameraProvider.getIsometricCamera(sizes);
+    cameraProvider.syncProjection(isometricCamera, perspectiveCamera);
+
+    const projection = store.getConfig().projection ?? 'perspective';
+    store.camera = cameraProvider.getCameraFor(projection);
+    store.camGroup = cameraProvider.getCameraGroup(store.camera);
+    store.getScene().add(store.camGroup);
 
     // Canvas & Renderer
     this._container.getStore().initRenderPipeline(this._container.getStore().getCanvas(), sizes);
@@ -85,8 +90,7 @@ export class ChessfieldCore {
 
     const store = this._container.getStore();
     store.getRenderPipeline().renderer.setSize(width, height);
-    store.camera.aspect = width / height;
-    store.camera.updateProjectionMatrix();
+    this._container.getCameraProvider().resize(store.camera, { width, height });
     store.requestRender();
   }
 

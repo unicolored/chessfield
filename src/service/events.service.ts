@@ -8,7 +8,6 @@ export class EventsService {
   public readonly mouse = new THREE.Vector2();
 
   private readonly canvas: HTMLCanvasElement;
-  private readonly camera: THREE.PerspectiveCamera | null;
 
   private readonly raycaster = new THREE.Raycaster();
   // Raycast targets are the two board groups, built once instead of per mouse event.
@@ -26,7 +25,6 @@ export class EventsService {
     private readonly cfElement: HTMLElement,
   ) {
     this.canvas = store.getCanvas();
-    this.camera = store.camera;
   }
 
   init(): void {
@@ -99,9 +97,10 @@ export class EventsService {
   };
 
   private getSquareFromMouse(mouse: THREE.Vector2): { rank: number; file: number } | null {
-    if (!this.camera) return null;
+    const camera = this.store.camera;
+    if (!camera) return null;
 
-    this.raycaster.setFromCamera(mouse, this.camera);
+    this.raycaster.setFromCamera(mouse, camera);
 
     // Recursive against the cached groups: hidden case hit-boxes still intersect.
     const [intersect] = this.raycaster.intersectObjects(this.getRaycastTargets(), true);

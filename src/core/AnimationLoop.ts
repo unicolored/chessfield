@@ -40,6 +40,9 @@ export class AnimationLoop {
     renderPipeline.outputNode = fxaaPass;
 
     const tick = () => {
+      // The projection switch swaps the camera instance: the pass follows the active one.
+      scenePass.camera = store.camera;
+
       // Consume pending changes first; requestRender() marks a single dirty frame.
       const requested = store.consumeRenderRequest();
 

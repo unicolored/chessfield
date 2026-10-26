@@ -6,6 +6,11 @@ export type Theme = 'blue' | 'green' | 'brown' | 'bw' | 'light' | 'dark' | strin
 
 export type Camera = 'white' | 'right' | 'black' | 'left' | 'top';
 
+export type Projection = 'perspective' | 'isometric';
+
+/** Camera instance actually rendered: one per projection. */
+export type ProjectionCamera = THREE.PerspectiveCamera | THREE.OrthographicCamera;
+
 export type Angle = 'left' | 'center' | 'right';
 
 export interface Move {
