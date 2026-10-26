@@ -16,13 +16,13 @@ export class GamePieceService {
 
   constructor(private container: Container) {}
 
-  getFenSubscription(): (() => void) | null {
-    return this.fenSubscription;
-  }
-
-  setFenSubscription(sub: (() => void) | null): void {
-    this.fenSubscription = sub;
-  }
+  // getFenSubscription(): (() => void) | null {
+  //   return this.fenSubscription;
+  // }
+  //
+  // setFenSubscription(sub: (() => void) | null): void {
+  //   this.fenSubscription = sub;
+  // }
   //
   // getMovesSubscription(): (() => void) | null {
   //   return this.movesSubscription;
@@ -41,10 +41,6 @@ export class GamePieceService {
   // }
 
   updatePieces(): void {
-    // if (this.fenSubscription) {
-    //   this.fenSubscription();
-    // }
-
     this.fenSubscription = this.container.getStore().fenSubject$.subscribe((moves: cf.Moves | null) => {
       console.log('🟣 fenSubject$ subscribe moves', moves);
       if (!moves) {
