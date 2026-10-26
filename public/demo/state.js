@@ -71,13 +71,12 @@ if (fenCheck) {
   const findCheckKing = chess.findPiece({ type: KING, color: chess.turn() });
   // -> ['e8']
   const check = {
-    status: 'check',
-    kings: {
-      white: chess.turn() === 'w' ? findCheckKing.pop() : null,
-      black: chess.turn() === 'b' ? findCheckKing.pop() : null,
-    },
+    check: [
+      chess.turn() === 'w' ? findCheckKing.pop() : undefined,
+      chess.turn() === 'b' ? findCheckKing.pop() : undefined,
+    ],
   };
-  board1.setCheck(check);
+  board1.setState(check);
 }
 
 // MATE
@@ -92,16 +91,26 @@ if (fenMate) {
   });
   board2.setFen(fenMate.fen, fenMate.lastMove);
   chess.load(fenMate.fen, { skipValidation: false });
+  const winner = chess.turn() === WHITE ? BLACK : WHITE;
   const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+
+  const mate = [];
+  if (winner === WHITE) {
+    mate.push(findBlackKing);
+  } else if (winner === BLACK) {
+    mate.push(findWhiteKing);
+  }
+
   const gO = {
-    status: 'mate',
-    winner: 'w',
+    winner,
     kings: {
-      // white: findWhiteKing.pop(),
+      white: findWhiteKing.pop(),
       black: findBlackKing.pop(),
     },
+    mate,
   };
-  board2.setGameOver(gO);
+  board2.setState(gO);
 }
 
 // DRAW
@@ -115,16 +124,17 @@ if (fenDraw) {
   });
   board3.setFen(fenDraw.fen, fenDraw.lastMove);
   chess.load(fenDraw.fen, { skipValidation: false });
-  const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-  const findDrawBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const findBlackKing = chess.findPiece({ type: KING, color: BLACK }).pop();
+  const findWhiteKing = chess.findPiece({ type: KING, color: WHITE }).pop();
+
   const gOdraw = {
-    status: 'draw',
     kings: {
-      white: findDrawWhiteKing.pop(),
-      black: findDrawBlackKing.pop(),
+      white: findWhiteKing,
+      black: findBlackKing,
     },
+    draw: [findWhiteKing, findBlackKing],
   };
-  board3.setGameOver(gOdraw);
+  board3.setState(gOdraw);
 }
 
 // RESIGN
@@ -133,17 +143,26 @@ if (fenResign) {
   const board4 = new Chessfield(document.getElementById('board-resign'), {});
   board4.setFen(fenResign.fen, fenResign.lastMove);
   chess.load(fenResign.fen, { skipValidation: false });
-  // const findDrawWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-  const findResignBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const winner = chess.turn() === WHITE ? BLACK : WHITE;
+  const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+
+  const resign = [];
+  if (winner === WHITE) {
+    resign.push(findBlackKing);
+  } else if (winner === BLACK) {
+    resign.push(findWhiteKing);
+  }
+
   const gOresign = {
-    status: 'resign',
-    winner: 'w',
+    winner,
     kings: {
-      // white: findResignWhiteKing.pop(),
-      black: findResignBlackKing.pop(),
+      white: findWhiteKing.pop(),
+      black: findBlackKing.pop(),
     },
+    mate: resign,
   };
-  board4.setGameOver(gOresign);
+  board4.setState(gOresign);
 }
 
 // LOST ON TIME
@@ -172,15 +191,24 @@ if (fenTime) {
   });
   board5.setFen(fenTime.fen, fenTime.lastMove);
   chess.load(fenTime.fen, { skipValidation: false });
-  // const findTimeWhiteKing = chess.findPiece({ type: KING, color: WHITE });
-  const findTimeBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const winner = chess.turn() === WHITE ? BLACK : WHITE;
+  const findBlackKing = chess.findPiece({ type: KING, color: BLACK });
+  const findWhiteKing = chess.findPiece({ type: KING, color: WHITE });
+
+  const timeout = [];
+  if (winner === WHITE) {
+    timeout.push(findBlackKing);
+  } else if (winner === BLACK) {
+    timeout.push(findWhiteKing);
+  }
+
   const gOtime = {
-    status: 'timeout',
-    winner: 'w',
+    winner,
     kings: {
-      // white: findTimeWhiteKing.pop(),
-      black: findTimeBlackKing.pop(),
+      white: findWhiteKing.pop(),
+      black: findBlackKing.pop(),
     },
+    mate: timeout,
   };
-  board5.setGameOver(gOtime);
+  board5.setState(gOtime);
 }
