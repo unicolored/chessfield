@@ -34,7 +34,7 @@ export class PieceProvider {
 
     this.store.getPieces().forEach((t: THREE.Mesh) => {
       const matchRemovePiece = removePieces.find(p => {
-        console.log(p.square, t.userData['square'], `${p.square}` === t.userData['square']);
+        // console.log(p.square, t.userData['square'], `${p.square}` === t.userData['square']);
         return `${p.square}` === t.userData['square'];
       });
       if (matchRemovePiece) {

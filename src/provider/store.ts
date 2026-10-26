@@ -29,9 +29,12 @@ export class Store {
   shapesRing!: THREE.InstancedMesh;
   moves: cf.Move[] = [];
   gameState: GameState | null = null;
+
   private boardPieces: cf.BoardPiece[] = [];
-  piecesObjects: cf.ColorPieceNameObjectMap | null = null;
+  private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
+  private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
   private squarePositionsVec3!: Map<string, THREE.Vector3>;
+
   static readonly boardSize = 8;
   static readonly squareSize = cm(4);
   static readonly squareHeight = cm(0.3);
@@ -98,10 +101,6 @@ export class Store {
     },
   };
 
-  private boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
-
-  private piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry> = new Map();
-
   setPiecesGeometriesGltfMap(piecesGeometriesGltfMap: Map<cg.Role, THREE.BufferGeometry>) {
     this.piecesGeometriesGltfMap = piecesGeometriesGltfMap;
   }
@@ -126,17 +125,11 @@ export class Store {
     this.config = config;
   }
 
-  private fenSubject = new SimpleSubject<cf.Moves>({
-    moves: [
-      {
-        fen: Store.initialFen,
-        lastMove: [],
-      },
-    ],
-  });
+  private fenSubject = new SimpleSubject<cf.Moves | null>(null);
   fenSubject$ = new SimpleObservable(this.fenSubject);
 
   setFen = (fen: cg.FEN, lastMove?: cg.Key[] | string[], previousFen: cg.FEN | null = null): void => {
+    console.log('⭐ setFen');
     if (!FenParser.isFen(fen)) {
       console.error('Invalid FEN', fen);
       return;
@@ -163,7 +156,7 @@ export class Store {
       }
     }
 
-    console.log(this.moves);
+    console.log('store', this.moves);
 
     this.fenSubject.next({ moves: this.moves });
   };
