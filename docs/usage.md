@@ -303,10 +303,6 @@ const colors = chessfield.getThemeColors();
 //   ringAlt: '#66799f',
 //   ringCtrl: '#b86f60'
 // }
-
-// Text service for advanced text manipulation
-const textService = chessfield.textService;
-textService.removeAll(); // Clear all text
 ```
 
 ## Event Handling (via DOM)
