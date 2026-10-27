@@ -301,24 +301,6 @@ chessfield.clearShape(undefined, undefined, 'ring'); // Clear all rings
 
 ---
 
-### `textService`
-
-Access the text rendering service for player names and labels.
-
-```typescript
-readonly textService: TextService
-```
-
-```typescript
-// Clear all text
-chessfield.textService.removeAll();
-
-// The TextService has methods for adding custom text
-// See TextService API below
-```
-
----
-
 ## Types
 
 ### `ChessfieldConfig`
