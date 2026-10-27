@@ -122,8 +122,8 @@ board1.setFen(fen, ['e2', 'e3']);
 
 board1.configUpdate({
   playerNames: {
-    white: 'GM Magnus Carlsen',
-    black: 'GM Hikaru Nakamura',
+    white: 'GM White',
+    black: 'IM Black',
   },
 });
 
