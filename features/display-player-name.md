@@ -118,9 +118,6 @@ const defaults = {
 ```typescript
 class Chessfield implements ChessfieldApi {
   // ... existing methods
-
-  /** Access to text service for advanced control */
-  readonly textService: TextService;
 }
 
 class TextService {
