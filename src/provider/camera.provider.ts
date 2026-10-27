@@ -10,6 +10,14 @@ export class CameraProvider {
 
   defaultCameraPosition = new THREE.Vector3(0, cm(14), cm(14));
 
+  private readonly fov = 33;
+  private readonly near = cm(0.1);
+  private readonly far = 3;
+
+  private perspectiveCamera: THREE.PerspectiveCamera | null = null;
+  private isometricCamera: THREE.OrthographicCamera | null = null;
+  private sizes = { width: 1, height: 1 };
+
   constructor(private config: ChessfieldConfig) {
     this.initMaps();
   }
@@ -37,7 +45,9 @@ export class CameraProvider {
   }
 
   getCamera({ width, height }: { width: number; height: number }): THREE.PerspectiveCamera {
-    const camera = new THREE.PerspectiveCamera(33, width / height, cm(0.1), 3);
+    this.sizes = { width, height };
+
+    const camera = new THREE.PerspectiveCamera(this.fov, width / height, this.near, this.far);
     camera.name = '🎥 Main Camera';
 
     const viewPosition =
@@ -46,7 +56,91 @@ export class CameraProvider {
 
     // camera.lookAt(0, cm(2), 0);
 
+    this.perspectiveCamera = camera;
+
     return camera;
+  }
+
+  getIsometricCamera({ width, height }: { width: number; height: number }): THREE.OrthographicCamera {
+    this.sizes = { width, height };
+
+    // Frustum starts from the default view distance: switchProjection() re-syncs it anyway.
+    const halfHeight = this.defaultCameraPosition.length() * Math.tan(THREE.MathUtils.degToRad(this.fov / 2));
+    const halfWidth = halfHeight * (width / height);
+
+    const camera = new THREE.OrthographicCamera(
+      -halfWidth,
+      halfWidth,
+      halfHeight,
+      -halfHeight,
+      this.near,
+      this.far,
+    );
+    camera.name = '🎥 Isometric Camera';
+
+    const viewPosition =
+      this.cameraPositionsMap.get(this.config.camera ?? 'white') ?? this.defaultCameraPosition;
+    camera.position.set(viewPosition.x, viewPosition.y, viewPosition.z);
+
+    this.isometricCamera = camera;
+
+    return camera;
+  }
+
+  /** The camera instance for a projection, creating the isometric one on first use. */
+  getCameraFor(projection: cf.Projection): cf.ProjectionCamera {
+    if (projection === 'isometric') {
+      return this.isometricCamera ?? this.getIsometricCamera(this.sizes);
+    }
+
+    return this.perspectiveCamera ?? this.getCamera(this.sizes);
+  }
+
+  /**
+   * Give `camera` the apparent size of `source` at the orbit target (origin), so switching
+   * projection does not zoom the board. Both cameras share the same local position/orientation.
+   */
+  syncProjection(camera: cf.ProjectionCamera, source: cf.ProjectionCamera): void {
+    if (camera instanceof THREE.OrthographicCamera && source instanceof THREE.PerspectiveCamera) {
+      const halfHeight = source.position.length() * Math.tan(THREE.MathUtils.degToRad(source.fov / 2));
+
+      camera.top = halfHeight;
+      camera.bottom = -halfHeight;
+      camera.left = -halfHeight * source.aspect;
+      camera.right = halfHeight * source.aspect;
+      camera.zoom = 1;
+      camera.position.copy(source.position);
+    } else if (camera instanceof THREE.PerspectiveCamera && source instanceof THREE.OrthographicCamera) {
+      // Distance reproducing the orthographic apparent height, so zooming does not jump.
+      const halfHeight = (source.top - source.bottom) / 2 / source.zoom;
+      const distance = halfHeight / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+
+      // The perspective aspect may be stale if the container was resized meanwhile.
+      camera.aspect = (source.right - source.left) / (source.top - source.bottom);
+      camera.position.copy(source.position).setLength(distance);
+    }
+
+    // Orientation is driven by OrbitControls, but a swap should never leave a half-set camera.
+    camera.quaternion.copy(source.quaternion);
+    camera.updateProjectionMatrix();
+  }
+
+  /** Keep the active camera's frustum matching the container aspect ratio. */
+  resize(camera: cf.ProjectionCamera, { width, height }: { width: number; height: number }): void {
+    this.sizes = { width, height };
+
+    const aspect = width / height;
+
+    if (camera instanceof THREE.OrthographicCamera) {
+      const halfHeight = (camera.top - camera.bottom) / 2;
+
+      camera.left = -halfHeight * aspect;
+      camera.right = halfHeight * aspect;
+    } else {
+      camera.aspect = aspect;
+    }
+
+    camera.updateProjectionMatrix();
   }
 
   getCameraPosition(camera: cf.Camera): THREE.Vector3 {
@@ -62,7 +156,7 @@ export class CameraProvider {
     return this.cameraGroupRotationMap.get(cameraAngle) ?? new THREE.Vector3(0, cm(12), cm(12));
   }
 
-  getCameraGroup(camera: THREE.PerspectiveCamera): THREE.Group {
+  getCameraGroup(camera: cf.ProjectionCamera): THREE.Group {
     const camGroup = new THREE.Group();
     camGroup.add(camera);
 

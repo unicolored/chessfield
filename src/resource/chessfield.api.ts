@@ -3,12 +3,14 @@ import type * as cg from '@lichess-org/chessground/types';
 import { type TextService } from '../service/text/types.ts';
 
 import { type ChessfieldConfig } from './chessfield.config.ts';
-import { type GameState } from './chessfield.state.ts';
-import { type Camera, type Mode, type ThemeColors } from './chessfield.types.ts';
+import { type Camera, type Mode, type Projection, type ThemeColors } from './chessfield.types.ts';
 
 export interface ChessfieldApi {
   // set a fen with flags, and optionally squares part of the last move
   setFen(fen: cg.FEN, lastMove?: cg.Key[]): void;
+
+  // set a move, and the fen
+  // setMove(lastMove: cg.Key[] | string[], fen?: cg.FEN): void;
 
   // set a fen with flags, and optionally squares part of the last move
   configUpdate(partialConfig: Partial<ChessfieldConfig>): Promise<void>;
@@ -22,20 +24,20 @@ export interface ChessfieldApi {
   // switch mode (light/dark) - toggles if no mode provided
   switchMode(mode?: Mode): void;
 
+  // switch camera projection (perspective/isometric) - toggles if no projection provided
+  switchProjection(projection?: Projection): void;
+
   // get current camera position
-  getCurrentCamera(): Camera;
+  getCurrentCamera(): Camera | undefined;
+
+  // get current camera projection
+  getCurrentProjection(): Projection;
 
   // get current mode (light/dark)
   getCurrentMode(): Mode;
 
   // get current theme colors (light, dark, highlight, etc.)
   getThemeColors(): ThemeColors;
-
-  setCheck(state: GameState): void;
-  setGameOver(state: GameState): void;
-
-  // Text service for player names
-  readonly textService: TextService;
 
   // click a square programmatically
   // selectSquare(key: cg.Key | null): void;

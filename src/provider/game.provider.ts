@@ -2,14 +2,12 @@ import { FenParser } from '@chess-fu/fen-parser';
 import * as cg from '@lichess-org/chessground/types';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { type GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { userData } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import piecesLiteModel from '../assets/models/pieces.lite.glb?url';
-import { cm, objKey } from '../helper.ts';
+import { objKey } from '../helper.ts';
 import type * as cf from '../resource/chessfield.types.ts';
-import type { BoardPiece, PieceColorRole } from '../resource/chessfield.types.ts';
-import { stateSprite } from '../shader/stateSprite.ts';
+import type { BoardPiece } from '../resource/chessfield.types.ts';
 
 import { PieceProvider } from './piece.provider';
 import { Store } from './store.ts';
@@ -22,15 +20,16 @@ export class GameProvider {
     black: null,
   };
 
+  fallbackMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff_00_00,
+  });
+
   constructor(private store: Store) {}
 
-  initGamePieces(move: cf.Move): cf.BoardPiece[] {
-    // Dispose old meshes before creating new ones to prevent memory leak
-    this.disposeOldMeshes();
-
-    // const gamePiecesMap: GamePieces = new Map();
-    const whitePiecesListMap: cf.CoordPieceNameMap = new Map();
-    const blackPiecesListMap: cf.CoordPieceNameMap = new Map();
+  setBoardPieces(move?: cf.Move | null): BoardPiece[] {
+    if (!move) {
+      return [];
+    }
 
     const fen = move.fen;
 
@@ -41,119 +40,38 @@ export class GameProvider {
     const fenParsed = new FenParser(fen);
 
     const boardPieces: cf.BoardPiece[] = [];
+    // Hoisted: the file letters are constant and were rebuilt for every square before.
+    const files = cg.files;
+
     fenParsed.ranks.forEach((rank: string, index: number) => {
       const rankIndex = Store.boardSize - index;
 
-      Array.from(rank).forEach((pieceStr: string, index: number) => {
-        if (pieceStr !== '-') {
-          const letters = Object.values(cg.files);
-          const coord: cg.Key = `${letters[index]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
+      // Walk the 8-character rank directly instead of allocating an array per rank.
+      for (let file = 0; file < rank.length; file++) {
+        const pieceStr = rank[file];
 
-          const color: cg.Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as cg.Color;
-
-          const role: cg.Role = PieceProvider.getPiece(pieceStr as cf.PieceKey);
-          // const pieceGroup = this.getOnePiece(pieceGeometries[pieceKey], pieceMaterials[color]);
-
-          if (color === 'white') {
-            whitePiecesListMap.set(coord, role);
-          } else if (color === 'black') {
-            blackPiecesListMap.set(coord, role);
-          }
-
-          boardPieces.push({
-            coord,
-            role,
-            color,
-            objectKey: objKey(color, role),
-            count: 0,
-          });
-          // }
+        if (pieceStr === '-') {
+          continue;
         }
-      });
-    });
 
-    const whiteCountsMap = this.countPieces(whitePiecesListMap, 'white');
-    const blackCountsMap = this.countPieces(blackPiecesListMap, 'black');
-    const mergedMap = new Map([...whiteCountsMap, ...blackCountsMap]);
+        const square: cg.Key = `${files[file]}${rankIndex}` as cg.Key; // A1, B2, G5, H8, etc.
 
-    const pieceGeometriesMap = this.store.getPiecesGeometriesGltfMap();
+        const color: cg.Color = (GameProvider.whiteKeys.includes(pieceStr) ? 'white' : 'black') as cg.Color;
 
-    const boardPiecesObjectsMap: cf.ColorPieceNameObjectMap = new Map();
+        const role: cg.Role = PieceProvider.getPiece(pieceStr as cf.PieceKey);
 
-    const fallbackMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff_00_00,
-    });
-
-    mergedMap.forEach((value: BoardPiece, key: PieceColorRole) => {
-      const baseGeometry: THREE.BufferGeometry | undefined = pieceGeometriesMap.get(value.role);
-      const geometry = baseGeometry ? baseGeometry.clone() : undefined;
-      const material = this.pieceMaterials[value.color] ?? fallbackMaterial;
-
-      const spriteMaterial = new THREE.SpriteNodeMaterial({
-        transparent: true,
-      });
-
-      const userDataShow = userData('showSprite', 'bool');
-      const userDataWinner = userData('lostState', 'bool');
-      spriteMaterial.colorNode = stateSprite({ lost: userDataWinner, show: userDataShow });
-
-      let mesh;
-
-      if (value.count > 1) {
-        mesh = new THREE.InstancedMesh(geometry, material, value.count);
-      } else {
-        mesh = new THREE.Mesh(geometry, material);
-
-        const sprite = new THREE.BoxGeometry(cm(0.5), cm(0.5), cm(0.5));
-
-        const spriteMesh = new THREE.Mesh(sprite, spriteMaterial);
-        spriteMesh.name = 'stateSprite';
-
-        const boundingBox = new THREE.Box3().setFromObject(mesh);
-        const highestY = boundingBox.max.y;
-        spriteMesh.position.set(0, highestY + cm(0.33), 0);
-        mesh.add(spriteMesh);
+        // The per-colour square lists were never read (counting is disabled), so they are gone.
+        boardPieces.push({
+          square,
+          role,
+          color,
+          objectKey: objKey(color, role),
+          count: 1,
+        });
       }
-
-      mesh.castShadow = false;
-      mesh.receiveShadow = false;
-      mesh.name = `${key}-${value.color}-${value.role}`;
-
-      boardPiecesObjectsMap.set(key, mesh);
     });
 
-    this.store.setBoardPiecesObjectsMap(boardPiecesObjectsMap);
     return boardPieces;
-  }
-
-  public disposeOldMeshes(): void {
-    const oldMap = this.store.getBoardPiecesObjectsMap();
-    oldMap.forEach(oldMesh => {
-      // Only dispose Mesh/InstancedMesh types (not Group)
-      if (!(oldMesh instanceof THREE.Mesh)) return;
-
-      // Dispose geometry
-      oldMesh.geometry?.dispose();
-
-      // Dispose material(s)
-      const mats = Array.isArray(oldMesh.material) ? oldMesh.material : [oldMesh.material];
-      mats.forEach((mat: THREE.Material) => mat?.dispose());
-
-      // Dispose InstancedMesh buffers
-      if (oldMesh instanceof THREE.InstancedMesh) {
-        oldMesh.instanceMatrix?.dispose();
-        oldMesh.instanceColor?.dispose();
-      }
-
-      // Dispose children (spriteMesh)
-      oldMesh.children.forEach(child => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry?.dispose();
-          const childMats = Array.isArray(child.material) ? child.material : [child.material];
-          childMats.forEach((mat: THREE.Material) => mat?.dispose());
-        }
-      });
-    });
   }
 
   public loadGlbGeometry(loadingManager: THREE.LoadingManager): void {
@@ -181,26 +99,5 @@ export class GameProvider {
     );
 
     this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
-  }
-
-  static findLastMove(moves: cf.Move[]): cf.Move | null {
-    for (let i = moves.length - 1; i >= 0; i--) {
-      const move = moves[i];
-      if (FenParser.isFen(move.fen)) {
-        return move;
-      }
-    }
-
-    return null;
-  }
-
-  private countPieces(listeMap: cf.CoordPieceNameMap, color: cg.Color): Map<PieceColorRole, BoardPiece> {
-    const map = new Map<PieceColorRole, BoardPiece>();
-    listeMap.forEach(pieceName => {
-      const oK = objKey(color, pieceName);
-      const count = map.get(oK)?.count || 0;
-      map.set(oK, { count: count + 1, color, role: pieceName, coord: null, objectKey: null });
-    });
-    return map;
   }
 }

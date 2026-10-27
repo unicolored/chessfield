@@ -110,7 +110,7 @@ export class CanvasSpriteBackend extends BaseTextBackend {
   protected disposeInstance(instance: TextInstance): void {
     if (instance.object instanceof THREE.Sprite) {
       const material = instance.object.material as THREE.SpriteMaterial;
-      material.map?.dispose();
+      // The texture is cached and shared with other instances: the cache owns it.
       material.dispose();
     }
   }
@@ -124,7 +124,7 @@ export class CanvasSpriteBackend extends BaseTextBackend {
     const { texture, width, height } = this.getOrCreateTexture(mergedOptions);
     const material = instance.object.material as THREE.SpriteMaterial;
 
-    material.map?.dispose();
+    // The previous texture stays cached (and may be shared): the cache owns it.
     material.map = texture;
     material.needsUpdate = true;
 

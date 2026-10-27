@@ -12,6 +12,11 @@
         width: 1200px;
         height: 700px;
       }
+
+      #board-1:fullscreen {
+        width: 100vw;
+        height: 100vh;
+      }
     </style>
 
     <script type="module" src="tweak.js"></script>
@@ -23,8 +28,15 @@
     <div style="display: flex">
       <div>
         basic board
-        <div class="chessfield" id="board-1"></div>
         <button id="switch-theme-btn" style="margin-top: 10px; padding: 8px 16px">Switch Theme</button>
+        <button id="fullscreen-btn" style="margin-top: 10px; padding: 8px 16px">Fullscreen</button>
+        <button id="switch-camera-btn" style="margin-top: 10px; padding: 8px 16px">Camera: white</button>
+        <button id="switch-mode-btn" style="margin-top: 10px; padding: 8px 16px">Mode: light</button>
+        <button id="switch-projection-btn" style="margin-top: 10px; padding: 8px 16px">
+          Projection: perspective
+        </button>
+        <div class="chessfield" id="board-1"></div>
+        >>>>>>> develop
       </div>
     </div>
 

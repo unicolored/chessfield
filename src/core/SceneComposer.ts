@@ -1,13 +1,12 @@
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import * as THREE from 'three/webgpu';
 
-import type { Store } from '../provider/store.ts';
-import type { ThemeProvider } from '../provider/theme.provider.ts';
-import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
-import type { BoardService } from '../service/board.service.ts';
-import type { ShapesService } from '../service/shapes.service.ts';
-import type { StateService } from '../service/state.service.ts';
-import type { TextService } from '../service/text/text.service.ts';
+import { type Store } from '../provider/store.ts';
+import { type ThemeProvider } from '../provider/theme.provider.ts';
+import { type BoardService } from '../service/board.service.ts';
+import { type ShapesService } from '../service/shapes.service.ts';
+import { type StateService } from '../service/state.service.ts';
+import { type TextService } from '../service/text/text.service.ts';
 
 export interface SceneCompositionResult {
   chessboardGroup: THREE.Group;
@@ -15,18 +14,19 @@ export interface SceneCompositionResult {
   shapesGroup: THREE.Group;
   decorGroup: THREE.Group;
   loaderGroup: THREE.Group;
+  textGroup: THREE.Group;
 }
 
 export class SceneComposer {
   static compose(
-    scene: THREE.Scene,
+    // container: Container,
     store: Store,
+    themeProvider: ThemeProvider,
     boardService: BoardService,
     shapesService: ShapesService,
     stateService: StateService,
     textService: TextService,
-    themeProvider: ThemeProvider,
-    config: ChessfieldConfig,
+    scene: THREE.Scene,
     font: Font | null,
   ): SceneCompositionResult {
     const themeColors = themeProvider.getThemeColors();
@@ -46,6 +46,8 @@ export class SceneComposer {
     const shapesGroup = new THREE.Group();
     shapesGroup.name = '🟣 Shapes Group';
     scene.add(shapesGroup);
+
+    const textGroup = store.getTextGroup();
 
     // Chessboard
     store.chessboard = boardService.createChessboard();
@@ -68,15 +70,19 @@ export class SceneComposer {
     shapesGroup.add(store.state);
 
     // Text Service
-    textService.setScene(scene);
-    if (config.playerNames) {
+    if (store.getConfig().playerNames) {
+      const textConfig = { ...store.getConfig().text };
+      // An explicit text color wins; otherwise use the mode-contrasting default.
+      textConfig.color ??= themeProvider.getTextColor();
+
       boardService.addPlayerNames(
         textService,
         {
-          white: config.playerNames.white ?? 'White',
-          black: config.playerNames.black ?? 'Black',
+          white: store.getConfig().playerNames?.white ?? 'White',
+          black: store.getConfig().playerNames?.black ?? 'Black',
         },
-        config.text ?? {},
+        textConfig,
+        textGroup,
       );
     }
 
@@ -95,6 +101,7 @@ export class SceneComposer {
       shapesGroup,
       decorGroup,
       loaderGroup,
+      textGroup,
     };
   }
 }

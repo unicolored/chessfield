@@ -12,6 +12,7 @@ export interface ChessfieldConfig {
   lastMove?: cg.Key[] | string[];
   orientation?: cg.Color;
   camera?: cf.Camera;
+  projection?: cf.Projection;
   angle?: cf.Angle;
   turnColor?: cg.Color;
   coordinatesOnSquares?: boolean;

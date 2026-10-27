@@ -17,7 +17,6 @@ import {
   type ThemeColors,
   type TextBackendType,
   type Move,
-  type Moves,
 } from 'chessfield';
 ```
 
@@ -61,7 +60,7 @@ chessfield.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
 
 ### `configUpdate`
 
-Update configuration dynamically. Triggers full re-render for structural changes.
+Update configuration dynamically. All changes are applied to the existing scene; nothing is recreated.
 
 ```typescript
 configUpdate(partialConfig: Partial<ChessfieldConfig>): Promise<void>
@@ -95,9 +94,10 @@ await chessfield.configUpdate({
 
 **Notes:**
 
-- Returns a Promise that resolves when re-render completes
+- Returns a Promise that resolves after asynchronous text work (backend/name changes) completes; changes are drawn on the next animation frame
 - Camera/theme/mode changes are instant (no reload)
-- FEN/player names/text backend changes trigger full scene rebuild
+- FEN, player names and text backend changes are applied to the current scene without rebuilding it
+- `loading` and `coordinatesOnSquares` are startup-only options; later updates only change the stored config
 
 ---
 
@@ -454,16 +454,12 @@ type TextBackendType = 'canvas-sprite' | 'troika-text';
 
 ---
 
-### `Move` / `Moves`
+### `Move`
 
 ```typescript
 interface Move {
   fen: cg.FEN;
   lastMove?: cg.Key[];
-}
-
-interface Moves {
-  moves: Move[];
 }
 ```
 
@@ -533,18 +529,14 @@ Store.themes; // { default, light, dark, blue, brown, green, bw, ... }
 
 ## Error Handling
 
-```typescript
-try {
-  await chessfield.configUpdate({ theme: 'invalid-theme' });
-} catch (error) {
-  console.warn('Theme not found:', error.message);
-}
+Invalid input is logged and ignored; the current board state is kept. These calls do not throw.
 
-try {
-  chessfield.setFen('invalid fen');
-} catch (error) {
-  console.error('Invalid FEN:', error.message);
-}
+```typescript
+// Unknown themes are rejected by the theme controller (console warning).
+await chessfield.configUpdate({ theme: 'invalid-theme' });
+
+// Invalid FEN strings are rejected by the store (console error).
+chessfield.setFen('invalid fen');
 ```
 
 ---

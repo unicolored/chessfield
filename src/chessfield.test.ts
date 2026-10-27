@@ -6,25 +6,6 @@ vi.mock('three/addons/inspector/Inspector.js', () => {
   return { Inspector: MockInspector };
 });
 
-// Mock renderer provider to avoid WebGPU initialization in tests
-vi.mock('./provider/renderer.provider.ts', () => {
-  class MockRendererProvider {
-    getCanvas() {
-      return document.createElement('canvas');
-    }
-    getRenderer() {
-      return {
-        init: vi.fn().mockResolvedValue(undefined),
-        setSize: vi.fn(),
-        setAnimationLoop: vi.fn(),
-        render: vi.fn(),
-        domElement: document.createElement('canvas'),
-      };
-    }
-  }
-  return { RendererProvider: MockRendererProvider };
-});
-
 // Mock loading manager provider to avoid GLTF loading errors
 vi.mock('./provider/loadingManager.provider.ts', () => {
   class MockLoadingManagerProvider {
@@ -44,6 +25,7 @@ vi.mock('./provider/loadingManager.provider.ts', () => {
 });
 
 import { Chessfield } from './chessfield.ts';
+import { Store } from './provider/store.ts';
 
 describe('Chessfield API', () => {
   let container: HTMLDivElement;
@@ -82,14 +64,6 @@ describe('Chessfield API', () => {
     expect(typeof chessfield.configUpdate).toBe('function');
   });
 
-  it('should have setCheck method', () => {
-    expect(typeof chessfield.setCheck).toBe('function');
-  });
-
-  it('should have setGameOver method', () => {
-    expect(typeof chessfield.setGameOver).toBe('function');
-  });
-
   it('should accept FEN string in setFen', () => {
     const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
     expect(() => chessfield.setFen(fen, ['e2', 'e4'])).not.toThrow();
@@ -100,21 +74,54 @@ describe('Chessfield API', () => {
     expect(() => chessfield.configUpdate({ orientation: 'black' })).not.toThrow();
   });
 
-  it('should accept GameState in setCheck', () => {
-    const gameState = {
-      status: 'check',
-      kings: { white: 'e1', black: 'e8' },
-      winner: null,
-    };
-    expect(() => chessfield.setCheck(gameState)).not.toThrow();
+  it('applies theme and mode changes without recreating the scene', async () => {
+    const canvas = container.querySelector('canvas');
+
+    await chessfield.configUpdate({ mode: 'dark', theme: 'blue' });
+
+    expect(container.querySelector('canvas')).toBe(canvas);
+    expect(chessfield.getCurrentMode()).toBe('dark');
+    expect(chessfield.getThemeColors().light).toBe(Store.themes['blue'].light);
   });
 
-  it('should accept GameState in setGameOver', () => {
-    const gameState = {
-      status: 'mate',
-      kings: { white: 'e1', black: 'e8' },
-      winner: 'w',
-    };
-    expect(() => chessfield.setGameOver(gameState)).not.toThrow();
+  it('applies camera changes to the live board', async () => {
+    await chessfield.configUpdate({ camera: 'top' });
+
+    expect(chessfield.getCurrentCamera()).toBe('top');
+  });
+
+  it('switches the camera projection', async () => {
+    expect(chessfield.getCurrentProjection()).toBe('perspective');
+
+    chessfield.switchProjection();
+
+    expect(chessfield.getCurrentProjection()).toBe('isometric');
+
+    await chessfield.configUpdate({ projection: 'perspective' });
+
+    expect(chessfield.getCurrentProjection()).toBe('perspective');
+  });
+
+  it('switches the mode and rebuilds through configUpdate', () => {
+    expect(chessfield.getCurrentMode()).toBe('light');
+
+    chessfield.switchMode();
+    expect(chessfield.getCurrentMode()).toBe('dark');
+
+    chessfield.switchMode();
+    expect(chessfield.getCurrentMode()).toBe('light');
+
+    chessfield.switchMode('dark');
+    expect(chessfield.getCurrentMode()).toBe('dark');
+  });
+
+  it('treats an empty update as a no-op', async () => {
+    const canvas = container.querySelector('canvas');
+    const mode = chessfield.getCurrentMode();
+
+    await chessfield.configUpdate({});
+
+    expect(container.querySelector('canvas')).toBe(canvas);
+    expect(chessfield.getCurrentMode()).toBe(mode);
   });
 });

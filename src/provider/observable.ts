@@ -29,6 +29,10 @@ export class SimpleSubject<T> {
 export class SimpleObservable<T> {
   constructor(private subject: SimpleSubject<T>) {}
 
+  get value(): T {
+    return this.subject.value;
+  }
+
   subscribe(fn: Listener<T>): () => void {
     return this.subject.subscribe(fn);
   }

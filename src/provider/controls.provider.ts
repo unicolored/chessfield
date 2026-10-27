@@ -5,17 +5,30 @@ import { cm } from '../helper.ts';
 import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
 
 export class ControlsProvider {
-  private readonly enabled;
-  private readonly zoomMinDistance;
-  private readonly zoomMaxDistance;
+  private enabled = true;
+  private zoomMinDistance = 10;
+  private zoomMaxDistance = 25;
 
-  constructor(private config: ChessfieldConfig) {
-    this.enabled = this.config.controlsEnabled ?? true;
-    this.zoomMinDistance = this.config.zoomMinDistance ?? 10;
-    this.zoomMaxDistance = this.config.zoomMaxDistance ?? 25;
+  constructor(config: ChessfieldConfig) {
+    this.apply(config);
   }
 
-  getControls(camera: THREE.PerspectiveCamera, canvas: HTMLCanvasElement): OrbitControls {
+  /** Update the cached values and, when it already exists, the live OrbitControls instance. */
+  apply(config: ChessfieldConfig, controls?: OrbitControls): void {
+    this.enabled = config.controlsEnabled ?? true;
+    this.zoomMinDistance = config.zoomMinDistance ?? 10;
+    this.zoomMaxDistance = config.zoomMaxDistance ?? 25;
+
+    if (!controls) {
+      return;
+    }
+
+    controls.enabled = this.enabled;
+    controls.minDistance = cm(this.zoomMinDistance);
+    controls.maxDistance = cm(this.zoomMaxDistance);
+  }
+
+  getControls(camera: THREE.Camera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
     controls.enablePan = false;
     controls.mouseButtons = {
