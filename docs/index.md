@@ -144,7 +144,7 @@
   </div>
   <div class="feature-card">
     <h3>🔧 Programmatic Control</h3>
-    <p>Rich API for theme switching, camera changes, shape overlays (rings), and dynamic configuration.</p>
+    <p>Rich API for theme switching, camera changes, shape overlays (rings and arrows), and dynamic configuration.</p>
   </div>
   <div class="feature-card">
     <h3>📦 Zero Dependencies</h3>
@@ -153,7 +153,7 @@
 </div>
 
 <h2 id="demo">Live Demo</h2>
-<p>Drag to orbit, scroll to zoom, right-click squares to add rings:</p>
+<p>Drag to orbit, scroll to zoom, right-click squares to add rings, or right-drag between squares to draw arrows:</p>
 <div class="flex">
     <div class="chessfield" id="board1"></div>
 </div>
