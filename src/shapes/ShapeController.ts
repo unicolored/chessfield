@@ -19,10 +19,7 @@ export class ShapeController {
     const index = rank * 8 + file;
     const isVisible = this.shapesService.getVisible(index, 'ring');
 
-    const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
-
-    const color =
-      (theme as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
+    const color = this.getShapeColor(shape);
 
     if (!isVisible) {
       this.shapesService.setShapeAt(rank, file, color, true, 'ring');
@@ -39,16 +36,41 @@ export class ShapeController {
     this.store.requestRender();
   }
 
+  addArrow(fromRank: number, fromFile: number, toRank: number, toFile: number, shape: string): void {
+    this.shapesService.addArrow(fromRank, fromFile, toRank, toFile, this.getShapeColor(shape));
+    this.store.requestRender();
+  }
+
+  previewArrow(fromRank: number, fromFile: number, toRank: number, toFile: number, shape: string): void {
+    this.shapesService.setArrowPreview(fromRank, fromFile, toRank, toFile, this.getShapeColor(shape));
+    this.store.requestRender();
+  }
+
+  clearArrowPreview(): void {
+    this.shapesService.clearArrowPreview();
+    this.store.requestRender();
+  }
+
   clearShape(rank?: number, file?: number, shaderName?: ShaderName): void {
     if (shaderName) {
       if (rank !== undefined && file !== undefined) {
         this.shapesService.clearShape(rank * 8 + file, shaderName);
       } else {
-        this.shapesService.clearAll(shaderName ? [shaderName] : undefined);
+        this.shapesService.clearAll([shaderName]);
       }
+    } else if (rank !== undefined && file !== undefined) {
+      this.shapesService.clearShape(rank * 8 + file);
+    } else {
+      this.shapesService.clearAll();
     }
 
     // Clearing shapes also changes GPU buffers, so request a frame.
     this.store.requestRender();
+  }
+
+  private getShapeColor(shape: string): string {
+    const theme: cf.ThemeColors = this.themeProvider.getThemeColors();
+
+    return (theme as unknown as Record<string, string | number | undefined>)[shape]?.toString() ?? '#000000';
   }
 }

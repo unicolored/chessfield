@@ -64,6 +64,9 @@ export class SceneComposer {
     store.shapesRing.name = '🟢 Shapes (ring)';
     shapesGroup.add(store.shapesRing);
 
+    // Shapes / Arrows
+    shapesGroup.add(shapesService.getArrowsGroup());
+
     // Shapes / Checks
     store.state = stateService.getMesh('check');
     store.state.name = '🟢 Shapes (check)';

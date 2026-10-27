@@ -6,6 +6,13 @@ import { Store } from '../provider/store';
 import { type ShaderName } from '../shader';
 import { ring } from '../shader/ringShader';
 
+type ArrowEndpoints = {
+  fromRank: number;
+  fromFile: number;
+  toRank: number;
+  toFile: number;
+};
+
 export class ShapesService {
   private meshes: Map<ShaderName, THREE.InstancedMesh> = new Map();
   private materials: Map<ShaderName, THREE.MeshBasicNodeMaterial> = new Map();
@@ -18,7 +25,24 @@ export class ShapesService {
   > = new Map();
   private readonly instanceCount = 64;
 
+  private readonly arrowsGroup = new THREE.Group();
+  private readonly arrows: Map<string, THREE.Mesh> = new Map();
+  private readonly arrowMaterials: Map<string, THREE.MeshBasicMaterial> = new Map();
+  private previewArrow: THREE.Mesh | null = null;
+  // Coplanar transparent arrows need an explicit painter order: depth sorting cannot
+  // distinguish them, and their draw order would otherwise depend on the camera.
+  private nextArrowRenderOrder = 1;
+  private readonly previewArrowRenderOrder = 1_000_000;
+
+  // Arrows lie on the board plane, just above the rings, without z-fighting.
+  private readonly arrowY = 0.00007;
+  private readonly arrowShaftHalfWidth = cm(0.13);
+  private readonly arrowHeadHalfWidth = cm(0.33);
+  private readonly arrowHeadLength = cm(0.42);
+
   constructor(shaderNames: ShaderName[] = ['ring']) {
+    this.arrowsGroup.name = '↗ Arrows';
+
     for (const name of shaderNames) {
       this.meshes.set(name, this.createShapes(name));
     }
@@ -81,15 +105,24 @@ export class ShapesService {
 
     for (let i = 0; i < this.instanceCount; i++) {
       const rank = Math.floor(i / 8);
-      const file = 7 - (i % 8);
+      const file = i % 8;
 
-      matrix.makeTranslation(cm(rank - 3.5), yPos, cm(file - 3.5));
+      matrix.makeTranslation(this.squareX(rank), yPos, this.squareZ(file));
       matrix.multiply(rotMatrix);
       matrix.multiply(scaleMatrix);
 
       mesh.setMatrixAt(i, matrix);
     }
     mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // A square's rank is its X coordinate; its file is mirrored on Z to match the board.
+  private squareX(rank: number): number {
+    return cm(rank - 3.5);
+  }
+
+  private squareZ(file: number): number {
+    return cm(3.5 - file);
   }
 
   private resetAll(shaderName: ShaderName): void {
@@ -126,6 +159,167 @@ export class ShapesService {
     this.setShape(index, colorHex, show, shaderName);
   }
 
+  getArrowsGroup(): THREE.Group {
+    return this.arrowsGroup;
+  }
+
+  addArrow(fromRank: number, fromFile: number, toRank: number, toFile: number, colorHex: string): void {
+    if (fromRank === toRank && fromFile === toFile) {
+      return;
+    }
+
+    const key = this.arrowKey({ fromRank, fromFile, toRank, toFile });
+    const color = colorHex.toLowerCase();
+    const existing = this.arrows.get(key);
+
+    if (existing) {
+      this.removeArrowMesh(existing);
+      this.arrows.delete(key);
+
+      // Same arrow and same color: the gesture toggles it off, like a ring.
+      if (existing.userData['color'] === color) {
+        return;
+      }
+    }
+
+    const mesh = this.createArrowMesh({ fromRank, fromFile, toRank, toFile }, color);
+    // Newer arrows consistently paint over older ones, whatever the camera angle.
+    mesh.renderOrder = this.nextArrowRenderOrder++;
+    mesh.userData['color'] = color;
+    this.arrows.set(key, mesh);
+    this.arrowsGroup.add(mesh);
+  }
+
+  setArrowPreview(
+    fromRank: number,
+    fromFile: number,
+    toRank: number,
+    toFile: number,
+    colorHex: string,
+  ): void {
+    this.clearArrowPreview();
+
+    if (fromRank === toRank && fromFile === toFile) {
+      return;
+    }
+
+    this.previewArrow = this.createArrowMesh({ fromRank, fromFile, toRank, toFile }, colorHex.toLowerCase());
+    // The in-progress arrow is always the topmost overlay.
+    this.previewArrow.renderOrder = this.previewArrowRenderOrder;
+    this.arrowsGroup.add(this.previewArrow);
+  }
+
+  clearArrowPreview(): void {
+    if (!this.previewArrow) {
+      return;
+    }
+
+    this.removeArrowMesh(this.previewArrow);
+    this.previewArrow = null;
+  }
+
+  clearArrows(): void {
+    this.clearArrowPreview();
+
+    for (const mesh of this.arrows.values()) {
+      this.removeArrowMesh(mesh);
+    }
+
+    this.arrows.clear();
+    this.nextArrowRenderOrder = 1;
+  }
+
+  private arrowKey({ fromRank, fromFile, toRank, toFile }: ArrowEndpoints): string {
+    return `${fromRank}:${fromFile}>${toRank}:${toFile}`;
+  }
+
+  private createArrowMesh(endpoints: ArrowEndpoints, colorHex: string): THREE.Mesh {
+    const { fromRank, fromFile, toRank, toFile } = endpoints;
+
+    const fromX = this.squareX(fromRank);
+    const fromZ = this.squareZ(fromFile);
+    const toX = this.squareX(toRank);
+    const toZ = this.squareZ(toFile);
+
+    const dx = toX - fromX;
+    const dz = toZ - fromZ;
+    const length = Math.hypot(dx, dz);
+    const dirX = dx / length;
+    const dirZ = dz / length;
+    // Perpendicular in the board plane.
+    const perpX = -dirZ;
+    const perpZ = dirX;
+
+    const headBaseX = toX - dirX * this.arrowHeadLength;
+    const headBaseZ = toZ - dirZ * this.arrowHeadLength;
+
+    const shaftHalf = this.arrowShaftHalfWidth;
+    const headHalf = this.arrowHeadHalfWidth;
+    const y = this.arrowY;
+
+    // Shaft quad + head triangle, kept as explicit triangles so the barbed polygon is never
+    // triangulated incorrectly.
+    const positions = new Float32Array([
+      fromX + perpX * shaftHalf,
+      y,
+      fromZ + perpZ * shaftHalf,
+      headBaseX + perpX * shaftHalf,
+      y,
+      headBaseZ + perpZ * shaftHalf,
+      headBaseX - perpX * shaftHalf,
+      y,
+      headBaseZ - perpZ * shaftHalf,
+
+      fromX + perpX * shaftHalf,
+      y,
+      fromZ + perpZ * shaftHalf,
+      headBaseX - perpX * shaftHalf,
+      y,
+      headBaseZ - perpZ * shaftHalf,
+      fromX - perpX * shaftHalf,
+      y,
+      fromZ - perpZ * shaftHalf,
+
+      headBaseX + perpX * headHalf,
+      y,
+      headBaseZ + perpZ * headHalf,
+      toX,
+      y,
+      toZ,
+      headBaseX - perpX * headHalf,
+      y,
+      headBaseZ - perpZ * headHalf,
+    ]);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.computeBoundingSphere();
+
+    return new THREE.Mesh(geometry, this.getArrowMaterial(colorHex));
+  }
+
+  private getArrowMaterial(colorHex: string): THREE.MeshBasicMaterial {
+    let material = this.arrowMaterials.get(colorHex);
+
+    if (!material) {
+      material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(colorHex),
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      this.arrowMaterials.set(colorHex, material);
+    }
+
+    return material;
+  }
+
+  private removeArrowMesh(mesh: THREE.Mesh): void {
+    mesh.removeFromParent();
+    mesh.geometry.dispose();
+  }
+
   clearShape(index?: number | null, shaderName?: ShaderName): void {
     if (shaderName) {
       const attrs = this.attributes.get(shaderName)!;
@@ -154,6 +348,7 @@ export class ShapesService {
       }
     } else {
       this.clearShape(null);
+      this.clearArrows();
     }
   }
 
@@ -181,8 +376,16 @@ export class ShapesService {
     for (const [, material] of this.materials) {
       material.dispose();
     }
+
+    this.clearArrows();
+    for (const [, material] of this.arrowMaterials) {
+      material.dispose();
+    }
+
     this.meshes.clear();
     this.materials.clear();
     this.attributes.clear();
+    this.arrowMaterials.clear();
+    this.arrowsGroup.clear();
   }
 }

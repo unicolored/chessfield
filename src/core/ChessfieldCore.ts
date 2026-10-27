@@ -132,11 +132,6 @@ export class ChessfieldCore {
     // Create EventsService now that canvas, camera, and scene are available
     const eventsService = new EventsService(this._container.getStore(), cfElement);
 
-    EventWiring.setup(
-      this._container.getStore(),
-      eventsService,
-      this._container.getShapeController(),
-      this._container.getShapesService(),
-    );
+    EventWiring.setup(this._container.getStore(), eventsService, this._container.getShapeController());
   }
 }

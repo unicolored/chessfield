@@ -186,9 +186,11 @@ chessfield.setCheck({ check: ['e8'], kings: { white: 'e1', black: 'e8' } });
 chessfield.setGameOver({ winner: 'w', mate: ['e8'], kings: { white: 'e1', black: 'e8' } });
 ```
 
-## Shape Overlays (Rings)
+## Shape Overlays (Rings and Arrows)
 
-Add colored rings to squares for arrows, highlights, or custom markers:
+Right-click a square to toggle a colored ring. Right-drag from one square to another to draw an arrow between them: the arrow previews while dragging and is committed on release. Releasing on the starting square adds a ring instead, and releasing outside the board cancels the gesture. A left click clears every ring and arrow.
+
+Add colored rings to squares for highlights or custom markers:
 
 ```typescript
 // Add a ring at rank/file (0-7, 0 = rank 1 / file a)
