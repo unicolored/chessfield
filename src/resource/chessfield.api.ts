@@ -1,7 +1,5 @@
 import type * as cg from '@lichess-org/chessground/types';
 
-import { type TextService } from '../service/text/types.ts';
-
 import { type ChessfieldConfig } from './chessfield.config.ts';
 import { type Camera, type Mode, type Projection, type ThemeColors } from './chessfield.types.ts';
 
