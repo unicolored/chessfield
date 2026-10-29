@@ -1,0 +1,8 @@
+- Add an overlay on top of the screen that fade when everything is loaded: font, scene, textures images, etc...
+    - Eventually a progress api that let consumers knows when loading is completed
+- The Api setFen() must also receive the time left in seconds as an integer for each player. For example: timeLeft: {white: 30, black: 6}. The consumer is responsible to setState to gameOver by timeout. Find a way to display the time for each user on the side of the chessboard.
+- Find a way to show aside the 3d chessboard which player it is the turn to play. In a real chessboard, this is the position of the switch of the clock that indicates which player has to play.
+- On mobile i see some issues:
+    - The player names are cropped: maybe use a downloaded font instead of relying on the system font?
+    - The fullscreen toggle appears but do not make anything, maybe one can hide it on tablet/mobile?
+    - The zoom is too high, and by default, the user can not see the full chessboard. Set a lower zoom value so the chessboard appears entirely.
