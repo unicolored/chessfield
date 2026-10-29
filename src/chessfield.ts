@@ -7,7 +7,7 @@ import { Store } from './provider/store.ts';
 import { type ChessfieldApi } from './resource/chessfield.api.ts';
 import { type ChessfieldConfig } from './resource/chessfield.config.ts';
 import { type GameState } from './resource/chessfield.state.ts';
-import { type Projection } from './resource/chessfield.types.ts';
+import { type LoadingProgress, type Projection, type TimeLeft } from './resource/chessfield.types.ts';
 import { type ShaderName } from './shader/index.ts';
 
 export type { ChessfieldApi, ChessfieldConfig, GameState };
@@ -35,13 +35,30 @@ export class Chessfield implements ChessfieldApi {
     // Set initial FEN
     const initialFen = this.container.getStore().getConfig().fen ?? Store.initialFen;
     const initialLastMove = this.container.getStore().getConfig().lastMove ?? [];
+    const initialTimeLeft = this.container.getStore().getConfig().timeLeft;
     //
     // The previous FEN is no longer tracked: only the current position is stored.
-    this.setFen(initialFen, initialLastMove);
+    this.setFen(initialFen, initialLastMove, initialTimeLeft);
   }
 
-  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[]) {
-    this.container.getGamePieceService().setFen(fen, lastMove);
+  public whenReady(): Promise<void> {
+    if (!this.container) {
+      return Promise.resolve();
+    }
+
+    return this.container.getLoadingService().whenReady();
+  }
+
+  public onLoadingProgress(listener: (progress: LoadingProgress) => void): () => void {
+    if (!this.container) {
+      return () => {};
+    }
+
+    return this.container.getLoadingService().subscribe(listener);
+  }
+
+  public setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], timeLeft?: TimeLeft) {
+    this.container.getGamePieceService().setFen(fen, lastMove, timeLeft);
   }
 
   // public setMove(lastMove: cg.Key[] | string[], fen: cg.FEN) {

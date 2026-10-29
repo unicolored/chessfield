@@ -20,6 +20,18 @@ function createHarness(config: ChessfieldConfig = {}) {
     moveSubject$: { value: null as { fen: string; lastMove?: string[] } | null },
     requestRender: vi.fn(),
     getConfig: () => store.config,
+    getCurrentFen: () => store.moveSubject$.value?.fen ?? null,
+    getTurnColor: () => {
+      const override = store.config.turnColor;
+      if (override) {
+        return override;
+      }
+
+      const fen = store.moveSubject$.value?.fen ?? store.config.fen;
+      const field = fen?.split(' ')[1];
+
+      return field === 'b' ? 'black' : 'white';
+    },
     setConfig: (next: ChessfieldConfig) => {
       store.config = next;
     },
@@ -29,8 +41,18 @@ function createHarness(config: ChessfieldConfig = {}) {
 
   const themeProvider = new ThemeProvider(config.mode, config.theme);
   const textService = { setBackend: vi.fn(async () => {}), removeAll: vi.fn() };
-  const boardService = { addPlayerNames: vi.fn(async () => {}), updateDecorColors: vi.fn() };
+  const boardService = {
+    addPlayerNames: vi.fn(async () => {}),
+    updateDecorColors: vi.fn(),
+    setTurn: vi.fn(),
+  };
   const gamePieceService = { setFen: vi.fn() };
+  const clockService = {
+    hasTimeLeft: vi.fn(() => false),
+    setTimeLeft: vi.fn(),
+    setTurn: vi.fn(),
+    mount: vi.fn(async () => {}),
+  };
   const cameraController = { applyConfig: vi.fn() };
   const controlsProvider = { apply: vi.fn() };
 
@@ -41,6 +63,7 @@ function createHarness(config: ChessfieldConfig = {}) {
     getTextService: () => textService,
     getBoardService: () => boardService,
     getGamePieceService: () => gamePieceService,
+    getClockService: () => clockService,
     getCameraController: () => cameraController,
     getControlsProvider: () => controlsProvider,
   } as unknown as Container;
@@ -53,6 +76,7 @@ function createHarness(config: ChessfieldConfig = {}) {
     textService,
     boardService,
     gamePieceService,
+    clockService,
     cameraController,
     controlsProvider,
     manager: new ConfigManager(container),
@@ -99,6 +123,18 @@ describe('ConfigManager.configUpdate', () => {
     expect(h.gamePieceService.setFen).toHaveBeenCalledWith(initialFen, ['e2', 'e4']);
   });
 
+  it('forwards a time left update to the clock service', async () => {
+    const h = createHarness();
+    h.store.moveSubject$.value = { fen: initialFen };
+
+    await h.manager.configUpdate({ timeLeft: { white: 30, black: 6 } });
+
+    expect(h.gamePieceService.setFen).toHaveBeenCalledWith(initialFen, undefined, {
+      white: 30,
+      black: 6,
+    });
+  });
+
   it('applies a new FEN without keeping the previous last move', async () => {
     const h = createHarness({ lastMove: ['d2', 'd4'] });
 
@@ -125,6 +161,22 @@ describe('ConfigManager.configUpdate', () => {
     expect(textConfig.fontSize).toBe(0.7);
     expect(textConfig.color).toBe(h.themeProvider.getTextColor());
     expect(h.store.scene.background).toEqual(new THREE.Color(h.themeProvider.getBackgroundColor()));
+    expect(h.clockService.mount).toHaveBeenCalled();
+  });
+
+  it('rebuilds the clock labels when only a clock is configured', async () => {
+    const h = createHarness({
+      mode: 'light',
+      timeLeft: { white: 30, black: 6 },
+    });
+    (h.store as any).chessboard = { setSquareColors: vi.fn(), setHighlightColor: vi.fn() };
+    h.clockService.hasTimeLeft.mockReturnValue(true);
+
+    await h.manager.configUpdate({ text: { fontSize: 0.7 } });
+
+    expect(h.textService.removeAll).toHaveBeenCalled();
+    expect(h.boardService.addPlayerNames).not.toHaveBeenCalled();
+    expect(h.clockService.mount).toHaveBeenCalled();
   });
 
   it('rebuilds player names in dark text when switching back to light', async () => {
@@ -152,5 +204,36 @@ describe('ConfigManager.configUpdate', () => {
     const [, names, textConfig] = h.boardService.addPlayerNames.mock.calls[0] as any[];
     expect(names).toEqual({ white: 'Carol', black: 'Bob' });
     expect(textConfig.color).toBe('#333333');
+  });
+
+  it('only refreshes the turn when turnColor is part of the update', async () => {
+    const h = createHarness({ fen: initialFen, turnColor: 'white' });
+    h.store.moveSubject$.value = { fen: initialFen };
+
+    await h.manager.configUpdate({ camera: 'top' });
+
+    expect(h.boardService.setTurn).not.toHaveBeenCalled();
+    expect(h.clockService.setTurn).not.toHaveBeenCalled();
+  });
+
+  it('moves the turn indicator and clock when turnColor changes', async () => {
+    const h = createHarness({ fen: initialFen });
+    h.store.moveSubject$.value = { fen: initialFen };
+
+    await h.manager.configUpdate({ turnColor: 'black' });
+
+    expect(h.boardService.setTurn).toHaveBeenCalledWith('black');
+    expect(h.clockService.setTurn).toHaveBeenCalledWith('black');
+    expect(h.store.requestRender).toHaveBeenCalled();
+  });
+
+  it('returns to the FEN turn when the turnColor override is cleared', async () => {
+    const h = createHarness({ fen: initialFen, turnColor: 'black' });
+    h.store.moveSubject$.value = { fen: initialFen };
+
+    await h.manager.configUpdate({ turnColor: undefined });
+
+    expect(h.boardService.setTurn).toHaveBeenCalledWith('white');
+    expect(h.clockService.setTurn).toHaveBeenCalledWith('white');
   });
 });

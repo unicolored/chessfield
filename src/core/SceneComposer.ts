@@ -4,6 +4,7 @@ import * as THREE from 'three/webgpu';
 import { type Store } from '../provider/store.ts';
 import { type ThemeProvider } from '../provider/theme.provider.ts';
 import { type BoardService } from '../service/board.service.ts';
+import { type ClockService } from '../service/clock.service.ts';
 import { type ShapesService } from '../service/shapes.service.ts';
 import { type StateService } from '../service/state.service.ts';
 import { type TextService } from '../service/text/text.service.ts';
@@ -13,7 +14,6 @@ export interface SceneCompositionResult {
   stateGroup: THREE.Group;
   shapesGroup: THREE.Group;
   decorGroup: THREE.Group;
-  loaderGroup: THREE.Group;
   textGroup: THREE.Group;
 }
 
@@ -26,6 +26,7 @@ export class SceneComposer {
     shapesService: ShapesService,
     stateService: StateService,
     textService: TextService,
+    clockService: ClockService,
     scene: THREE.Scene,
     font: Font | null,
   ): SceneCompositionResult {
@@ -73,12 +74,12 @@ export class SceneComposer {
     shapesGroup.add(store.state);
 
     // Text Service
-    if (store.getConfig().playerNames) {
-      const textConfig = { ...store.getConfig().text };
-      // An explicit text color wins; otherwise use the mode-contrasting default.
-      textConfig.color ??= themeProvider.getTextColor();
+    const textConfig = { ...store.getConfig().text };
+    // An explicit text color wins; otherwise use the mode-contrasting default.
+    textConfig.color ??= themeProvider.getTextColor();
 
-      boardService.addPlayerNames(
+    if (store.getConfig().playerNames) {
+      void boardService.addPlayerNames(
         textService,
         {
           white: store.getConfig().playerNames?.white ?? 'White',
@@ -89,21 +90,19 @@ export class SceneComposer {
       );
     }
 
+    // Clock labels live next to the names; mounting registers their style/group even before a snapshot.
+    void clockService.mount(textService, textConfig, textGroup);
+
     // Décor
-    const decorGroup = boardService.decor(modeColors);
+    const decorGroup = boardService.decor(modeColors, store.getTurnColor());
     decorGroup.name = '🔵 Décor';
     scene.add(decorGroup);
-
-    // Loader Group
-    const loaderGroup = new THREE.Group();
-    scene.add(loaderGroup);
 
     return {
       chessboardGroup,
       stateGroup,
       shapesGroup,
       decorGroup,
-      loaderGroup,
       textGroup,
     };
   }

@@ -26,6 +26,8 @@ export abstract class BaseTextBackend implements TextBackend {
       options: { ...options },
       dispose: () => {
         this.disposeInstance(instance);
+        // Drop the backend's own reference; the caller (TextService) drops its entry too.
+        this.instances.delete(id);
       },
       update: (newOptions: Partial<TextOptions>) => {
         this.updateInstance(instance, newOptions);

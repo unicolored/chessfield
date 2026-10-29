@@ -8,6 +8,20 @@ export const cm = (meter: number): number => {
   return meter / 100;
 };
 
+/** Side to move from a FEN, or null when the turn field is missing or invalid. */
+export function turnFromFen(fen?: cg.FEN | string | null): Color | null {
+  const field = fen?.split(' ')[1];
+
+  if (field === 'w') {
+    return 'white';
+  }
+  if (field === 'b') {
+    return 'black';
+  }
+
+  return null;
+}
+
 export const objKey = (color: Color, key: cg.Role): PieceColorRole => `${color}-${key}`;
 
 // Helper function to convert hex color to RGB (0-1 range), handling "0x" prefix

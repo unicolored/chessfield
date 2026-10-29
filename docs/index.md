@@ -143,6 +143,10 @@
     <p>FEN support, last move highlighting, check/mate/draw states, player names, and coordinate display.</p>
   </div>
   <div class="feature-card">
+    <h3>⏳ Loading State</h3>
+    <p>Built-in loading overlay with progress events and a whenReady() promise.</p>
+  </div>
+  <div class="feature-card">
     <h3>🔧 Programmatic Control</h3>
     <p>Rich API for theme switching, camera changes, shape overlays (rings and arrows), and dynamic configuration.</p>
   </div>

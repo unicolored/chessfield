@@ -65,8 +65,15 @@ export class TextService implements TextServiceInterface {
     }
   }
 
-  async add(options: TextOptions): Promise<TextInstance> {
+  async add(options: TextOptions, id?: string): Promise<TextInstance> {
     const instance = await (this.backend as any).create(options);
+
+    // A caller-provided id stays stable across backend switches, so owners can update by id.
+    if (id !== undefined && id !== instance.id) {
+      this.instances.delete(instance.id);
+      instance.id = id;
+    }
+
     // Troika builds its glyph atlas asynchronously; repaint when it signals completion.
     instance.object.addEventListener?.('synccomplete', () => this.onChange());
     this.instances.set(instance.id, instance);

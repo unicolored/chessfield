@@ -74,30 +74,34 @@ export class GameProvider {
     return boardPieces;
   }
 
-  public loadGlbGeometry(loadingManager: THREE.LoadingManager): void {
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-    const loader = new GLTFLoader(loadingManager);
-    loader.setDRACOLoader(dracoLoader);
+  public loadGlbGeometry(loadingManager: THREE.LoadingManager): Promise<void> {
+    return new Promise<void>(resolve => {
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+      const loader = new GLTFLoader(loadingManager);
+      loader.setDRACOLoader(dracoLoader);
 
-    const piecesGeometriesGltfMap = new Map<cf.PiecesEnum, THREE.BufferGeometry>();
+      const piecesGeometriesGltfMap = new Map<cf.PiecesEnum, THREE.BufferGeometry>();
 
-    loader.load(
-      piecesLiteModel,
-      (gltf: GLTF) => {
-        gltf.scene.children.forEach((obj: THREE.Object3D) => {
-          const mesh = obj as THREE.Mesh;
-          mesh.geometry.scale(0.2, 0.2, 0.2);
+      this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
 
-          piecesGeometriesGltfMap.set(obj.name as cf.PiecesEnum, mesh.geometry);
-        });
-      }, // Success: resolve with the loaded gltf
-      undefined, // Progress: optional, omitted here
-      error => {
-        console.error(`Failed to load pieces:`, error);
-      },
-    );
+      loader.load(
+        piecesLiteModel,
+        (gltf: GLTF) => {
+          gltf.scene.children.forEach((obj: THREE.Object3D) => {
+            const mesh = obj as THREE.Mesh;
+            mesh.geometry.scale(0.2, 0.2, 0.2);
 
-    this.store.setPiecesGeometriesGltfMap(piecesGeometriesGltfMap);
+            piecesGeometriesGltfMap.set(obj.name as cf.PiecesEnum, mesh.geometry);
+          });
+          resolve();
+        }, // Success: resolve with the loaded gltf
+        undefined, // Progress: optional, omitted here
+        error => {
+          console.error(`Failed to load pieces:`, error);
+          resolve();
+        },
+      );
+    });
   }
 }
