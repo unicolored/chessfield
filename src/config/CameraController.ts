@@ -1,4 +1,5 @@
 import type { CameraProvider } from '../provider/camera.provider.ts';
+import type { ControlsProvider } from '../provider/controls.provider.ts';
 import type { Store } from '../provider/store.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import type { Projection } from '../resource/chessfield.types.ts';
@@ -11,6 +12,7 @@ export class CameraController {
   constructor(
     private cameraProvider: CameraProvider,
     private store: Store,
+    private controlsProvider: ControlsProvider,
   ) {}
 
   /** Apply the camera, angle, projection and orientation already stored in the config to the live scene. */
@@ -60,6 +62,8 @@ export class CameraController {
     // OrbitControls keeps its own reference to the camera object.
     if (this.store.controls) {
       this.store.controls.object = next;
+      // Orthographic zoom is a frustum factor: refresh the limits for the swapped camera.
+      this.controlsProvider.applyZoomLimits(this.store.controls);
     }
 
     this.store.requestRender();

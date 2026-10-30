@@ -4,7 +4,7 @@ import * as cg from '@lichess-org/chessground/types';
 import { type OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as THREE from 'three/webgpu';
 
-import { cm } from '../helper.ts';
+import { cm, turnFromFen } from '../helper.ts';
 import type { ChessfieldConfig } from '../resource/chessfield.config.ts';
 import { type GameState } from '../resource/chessfield.state.ts';
 import type * as cf from '../resource/chessfield.types.ts';
@@ -119,6 +119,22 @@ export class Store {
 
   getConfig(): ChessfieldConfig {
     return this.config ?? {};
+  }
+
+  getCurrentFen(): cg.FEN | null {
+    return this.moveSubject.value?.fen ?? null;
+  }
+
+  /** Side to move: the explicit config override, else the current FEN, else White. */
+  getTurnColor(): cg.Color {
+    const override = this.getConfig().turnColor;
+    if (override === 'white' || override === 'black') {
+      return override;
+    }
+
+    const fen = this.moveSubject.value?.fen ?? this.getConfig().fen ?? Store.initialFen;
+
+    return turnFromFen(fen) ?? 'white';
   }
 
   setConfig(config: ChessfieldConfig): void {

@@ -2,12 +2,18 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
-import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
+import {
+  type ChessfieldConfig,
+  DEFAULT_ZOOM_MAX_DISTANCE,
+  DEFAULT_ZOOM_MIN_DISTANCE,
+} from '../resource/chessfield.config.ts';
+
+import { CAMERA_FOV } from './camera.provider.ts';
 
 export class ControlsProvider {
   private enabled = true;
-  private zoomMinDistance = 10;
-  private zoomMaxDistance = 25;
+  private zoomMinDistance = DEFAULT_ZOOM_MIN_DISTANCE;
+  private zoomMaxDistance = DEFAULT_ZOOM_MAX_DISTANCE;
 
   constructor(config: ChessfieldConfig) {
     this.apply(config);
@@ -16,8 +22,8 @@ export class ControlsProvider {
   /** Update the cached values and, when it already exists, the live OrbitControls instance. */
   apply(config: ChessfieldConfig, controls?: OrbitControls): void {
     this.enabled = config.controlsEnabled ?? true;
-    this.zoomMinDistance = config.zoomMinDistance ?? 10;
-    this.zoomMaxDistance = config.zoomMaxDistance ?? 25;
+    this.zoomMinDistance = config.zoomMinDistance ?? DEFAULT_ZOOM_MIN_DISTANCE;
+    this.zoomMaxDistance = config.zoomMaxDistance ?? DEFAULT_ZOOM_MAX_DISTANCE;
 
     if (!controls) {
       return;
@@ -26,6 +32,30 @@ export class ControlsProvider {
     controls.enabled = this.enabled;
     controls.minDistance = cm(this.zoomMinDistance);
     controls.maxDistance = cm(this.zoomMaxDistance);
+    this.applyZoomLimits(controls);
+  }
+
+  /**
+   * OrbitControls zooms an orthographic camera through `camera.zoom`, not its orbit distance,
+   * so the configured distance range has to be expressed as zoom factors. `zoom === 1` is the
+   * frustum height set by CameraProvider.syncProjection(), matching the perspective view.
+   */
+  applyZoomLimits(controls: OrbitControls): void {
+    const camera = controls.object;
+
+    if (!(camera instanceof THREE.OrthographicCamera)) {
+      // Perspective zoom is clamped by minDistance/maxDistance instead.
+      controls.minZoom = 0;
+      controls.maxZoom = Infinity;
+      return;
+    }
+
+    const halfHeight = (camera.top - camera.bottom) / 2;
+    const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2));
+
+    // zoom = frustum half-height / (orbit distance * tan(fov / 2))
+    controls.minZoom = halfHeight / (cm(this.zoomMaxDistance) * tanHalfFov);
+    controls.maxZoom = halfHeight / (cm(this.zoomMinDistance) * tanHalfFov);
   }
 
   getControls(camera: THREE.Camera, canvas: HTMLCanvasElement): OrbitControls {
@@ -43,6 +73,7 @@ export class ControlsProvider {
     controls.target.set(0, 0, 0);
     controls.minDistance = cm(this.zoomMinDistance); // Set the minimum zoom distance
     controls.maxDistance = cm(this.zoomMaxDistance); // Set the maximum zoom distance
+    this.applyZoomLimits(controls);
 
     return controls;
   }

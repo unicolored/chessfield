@@ -10,7 +10,9 @@ import { PieceProvider } from '../provider/piece.provider';
 import { Store } from '../provider/store';
 import { ThemeProvider } from '../provider/theme.provider';
 import { BoardService } from '../service/board.service';
+import { ClockService } from '../service/clock.service';
 import { GamePieceService } from '../service/game-piece.service';
+import { LoadingService } from '../service/loading.service';
 import { ShapesService } from '../service/shapes.service';
 import { StateService } from '../service/state.service';
 import { TextService } from '../service/text/text.service';
@@ -31,10 +33,12 @@ export class Container {
   private themeProvider!: ThemeProvider;
   private gameProvider!: GameProvider;
   private loadingManagerProvider!: LoadingManagerProvider;
+  private loadingService!: LoadingService;
 
   private boardService!: BoardService;
   private shapesService!: ShapesService;
   private textService!: TextService;
+  private clockService!: ClockService;
   private stateService!: StateService;
   private gamePieceService!: GamePieceService;
 
@@ -117,6 +121,14 @@ export class Container {
     return this.loadingManagerProvider;
   }
 
+  getLoadingService(): LoadingService {
+    if (!this.loadingService) {
+      this.loadingService = new LoadingService();
+    }
+
+    return this.loadingService;
+  }
+
   getBoardService(): BoardService {
     if (!this.boardService) {
       this.boardService = new BoardService();
@@ -160,6 +172,14 @@ export class Container {
     return this.gamePieceService;
   }
 
+  getClockService(): ClockService {
+    if (!this.clockService) {
+      this.clockService = new ClockService(this.getStore());
+    }
+
+    return this.clockService;
+  }
+
   getAnimationLoop(): AnimationLoop {
     if (!this.animationLoop) {
       this.animationLoop = new AnimationLoop();
@@ -199,7 +219,11 @@ export class Container {
 
   getCameraController(): CameraController {
     if (!this.cameraController) {
-      this.cameraController = new CameraController(this.getCameraProvider(), this.getStore());
+      this.cameraController = new CameraController(
+        this.getCameraProvider(),
+        this.getStore(),
+        this.getControlsProvider(),
+      );
     }
 
     return this.cameraController;

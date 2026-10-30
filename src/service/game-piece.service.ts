@@ -26,12 +26,39 @@ export class GamePieceService {
   }
 
   /** Replace the current position and its last-move highlight on the live board. */
-  setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[]): void {
+  setFen(fen: cg.FEN, lastMove?: cg.Key[] | string[], timeLeft?: cf.TimeLeft): void {
     const store = this.container.getStore();
+    const clockService = this.container.getClockService();
+
+    // A clock-only sync keeps the game state and skips the piece parse.
+    if (store.getCurrentFen() === fen && timeLeft !== undefined) {
+      clockService.setTimeLeft(timeLeft);
+
+      if (lastMove !== undefined) {
+        store.setLastMove(lastMove);
+      }
+
+      return;
+    }
+
     store.gameState = null;
 
     if (store.setFen(fen, lastMove)) {
+      // The FEN is the single source of the turn: move both indicators together.
+      const turn = store.getTurnColor();
+      this.container.getBoardService().setTurn(turn);
+      clockService.setTurn(turn);
+
+      if (timeLeft !== undefined) {
+        clockService.setTimeLeft(timeLeft);
+      }
+
       return;
+    }
+
+    // Same FEN without a clock snapshot, or an invalid FEN.
+    if (timeLeft !== undefined) {
+      clockService.setTimeLeft(timeLeft);
     }
 
     // Same FEN: only the highlight can change; without one, repaint the cleared state.

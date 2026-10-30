@@ -11,11 +11,23 @@ import { cbShader } from '../shader/cbShader.ts';
 
 import { type TextConfig, type TextService } from './text/text.service.ts';
 
+const TURN_SWITCH_X = cm(-4.5);
+const TURN_SWITCH_CENTER_Y = cm(0.32);
+const TURN_SWITCH_WIDTH = cm(0.4);
+const TURN_SWITCH_THICKNESS = cm(0.1);
+const TURN_SWITCH_LENGTH = cm(7);
+const TURN_SWITCH_TILT = 0.08;
+
 export class BoardService {
   // Shared with the frame material's uniform: mutating it needs no shader rebuild.
   private frameColor = new THREE.Color();
 
-  public decor(mode: ThemeColors): THREE.Group {
+  // One rocker on the left edge, coloured like the current scene background.
+  private readonly switchColor = new THREE.Color('#000000');
+  private turnSwitch: THREE.Mesh | null = null;
+  private turn: cg.Color = 'white';
+
+  public decor(mode: ThemeColors, turn: cg.Color = 'white'): THREE.Group {
     const decorGroup = new THREE.Group();
 
     // Create a box geometry and material
@@ -33,30 +45,58 @@ export class BoardService {
     // gridHelper.position.y = cm(0.045);
     // decorGroup.add(gridHelper);
 
-    // Player bars keep their fixed light/dark indicator colors, whatever the mode.
-    const playerGeometry = new THREE.BoxGeometry(cm(8), cm(0.025), cm(0.025));
+    // One clock-style rocker on the left edge (from White's view). The end on the side
+    // of the player to move is raised; the other end rests near the frame.
+    this.switchColor.set(mode.light);
+    const switchMaterial = new THREE.MeshBasicNodeMaterial();
+    switchMaterial.colorNode = vec4(uniform(this.switchColor), 1.0);
 
-    const player1Material = new THREE.MeshBasicNodeMaterial({ color: Store.modes['light'].dark });
-    const player1 = new THREE.Mesh(playerGeometry, player1Material);
-    // Position the box in the scene
-    player1.position.set(0, cm(0), cm(4.5));
-    // Add the box to the scene
-    decorGroup.add(player1);
+    const switchGeometry = new THREE.BoxGeometry(
+      TURN_SWITCH_WIDTH,
+      TURN_SWITCH_THICKNESS,
+      TURN_SWITCH_LENGTH,
+    );
+    const turnSwitch = new THREE.Mesh(switchGeometry, switchMaterial);
+    turnSwitch.name = 'cf-turn-switch';
+    turnSwitch.position.set(TURN_SWITCH_X, TURN_SWITCH_CENTER_Y, 0);
+    this.turnSwitch = turnSwitch;
+    decorGroup.add(turnSwitch);
 
-    // Create a box geometry and material
-    const player2Material = new THREE.MeshBasicNodeMaterial({ color: Store.modes['dark'].dark });
-    const player2 = new THREE.Mesh(playerGeometry, player2Material);
-    // Position the box in the scene
-    player2.position.set(0, cm(0), cm(-4.5));
-    // Add the box to the scene
-    decorGroup.add(player2);
+    // A small fixed fulcrum makes the bar read as a rocker rather than a floating plank.
+    const pivot = new THREE.Mesh(new THREE.CylinderGeometry(cm(0.12), cm(0.12), cm(0.3), 12), switchMaterial);
+    pivot.name = 'cf-turn-switch-pivot';
+    pivot.position.set(TURN_SWITCH_X, cm(0.15), 0);
+    decorGroup.add(pivot);
+
+    this.turn = turn;
+    this.applyTurn();
 
     return decorGroup;
   }
 
-  // The frame follows the mode; player bars keep their fixed indicator colors.
+  /** Rock the switch toward the side to move. No-op when the turn did not change. */
+  public setTurn(turn: cg.Color): void {
+    if (this.turn === turn) {
+      return;
+    }
+
+    this.turn = turn;
+    this.applyTurn();
+  }
+
+  private applyTurn(): void {
+    if (!this.turnSwitch) {
+      return;
+    }
+
+    // White is +Z: a negative rotation around X raises that end.
+    this.turnSwitch.rotation.x = this.turn === 'white' ? -TURN_SWITCH_TILT : TURN_SWITCH_TILT;
+  }
+
+  // The frame follows the mode; the rocker matches the current background colour.
   public updateDecorColors(modeColors: ThemeColors): void {
     this.frameColor.set(modeColors.dark);
+    this.switchColor.set(modeColors.light);
   }
 
   public createCases(font: Font | null): THREE.Group {
@@ -197,7 +237,7 @@ export class BoardService {
     const fontFamily = textConfig.fontFamily ?? 'system-ui, sans-serif';
     const fontWeight = textConfig.fontWeight ?? '400';
 
-    // White player name - South side (bottom), facing camera
+    // White player name - South side (bottom), facing the white side
     const whiteName = await textService.add({
       text: names.white ?? 'White',
       position: new THREE.Vector3(0, cm(0.5), offset),
@@ -207,11 +247,11 @@ export class BoardService {
       fontWeight,
       anchorX: 'center',
       anchorY: 'center',
-      rotation: new THREE.Euler(0, Math.PI, 0),
+      rotation: new THREE.Euler(0, 0, 0),
     });
     textGroup.add(whiteName.object);
 
-    // Black player name - North side (top), facing camera
+    // Black player name - North side (top), facing the black side
     const blackName = await textService.add({
       text: names.black ?? 'Black',
       position: new THREE.Vector3(0, cm(0.5), -offset),
@@ -221,7 +261,7 @@ export class BoardService {
       fontWeight,
       anchorX: 'center',
       anchorY: 'center',
-      rotation: new THREE.Euler(0, 0, 0),
+      rotation: new THREE.Euler(0, Math.PI, 0),
     });
 
     textGroup.add(blackName.object);

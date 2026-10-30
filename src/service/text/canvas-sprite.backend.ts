@@ -11,6 +11,11 @@ interface CacheEntry {
   pixelRatio: number;
 }
 
+// Fonts are sized in world units (meters); 100 px per cm maps one meter to 10,000 px.
+const PIXELS_PER_METER = 10_000;
+// Blank margin around the glyphs, in CSS pixels, so overhangs and antialiasing stay inside.
+const PADDING_PX = 10;
+
 function getPixelRatio(options: TextOptions): number {
   return options.pixelRatio ?? (typeof window !== 'undefined' ? window.devicePixelRatio : 2) ?? 2;
 }
@@ -18,6 +23,8 @@ function getPixelRatio(options: TextOptions): number {
 export class CanvasSpriteBackend extends BaseTextBackend {
   readonly type: TextBackendType = 'canvas-sprite';
   private cache: Map<string, CacheEntry> = new Map();
+  // Cache-owned textures outlive individual instances; everything else is instance-owned.
+  private cachedTextures = new WeakSet<THREE.Texture>();
 
   private getCacheKey(options: TextOptions): string {
     const pixelRatio = getPixelRatio(options);
@@ -42,33 +49,46 @@ export class CanvasSpriteBackend extends BaseTextBackend {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
 
-    // Render at higher DPI for crisp text
-    // fontSize is in meters (world units). 1 meter = 100cm. At 100px/cm = 10000px/meter
-    const renderFontSize = Math.round(fontSize * 10_000 * pixelRatio);
-    const fontString = `${fontWeight} ${renderFontSize}px ${fontFamily}`;
+    // Measure in CSS pixels. The backing store is enlarged by the pixel ratio afterwards,
+    // so glyphs stay sharp on high-DPI screens without changing their world size.
+    const fontString = `${fontWeight} ${Math.round(fontSize * PIXELS_PER_METER)}px ${fontFamily}`;
     ctx.font = fontString;
-
     const metrics = ctx.measureText(options.text);
-    const textWidth = metrics.width;
-    const textHeight = Math.round(renderFontSize * 1.2);
 
-    const padding = 10 * pixelRatio;
-    canvas.width = textWidth + padding * 2;
-    canvas.height = textHeight + padding * 2;
+    // Size from the real ink box: system fonts differ in ascent/descent, and a fixed
+    // line height would clip tall fonts (or italic/accented glyphs).
+    const ascent = Math.ceil(metrics.actualBoundingBoxAscent ?? metrics.fontBoundingBoxAscent ?? 0);
+    const descent = Math.ceil(metrics.actualBoundingBoxDescent ?? metrics.fontBoundingBoxDescent ?? 0);
 
-    // Scale context to match high DPI rendering
+    canvas.width = Math.ceil((metrics.width + PADDING_PX * 2) * pixelRatio);
+    canvas.height = Math.ceil((ascent + descent + PADDING_PX * 2) * pixelRatio);
+
+    // Resizing the canvas resets its context, so the transform and font are applied after.
     ctx.scale(pixelRatio, pixelRatio);
     ctx.font = fontString;
     ctx.fillStyle = typeof color === 'number' ? `#${color.toString(16).padStart(6, '0')}` : color;
-    ctx.textBaseline = 'middle';
+    ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'center';
-    ctx.fillText(options.text, canvas.width / 2 / pixelRatio, canvas.height / 2 / pixelRatio);
+    ctx.fillText(options.text, canvas.width / 2 / pixelRatio, PADDING_PX + ascent);
 
-    // Return CSS pixels (canvas pixels / pixelRatio)
-    return { canvas, width: textWidth / pixelRatio, height: textHeight / pixelRatio };
+    // Report CSS pixels: the texture is stretched to the sprite, so its aspect ratio must
+    // match the backing store exactly at every pixel ratio.
+    return {
+      canvas,
+      width: canvas.width / pixelRatio,
+      height: canvas.height / pixelRatio,
+    };
   }
 
   private getOrCreateTexture(options: TextOptions): CacheEntry {
+    // Dynamic text (clocks) opts out: its texture is owned by the instance and replaced on update.
+    if (options.cache === false) {
+      const { canvas, width, height } = this.renderToCanvas(options);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return { canvas, texture, width, height, pixelRatio: getPixelRatio(options) };
+    }
+
     const key = this.getCacheKey(options);
     let cached = this.cache.get(key);
 
@@ -79,9 +99,16 @@ export class CanvasSpriteBackend extends BaseTextBackend {
       const pixelRatio = getPixelRatio(options);
       cached = { canvas, texture, width, height, pixelRatio };
       this.cache.set(key, cached);
+      this.cachedTextures.add(texture);
     }
 
     return cached;
+  }
+
+  private disposeIfInstanceOwned(texture: THREE.Texture | null): void {
+    if (texture && !this.cachedTextures.has(texture)) {
+      texture.dispose();
+    }
   }
 
   create(options: TextOptions): TextInstance {
@@ -110,7 +137,8 @@ export class CanvasSpriteBackend extends BaseTextBackend {
   protected disposeInstance(instance: TextInstance): void {
     if (instance.object instanceof THREE.Sprite) {
       const material = instance.object.material as THREE.SpriteMaterial;
-      // The texture is cached and shared with other instances: the cache owns it.
+      // Cached textures are shared with other instances and owned by the cache.
+      this.disposeIfInstanceOwned(material.map);
       material.dispose();
     }
   }
@@ -123,10 +151,12 @@ export class CanvasSpriteBackend extends BaseTextBackend {
 
     const { texture, width, height } = this.getOrCreateTexture(mergedOptions);
     const material = instance.object.material as THREE.SpriteMaterial;
+    const previousTexture = material.map;
 
-    // The previous texture stays cached (and may be shared): the cache owns it.
+    // Replace the instance-owned texture; cached textures stay in the cache.
     material.map = texture;
     material.needsUpdate = true;
+    this.disposeIfInstanceOwned(previousTexture);
 
     const scale = mergedOptions.fontSize ?? 0.4;
     instance.object.scale.set((width * scale) / 100, (height * scale) / 100, 1);

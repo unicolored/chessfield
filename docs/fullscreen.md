@@ -100,10 +100,20 @@ document.addEventListener('keydown', e => {
 
 ## Mobile Considerations
 
-```typescript
-// iOS Safari requires specific meta tag
-// <meta name="apple-mobile-web-app-capable" content="yes">
+Element fullscreen is not available on iOS/iPadOS Safari, and it is disabled in
+frames without `allowfullscreen`. There is no workaround: detect support and hide
+the control so users are not offered a button that cannot respond.
 
+```typescript
+const canFullscreen = typeof canvas.requestFullscreen === 'function' && document.fullscreenEnabled !== false;
+
+fsBtn.hidden = !canFullscreen;
+```
+
+Render the button with the `hidden` attribute first, then reveal it only when
+supported, so a dead control never flashes before the script runs.
+
+```typescript
 // Handle orientation change
 window.addEventListener('orientationchange', () => {
   // Canvas auto-resizes, but you may need to trigger a manual resize
@@ -115,7 +125,7 @@ window.addEventListener('orientationchange', () => {
 
 ```html
 <div id="board" style="width: 600px; height: 600px;"></div>
-<button id="fs-btn" aria-label="Enter fullscreen">⛶</button>
+<button id="fs-btn" aria-label="Enter fullscreen" hidden>⛶</button>
 
 <script type="module">
   import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.js';
@@ -130,6 +140,11 @@ window.addEventListener('orientationchange', () => {
   });
 
   const canvas = container.querySelector('canvas')!;
+
+  // Element fullscreen is missing on iOS/iPadOS Safari: do not offer the control there.
+  const canFullscreen =
+    typeof canvas.requestFullscreen === 'function' && document.fullscreenEnabled !== false;
+  fsBtn.hidden = !canFullscreen;
 
   fsBtn.addEventListener('click', () => {
     if (document.fullscreenElement === canvas) {

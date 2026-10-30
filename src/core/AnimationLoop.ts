@@ -6,9 +6,12 @@ import { type Store } from '../provider/store';
 
 export class AnimationLoop {
   private animationLoop: (() => void) | null = null;
+  private detachControlsChange: (() => void) | null = null;
 
   start(
     store: Store,
+    // Runs every frame before the dirty check; may request a render (clock ticks).
+    onFrame?: () => void,
     // controls: OrbitControls,
     // renderer: THREE.WebGPURenderer,
     // renderPipeline: THREE.RenderPipeline,
@@ -21,6 +24,12 @@ export class AnimationLoop {
     if (!store.controls || !renderPipeline?.renderer) {
       return;
     }
+
+    // OrbitControls applies wheel and pointer changes through its own update() call, before
+    // this loop can observe them. Its change event is what marks those frames dirty.
+    const requestRender = () => store.requestRender();
+    store.controls.addEventListener('change', requestRender);
+    this.detachControlsChange = () => store.controls.removeEventListener('change', requestRender);
 
     // Scene pass
     const scenePass = pass(store.getScene(), store.camera);
@@ -43,10 +52,13 @@ export class AnimationLoop {
       // The projection switch swaps the camera instance: the pass follows the active one.
       scenePass.camera = store.camera;
 
+      // Clock ticks may request a frame before the dirty check consumes it.
+      onFrame?.();
+
       // Consume pending changes first; requestRender() marks a single dirty frame.
       const requested = store.consumeRenderRequest();
 
-      // OrbitControls.update() reports whether damping or user input moved the camera.
+      // OrbitControls.update() reports damping or input it applies on this tick.
       const cameraMoved = store.controls.update();
 
       // Idle boards render nothing: only changed frames are submitted to the GPU.
@@ -65,6 +77,8 @@ export class AnimationLoop {
   stop(renderer: THREE.WebGPURenderer): void {
     renderer.setAnimationLoop(null);
     this.animationLoop = null;
+    this.detachControlsChange?.();
+    this.detachControlsChange = null;
   }
 
   getTick(): (() => void) | null {

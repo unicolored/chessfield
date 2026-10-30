@@ -78,3 +78,35 @@ describe('Store render requests', () => {
     expect(store.consumeRenderRequest()).toBe(true);
   });
 });
+
+describe('Store.getTurnColor', () => {
+  it('reads the side to move from the current FEN', () => {
+    const store = new Store();
+
+    store.setFen(startFen);
+    expect(store.getTurnColor()).toBe('white');
+
+    store.setFen(afterE4Fen);
+    expect(store.getTurnColor()).toBe('black');
+  });
+
+  it('falls back to the configured FEN before the first move', () => {
+    const store = new Store({ fen: afterE4Fen });
+
+    expect(store.getTurnColor()).toBe('black');
+  });
+
+  it('lets an explicit turnColor override the FEN', () => {
+    const store = new Store({ turnColor: 'white' });
+
+    store.setFen(afterE4Fen);
+
+    expect(store.getTurnColor()).toBe('white');
+  });
+
+  it('falls back to White when no FEN is available', () => {
+    const store = new Store();
+
+    expect(store.getTurnColor()).toBe('white');
+  });
+});

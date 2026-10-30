@@ -45,7 +45,15 @@ if (switchThemeBtn) {
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const isBoardFullscreen = () => document.fullscreenElement === board1El;
 
-if (fullscreenBtn && board1El) {
+// iOS/iPadOS Safari and some embedded webviews expose no Element Fullscreen:
+// keep the control hidden rather than showing a button that cannot respond.
+const canFullscreen =
+  board1El !== null &&
+  typeof board1El.requestFullscreen === 'function' &&
+  document.fullscreenEnabled !== false;
+
+if (fullscreenBtn && board1El && canFullscreen) {
+  fullscreenBtn.hidden = false;
   fullscreenBtn.addEventListener('click', () => {
     if (isBoardFullscreen()) {
       void document.exitFullscreen();

@@ -17,6 +17,7 @@ import {
   type ThemeColors,
   type TextBackendType,
   type Move,
+  type LoadingProgress,
 } from 'chessfield';
 ```
 
@@ -39,22 +40,71 @@ new Chessfield(container: HTMLElement | null, config?: ChessfieldConfig): Chessf
 
 ## Methods
 
+### `whenReady`
+
+Resolves once all assets are settled, fonts are ready and the scene is composed. The loading overlay starts fading at the same moment.
+
+```typescript
+whenReady(): Promise<void>
+```
+
+```typescript
+await chessfield.whenReady();
+console.log('Board ready');
+```
+
+---
+
+### `onLoadingProgress`
+
+Subscribe to loading progress. The listener is called immediately with the current state and on every update; the returned function unsubscribes.
+
+```typescript
+onLoadingProgress(listener: (progress: LoadingProgress) => void): () => void
+```
+
+```typescript
+const unsubscribe = chessfield.onLoadingProgress(({ progress, ready }) => {
+  console.log(`${Math.round(progress * 100)}%`, ready ? 'ready' : 'loading');
+});
+
+// Later
+unsubscribe();
+```
+
+---
+
 ### `setFen`
 
 Set the board position from a FEN string.
 
 ```typescript
-setFen(fen: cg.FEN, lastMove?: cg.Key[]): void
+setFen(fen: cg.FEN, lastMove?: cg.Key[], timeLeft?: TimeLeft): void
 ```
 
 | Parameter  | Type       | Description                                                                           |
 | ---------- | ---------- | ------------------------------------------------------------------------------------- |
 | `fen`      | `cg.FEN`   | Valid FEN string (e.g., `'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'`) |
 | `lastMove` | `cg.Key[]` | Optional: two squares for last move highlight (e.g., `['e2', 'e4']`)                  |
+| `timeLeft` | `TimeLeft` | Optional: remaining seconds per player (e.g., `{ white: 30, black: 6 }`)              |
 
 ```typescript
-chessfield.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+chessfield.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4'], {
+  white: 30,
+  black: 6,
+});
 ```
+
+When `timeLeft` is provided, each player's clock is displayed at their end of the left-edge
+turn switch. The board counts down the side to move locally, resyncing on every call. Reaching
+`0:00` never changes the game state: the consumer is responsible for calling `setState` on flag
+fall. When the terminal state reports a timeout, the side to move is displayed at `0:00`.
+
+The board also shows whose turn it is with a single clock-style rocker on the left edge (from
+White's view), coloured with the current background so it is light in light mode and dark in
+dark mode. The end nearest the player to move is raised. The turn comes from the FEN's
+side-to-move field; the `turnColor` config option overrides it when set, and clearing it returns
+control to the FEN.
 
 ---
 
@@ -311,18 +361,20 @@ interface ChessfieldConfig {
   theme?: Theme; // Theme name
   fen?: cg.FEN; // Starting position
   lastMove?: cg.Key[] | string[]; // Last move squares
+  timeLeft?: TimeLeft; // Remaining clock seconds per player
   orientation?: cg.Color; // 'white' | 'black'
   camera?: Camera; // Camera position
   angle?: Angle; // Camera angle for white/black
-  turnColor?: cg.Color; // 'white' | 'black'
+  turnColor?: cg.Color; // 'white' | 'black'; overrides the FEN's turn field
   coordinatesOnSquares?: boolean; // Show coordinates on squares
   controlsEnabled?: boolean; // Enable orbit controls
   zoomMinDistance?: number; // Min zoom distance
   zoomMaxDistance?: number; // Max zoom distance
   loading?: {
-    overlayFadeDuration?: number; // ms
-    progressBarHeight?: number; // px
-    onLoadingComplete?: () => void; // Callback
+    enabled?: boolean; // Show the loading overlay (default: true)
+    overlayFadeDuration?: number; // Fade duration in ms (default: 500)
+    progressBarHeight?: number; // Progress bar height in px (default: 4, 0 hides it)
+    onLoadingComplete?: () => void; // Called once when the board is ready
   };
   playerNames?: {
     white?: string;
@@ -344,6 +396,33 @@ interface ChessfieldConfig {
   };
 }
 ```
+
+---
+
+### `LoadingProgress`
+
+```typescript
+interface LoadingProgress {
+  loaded: number; // Asset loads that have settled, successfully or not
+  total: number; // Asset loads started
+  progress: number; // 0..1, never decreases
+  ready: boolean; // Assets, fonts and scene ready
+}
+```
+
+---
+
+### `TimeLeft`
+
+```typescript
+interface TimeLeft {
+  white: number; // Whole seconds remaining for White
+  black: number; // Whole seconds remaining for Black
+}
+```
+
+Used by `setFen()`, `configUpdate()` and the `timeLeft` config option. The board renders a
+local countdown for the side to move and freezes it once the game state is terminal.
 
 ---
 
