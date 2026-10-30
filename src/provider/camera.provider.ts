@@ -1,16 +1,22 @@
 import * as THREE from 'three/webgpu';
 
 import { cm } from '../helper.ts';
-import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
+import { type ChessfieldConfig, DEFAULT_ZOOM_MAX_DISTANCE } from '../resource/chessfield.config.ts';
 import type * as cf from '../resource/chessfield.types.ts';
+
+/** Vertical field of view shared by the perspective camera and the orthographic zoom mapping. */
+export const CAMERA_FOV = 33;
 
 export class CameraProvider {
   cameraPositionsMap = new Map<cf.Camera, THREE.Vector3>();
   cameraGroupRotationMap = new Map<string, THREE.Vector3>();
 
-  defaultCameraPosition = new THREE.Vector3(0, cm(14), cm(14));
+  /** The board opens fully zoomed out, looking at it along this direction. */
+  private readonly defaultViewDirection = new THREE.Vector3(0, 1, 1).normalize();
 
-  private readonly fov = 33;
+  defaultCameraPosition = new THREE.Vector3();
+
+  private readonly fov = CAMERA_FOV;
   private readonly near = cm(0.1);
   private readonly far = 3;
 
@@ -25,6 +31,11 @@ export class CameraProvider {
   private initMaps(): void {
     const orientation = this.config.orientation ?? 'white';
     const viewOrientation = orientation === 'white' ? 0.01 : -0.01;
+    const maxDistance = cm(this.config.zoomMaxDistance ?? DEFAULT_ZOOM_MAX_DISTANCE);
+
+    // The default camera distance is the maximum zoom distance: the board starts fully zoomed out.
+    this.defaultCameraPosition.copy(this.defaultViewDirection).multiplyScalar(maxDistance);
+
     this.cameraPositionsMap.set('top', new THREE.Vector3(0, cm(16), cm(viewOrientation)));
     this.cameraPositionsMap.set('white', this.defaultCameraPosition);
 

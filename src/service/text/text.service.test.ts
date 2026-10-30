@@ -238,6 +238,16 @@ describe('TextService', () => {
     expect(instance.options.fontSize).toBe(0.5);
   });
 
+  it('keeps a caller-provided id across a backend switch', async () => {
+    await textService.add({ text: '0:30', position: new MockVector3(0, 0, 5) }, 'clock-white');
+
+    expect(textService.get('clock-white')).toBeDefined();
+
+    await textService.setBackend('troika-text');
+
+    expect(textService.get('clock-white')?.options.text).toBe('0:30');
+  });
+
   it('should switch backend and preserve instances', async () => {
     await textService.add({ text: 'White', position: new MockVector3(0, 0, 5) });
     await textService.add({ text: 'Black', position: new MockVector3(0, 0, -5) });

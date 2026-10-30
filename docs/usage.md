@@ -22,7 +22,7 @@ const chessfield = new Chessfield(document.getElementById('board')!, {
   // Position
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
   lastMove: ['e2', 'e4'],
-  turnColor: 'white',
+  turnColor: 'white', // optional override; omit to follow the FEN
 
   // Display options
   coordinatesOnSquares: false,
@@ -65,6 +65,53 @@ chessfield.setFen(
 
 // Clear board
 chessfield.setFen('8/8/8/8/8/8/8/8 w - - 0 1');
+```
+
+## Chess Clocks
+
+Pass the remaining time for each player (whole seconds) as the third argument:
+
+```typescript
+chessfield.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4'], {
+  white: 30,
+  black: 6,
+});
+```
+
+Each time is displayed at the player's end of the turn switch: White's left and Black's right.
+The board counts down the side to move from the last snapshot, and resyncs every time a `timeLeft`
+value is supplied. It never ends the game by itself: call `setState({ status: 'timeout', ... })`
+when your own clock reaches zero. On a reported timeout, the side to move is shown at `0:00`
+even if the local countdown still had a fraction of a second left. The initial values can also
+be provided in the config:
+
+```typescript
+const chessfield = new Chessfield(container, {
+  fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+  timeLeft: { white: 300, black: 300 },
+});
+```
+
+## Turn Indicator
+
+A single clock-style rocker is shown on the left edge of the board (from White's view). It uses
+the current background colour, so it is light in light mode and dark in dark mode; the end
+nearest the player to move is raised.
+
+The turn follows the FEN automatically:
+
+```typescript
+// Black to move: the end of the rocker nearest Black is raised and the clock counts black.
+chessfield.setFen('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1', ['e2', 'e4']);
+```
+
+If your application tracks the turn separately from the FEN, set `turnColor` as an explicit
+override. Clear it with `undefined` to let the FEN drive the indicator again:
+
+```typescript
+await chessfield.configUpdate({ turnColor: 'black' });
+
+await chessfield.configUpdate({ turnColor: undefined });
 ```
 
 ## Theme & Appearance

@@ -18,6 +18,24 @@ export interface Move {
   lastMove?: cg.Key[] | string[];
 }
 
+/** Remaining clock time per player, in whole seconds. */
+export interface TimeLeft {
+  white: number;
+  black: number;
+}
+
+/** Progress reported while the library loads its assets and prepares the scene. */
+export interface LoadingProgress {
+  /** Number of asset loads that have settled, successfully or not. */
+  loaded: number;
+  /** Total number of asset loads started. */
+  total: number;
+  /** Overall progress between 0 and 1; never decreases. */
+  progress: number;
+  /** True once assets, fonts and the scene are ready for the first frame. */
+  ready: boolean;
+}
+
 export type ColorMaterial = {
   [key in cg.Color]: THREE.Material | null;
 };

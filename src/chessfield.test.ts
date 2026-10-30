@@ -19,6 +19,10 @@ vi.mock('./provider/loadingManager.provider.ts', () => {
         onProgress: null,
       };
     }
+    // Keep the core's startup pending: jsdom cannot render the WebGPU scene.
+    load(): Promise<void> {
+      return new Promise<void>(() => {});
+    }
     font = null;
   }
   return { LoadingManagerProvider: MockLoadingManagerProvider };
@@ -26,6 +30,7 @@ vi.mock('./provider/loadingManager.provider.ts', () => {
 
 import { Chessfield } from './chessfield.ts';
 import { Store } from './provider/store.ts';
+import type { LoadingProgress } from './resource/chessfield.types.ts';
 
 describe('Chessfield API', () => {
   let container: HTMLDivElement;
@@ -64,9 +69,24 @@ describe('Chessfield API', () => {
     expect(typeof chessfield.configUpdate).toBe('function');
   });
 
+  it('exposes the loading API', () => {
+    expect(typeof chessfield.whenReady).toBe('function');
+    expect(typeof chessfield.onLoadingProgress).toBe('function');
+  });
+
+  it('reports the initial loading progress to subscribers', () => {
+    const states: LoadingProgress[] = [];
+    const unsubscribe = chessfield.onLoadingProgress(progress => states.push(progress));
+
+    unsubscribe();
+
+    expect(states).toHaveLength(1);
+    expect(states[0]).toMatchObject({ progress: 0, ready: false });
+  });
+
   it('should accept FEN string in setFen', () => {
     const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
-    expect(() => chessfield.setFen(fen, ['e2', 'e4'])).not.toThrow();
+    expect(() => chessfield.setFen(fen, ['e2', 'e4'], { white: 30, black: 6 })).not.toThrow();
   });
 
   it('should accept partial config in configUpdate', () => {

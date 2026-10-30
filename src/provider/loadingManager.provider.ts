@@ -8,53 +8,48 @@ import { type ChessfieldConfig } from '../resource/chessfield.config.ts';
 
 import { type GameProvider } from './game.provider.ts';
 
+export type LoadingProgressListener = (loaded: number, total: number) => void;
+
 export class LoadingManagerProvider {
   private readonly loadingManager = new THREE.LoadingManager();
-  private textureLoader: THREE.TextureLoader;
+  private readonly textureLoader: THREE.TextureLoader;
+  private loadPromise: Promise<void> | null = null;
   font: Font | null = null;
 
   constructor(
     private readonly config: ChessfieldConfig,
     private readonly gameProvider: GameProvider,
   ) {
-    /**
-     * 2. PIECES glb
-     */
-    // this.gameProvider.loadGltfGeometries(loadingManager);
-    this.gameProvider.loadGlbGeometry(this.loadingManager);
-
-    /**
-     * 3. TEXTURES baked
-     */
     this.textureLoader = new THREE.TextureLoader(this.loadingManager);
-
-    this.loadTextures();
-
-    this.loadFont();
   }
 
-  loadTextures() {
-    /**
-     * 3. TEXTURES baked
-     */
+  /**
+   * Load every asset the scene needs. The promise resolves once all loads have
+   * settled, so one failed asset cannot block the board or the loading overlay.
+   */
+  load(onProgress?: LoadingProgressListener): Promise<void> {
+    this.loadPromise ??= this.loadAssets(onProgress);
 
-    // Load the texture and apply it to the material
-    this.textureLoader.load(
-      bakedTexture,
-      texture => {
+    return this.loadPromise;
+  }
+
+  private async loadAssets(onProgress?: LoadingProgressListener): Promise<void> {
+    const loads: Promise<void>[] = [
+      /**
+       * 1. PIECES glb
+       */
+      this.gameProvider.loadGlbGeometry(this.loadingManager),
+
+      /**
+       * 2. TEXTURES baked
+       */
+      this.loadTexture(bakedTexture, 'light pieces texture', texture => {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
 
         this.gameProvider.pieceMaterials.white = new THREE.MeshBasicNodeMaterial({ map: texture });
-      },
-      undefined,
-      (e: unknown) => {
-        console.error('error bakedTexture', e);
-      },
-    );
-    this.textureLoader.load(
-      bakedBlackTexture,
-      texture => {
+      }),
+      this.loadTexture(bakedBlackTexture, 'dark pieces texture', texture => {
         texture.flipY = false;
         texture.colorSpace = THREE.SRGBColorSpace;
 
@@ -62,20 +57,67 @@ export class LoadingManagerProvider {
           // color: Store.themes['bw'].dark,
           map: texture,
         });
-      },
-      undefined,
-      (e: unknown) => {
-        console.error('error bakedBlackTexture', e);
-      },
+      }),
+    ];
+
+    /**
+     * 3. FONT (only needed for coordinates on squares)
+     */
+    if (this.config.coordinatesOnSquares) {
+      loads.push(this.loadFont());
+    }
+
+    const total = loads.length;
+    let loaded = 0;
+
+    onProgress?.(0, total);
+
+    await Promise.allSettled(
+      loads.map(load =>
+        load.finally(() => {
+          loaded++;
+          onProgress?.(loaded, total);
+        }),
+      ),
     );
   }
 
-  loadFont() {
-    if (this.config.coordinatesOnSquares) {
-      new FontLoader(this.loadingManager).load(helvetikerFont, async (font: any) => {
-        this.font = font;
-      });
-    }
+  private loadTexture(url: string, label: string, apply: (texture: THREE.Texture) => void): Promise<void> {
+    return new Promise<void>(resolve => {
+      this.textureLoader.load(
+        url,
+        texture => {
+          try {
+            apply(texture);
+          } catch (error) {
+            console.error(`Failed to prepare ${label}`, error);
+          }
+          resolve();
+        },
+        undefined,
+        (error: unknown) => {
+          console.error(`Failed to load ${label}`, error);
+          resolve();
+        },
+      );
+    });
+  }
+
+  private loadFont(): Promise<void> {
+    return new Promise<void>(resolve => {
+      new FontLoader(this.loadingManager).load(
+        helvetikerFont,
+        (font: Font) => {
+          this.font = font;
+          resolve();
+        },
+        undefined,
+        (error: unknown) => {
+          console.error('Failed to load coordinates font', error);
+          resolve();
+        },
+      );
+    });
   }
 
   getLoadingManager(): THREE.LoadingManager {

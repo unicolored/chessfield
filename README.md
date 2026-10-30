@@ -34,6 +34,9 @@ Chessfield is designed to be a 3d chess viewer.
 - WebGL powered by Three.js
 - Zoom and rotate around the board to see games in a any angle
 - Display FEN and highlight squares of the last move
+- Optional live chess clocks on each side of the board
+- Single clock-style turn switch beside the board
+- Loading overlay with progress events and a ready promise
 
 ## Installation
 

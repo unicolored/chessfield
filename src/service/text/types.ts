@@ -17,6 +17,11 @@ export interface TextOptions {
   outlineColor?: string | number;
   /** Pixel ratio for high-DPI rendering (canvas-sprite backend) */
   pixelRatio?: number;
+  /**
+   * Cache the rendered texture by text/style. Disable for text that changes often
+   * (clocks): uncached instances own their texture and dispose it on update/removal.
+   */
+  cache?: boolean;
 }
 
 export interface TextInstance {
@@ -51,7 +56,7 @@ export interface TextConfig {
 export interface TextServiceInterface {
   readonly backendType: TextBackendType;
   setBackend(type: TextBackendType): Promise<void>;
-  add(options: TextOptions): Promise<TextInstance>;
+  add(options: TextOptions, id?: string): Promise<TextInstance>;
   remove(id: string): void;
   removeAll(): void;
   update(id: string, options: Partial<TextOptions>): void;

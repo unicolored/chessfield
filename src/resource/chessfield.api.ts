@@ -1,11 +1,24 @@
 import type * as cg from '@lichess-org/chessground/types';
 
 import { type ChessfieldConfig } from './chessfield.config.ts';
-import { type Camera, type Mode, type Projection, type ThemeColors } from './chessfield.types.ts';
+import {
+  type Camera,
+  type LoadingProgress,
+  type Mode,
+  type Projection,
+  type ThemeColors,
+  type TimeLeft,
+} from './chessfield.types.ts';
 
 export interface ChessfieldApi {
-  // set a fen with flags, and optionally squares part of the last move
-  setFen(fen: cg.FEN, lastMove?: cg.Key[]): void;
+  // resolves once assets, fonts and the scene are ready
+  whenReady(): Promise<void>;
+
+  // subscribe to loading progress; returns an unsubscribe function
+  onLoadingProgress(listener: (progress: LoadingProgress) => void): () => void;
+
+  // set a fen with flags, optionally squares part of the last move and the remaining clock time
+  setFen(fen: cg.FEN, lastMove?: cg.Key[], timeLeft?: TimeLeft): void;
 
   // set a move, and the fen
   // setMove(lastMove: cg.Key[] | string[], fen?: cg.FEN): void;

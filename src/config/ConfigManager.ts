@@ -57,11 +57,27 @@ export class ConfigManager {
     this.container.getControlsProvider().apply(updatedConfig, store.controls);
 
     // Position updates fall back to the live FEN when only the last move changes.
-    if (partialConfig.fen !== undefined || partialConfig.lastMove !== undefined) {
-      const fen = partialConfig.fen ?? store.moveSubject$.value?.fen;
+    if (
+      partialConfig.fen !== undefined ||
+      partialConfig.lastMove !== undefined ||
+      partialConfig.timeLeft !== undefined
+    ) {
+      const fen = partialConfig.fen ?? store.getCurrentFen();
       if (fen) {
-        this.container.getGamePieceService().setFen(fen, partialConfig.lastMove);
+        if (partialConfig.timeLeft !== undefined) {
+          this.container.getGamePieceService().setFen(fen, partialConfig.lastMove, partialConfig.timeLeft);
+        } else {
+          this.container.getGamePieceService().setFen(fen, partialConfig.lastMove);
+        }
       }
+    }
+
+    // An explicit turn override (or its removal) must move the switch and the countdown.
+    if ('turnColor' in partialConfig && partialConfig.turnColor !== currentConfig.turnColor) {
+      const turn = store.getTurnColor();
+      this.container.getBoardService().setTurn(turn);
+      this.container.getClockService().setTurn(turn);
+      store.requestRender();
     }
 
     const backend = partialConfig.text?.backend;
@@ -69,43 +85,47 @@ export class ConfigManager {
       await this.container.getTextService().setBackend(backend);
     }
 
-    // Player names are rebuilt only once the scene exists; SceneComposer handles the first load.
+    // Player names and clocks are rebuilt only once the scene exists; SceneComposer handles the first load.
     const appearanceChanged =
       partialConfig.text !== undefined && Object.keys(partialConfig.text).some(key => key !== 'backend');
     const modeChanged = updatedConfig.mode !== currentConfig.mode;
+    const labelsConfigured =
+      updatedConfig.playerNames !== undefined || this.container.getClockService().hasTimeLeft();
+
     if (
       store.chessboard &&
-      updatedConfig.playerNames &&
+      labelsConfigured &&
       (partialConfig.playerNames !== undefined || appearanceChanged || modeChanged)
     ) {
-      await this.refreshPlayerNames();
+      await this.refreshLabels();
     }
   }
 
-  /** Rebuild the name labels with the current names, text options and mode contrast color. */
-  private async refreshPlayerNames(): Promise<void> {
+  /** Rebuild the name and clock labels with the current text options and mode contrast color. */
+  private async refreshLabels(): Promise<void> {
     const store = this.container.getStore();
     const config = store.getConfig();
     const textService = this.container.getTextService();
 
     textService.removeAll();
 
-    if (!config.playerNames) {
-      return;
-    }
-
     const textConfig = { ...config.text };
     // An explicit text color wins; otherwise use the mode-contrasting default.
     textConfig.color ??= this.container.getThemeProvider().getTextColor();
 
-    await this.container.getBoardService().addPlayerNames(
-      textService,
-      {
-        white: config.playerNames.white ?? 'White',
-        black: config.playerNames.black ?? 'Black',
-      },
-      textConfig,
-      store.getTextGroup(),
-    );
+    if (config.playerNames) {
+      await this.container.getBoardService().addPlayerNames(
+        textService,
+        {
+          white: config.playerNames.white ?? 'White',
+          black: config.playerNames.black ?? 'Black',
+        },
+        textConfig,
+        store.getTextGroup(),
+      );
+    }
+
+    // removeAll() also dropped the clock labels: recreate them with the new style.
+    await this.container.getClockService().mount(textService, textConfig, store.getTextGroup());
   }
 }

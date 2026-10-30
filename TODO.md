@@ -1,0 +1,2 @@
+- On mobile i see some issues:
+  - The zoom is too high, and by default, the user can not see the full chessboard. Set a lower zoom value so the chessboard appears entirely.
