@@ -1,0 +1,4 @@
+[env]
+CODE_WORK_BRANCH = "develop"
+CODE_UPSTREAM_BRANCH = "next"
+RELEASE_VERSION = "2.5.4"
