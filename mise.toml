@@ -1,0 +1,23 @@
+[tools]
+node = "24"
+pnpm = "12.3.4"
+
+[env]
+CODE_WORK_BRANCH = "develop"
+CODE_UPSTREAM_BRANCH = "next"
+RELEASE_VERSION = "2.5.5"
+
+[tasks.install]
+run = "pnpm install"
+
+[tasks.release-checks]
+depends = ["install"]
+run = ["pnpm run lint", "pnpm run check-format", "pnpm run dist"]
+
+[tasks.build]
+description = "Build the app"
+run = ["pnpm run dist"]
+
+[tasks.format]
+run = ["pnpm run lint:fix", "pnpm run format"]
+
