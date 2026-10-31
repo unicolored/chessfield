@@ -42,23 +42,28 @@ export class EventsService {
   }
 
   init(): void {
-    this.cfElement.addEventListener('mousemove', this.handleMouseMove);
-    this.cfElement.addEventListener('mouseleave', this.handleMouseLeave);
+    this.cfElement.addEventListener('pointermove', this.handlePointerMove);
+    this.cfElement.addEventListener('pointerleave', this.handlePointerLeave);
     this.canvas.addEventListener('contextmenu', this.handleContextMenu);
-    this.canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.canvas.addEventListener('pointerdown', this.handlePointerDown);
     // The release can happen outside the board: listen on the window so the gesture always ends.
-    window.addEventListener('mouseup', this.handleMouseUp);
+    window.addEventListener('pointerup', this.handlePointerUp);
   }
 
   dispose(): void {
-    this.cfElement.removeEventListener('mousemove', this.handleMouseMove);
-    this.cfElement.removeEventListener('mouseleave', this.handleMouseLeave);
+    this.cfElement.removeEventListener('pointermove', this.handlePointerMove);
+    this.cfElement.removeEventListener('pointerleave', this.handlePointerLeave);
     this.canvas.removeEventListener('contextmenu', this.handleContextMenu);
-    this.canvas.removeEventListener('mousedown', this.handleMouseDown);
-    window.removeEventListener('mouseup', this.handleMouseUp);
+    this.canvas.removeEventListener('pointerdown', this.handlePointerDown);
+    window.removeEventListener('pointerup', this.handlePointerUp);
   }
 
-  private handleMouseMove = (event: MouseEvent): void => {
+  private handlePointerMove = (event: PointerEvent): void => {
+    // Touch and pen drive the camera through OrbitControls; only a hovering mouse highlights.
+    // Touch does not emit mouse events with a pointerType, so pointer events are the only
+    // reliable way to tell a finger from a real mouse.
+    if (event.pointerType !== 'mouse') return;
+
     this.updateMouse(event);
 
     const now = performance.now();
@@ -68,7 +73,9 @@ export class EventsService {
     }
   };
 
-  private handleMouseLeave = (): void => {
+  private handlePointerLeave = (event: PointerEvent): void => {
+    if (event.pointerType !== 'mouse') return;
+
     this.mouse.x = this.mouse.y = -2;
 
     // A preview arrow must not stay behind while the pointer is outside the board.
@@ -182,7 +189,10 @@ export class EventsService {
     return 'ring';
   }
 
-  private handleMouseDown = (event: MouseEvent): void => {
+  private handlePointerDown = (event: PointerEvent): void => {
+    // Shape gestures are mouse-only: a touch drag belongs to the camera, not to the board.
+    if (event.pointerType !== 'mouse') return;
+
     if (event.button === 0) {
       this.onLeftClickClear?.();
       return;
@@ -199,8 +209,8 @@ export class EventsService {
     this.rightDragShape = null;
   };
 
-  private handleMouseUp = (event: MouseEvent): void => {
-    if (event.button !== 2 || !this.rightDragStart) {
+  private handlePointerUp = (event: PointerEvent): void => {
+    if (event.pointerType !== 'mouse' || event.button !== 2 || !this.rightDragStart) {
       return;
     }
 
