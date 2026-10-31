@@ -1,7 +1,7 @@
 ---
 name: Continuous Integration
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build:
@@ -13,16 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24 # Adjust to 22 or 24 if preferred
+      - uses: jdx/mise-action@v2
 
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false # Prevents the automatic installation cwd bug
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - run: sh script/test.sh
-      - run: sh script/cibuild.sh
+      - run: mise run release-checks
