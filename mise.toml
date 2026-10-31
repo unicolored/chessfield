@@ -21,3 +21,6 @@ run = ["pnpm run dist"]
 [tasks.format]
 run = ["pnpm run lint:fix", "pnpm run format"]
 
+[tasks.dev]
+run = ["pnpm run dev"]
+
