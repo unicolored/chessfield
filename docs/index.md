@@ -1,20 +1,20 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.css" />
 
 <style>
-    body {
+    .chessfield-home {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         line-height: 1.6;
         max-width: 900px;
         margin: 0 auto;
         padding: 20px;
     }
-    .flex {
+    .chessfield-home .flex {
         display: flex;
         justify-content: center;
         align-items: center;
         margin: 20px 0;
     }
-    .chessfield {
+    .chessfield-home .chessfield {
         width: 100%;
         max-width: 740px;
         height: 740px;
@@ -23,42 +23,62 @@
         border-radius: 8px;
         overflow: hidden;
     }
-    h1, h2, h3 {
+    .chessfield-home h1, .chessfield-home h2, .chessfield-home h3 {
         color: #1a1a2e;
     }
-    code {
+    .chessfield-home code {
         background: #f4f4f4;
         padding: 2px 6px;
         border-radius: 4px;
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     }
-    pre {
+    .chessfield-home pre {
         background: #1e1e1e;
         color: #d4d4d4;
         padding: 16px;
         border-radius: 8px;
         overflow-x: auto;
     }
-    pre code {
+    .chessfield-home pre code,
+    .chessfield-home .md-typeset pre code {
         background: transparent;
         padding: 0;
+        color: #d4d4d4;
     }
-    .feature-grid {
+    .chessfield-home .md-typeset pre,
+    .chessfield-home .md-typeset pre > code {
+        color: #d4d4d4;
+    }
+    .chessfield-home .demo-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+    .chessfield-home .demo-controls button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f5f5f5;
+        cursor: pointer;
+    }
+    .chessfield-home .feature-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 16px;
         margin: 24px 0;
     }
-    .feature-card {
+    .chessfield-home .feature-card {
         padding: 16px;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         background: #fafafa;
     }
-    .feature-card h3 {
+    .chessfield-home .feature-card h3 {
         margin-top: 0;
     }
-    .badge {
+    .chessfield-home .badge {
         display: inline-block;
         padding: 2px 8px;
         border-radius: 12px;
@@ -66,25 +86,25 @@
         font-weight: 600;
         margin-right: 8px;
     }
-    .badge-npm { background: #e3f2fd; color: #1565c0; }
-    .badge-cdn { background: #f3e5f5; color: #7b1fa2; }
-    .badge-browser { background: #e8f5e9; color: #2e7d32; }
-    .toc {
+    .chessfield-home .badge-npm { background: #e3f2fd; color: #1565c0; }
+    .chessfield-home .badge-cdn { background: #f3e5f5; color: #7b1fa2; }
+    .chessfield-home .badge-browser { background: #e8f5e9; color: #2e7d32; }
+    .chessfield-home .toc {
         background: #f5f5f5;
         padding: 16px;
         border-radius: 8px;
         margin: 24px 0;
     }
-    .toc ul {
+    .chessfield-home .toc ul {
         margin: 0;
         padding-left: 20px;
     }
-    .tabs {
+    .chessfield-home .tabs {
         display: flex;
         gap: 8px;
         margin-bottom: 16px;
     }
-    .tab {
+    .chessfield-home .tab {
         padding: 8px 16px;
         border: 1px solid #ddd;
         background: #f5f5f5;
@@ -92,18 +112,20 @@
         cursor: pointer;
         font-weight: 500;
     }
-    .tab.active {
+    .chessfield-home .tab.active {
         background: white;
         border-bottom-color: white;
         margin-bottom: -1px;
     }
-    .tab-panel {
+    .chessfield-home .tab-panel {
         display: none;
     }
-    .tab-panel.active {
+    .chessfield-home .tab-panel.active {
         display: block;
     }
 </style>
+
+<div class="chessfield-home">
 
 <h1>Chessfield: Interactive 3D Chessboards</h1>
 
@@ -158,6 +180,12 @@
 
 <h2 id="demo">Live Demo</h2>
 <p>Drag to orbit, scroll to zoom, right-click squares to add rings, or right-drag between squares to draw arrows:</p>
+<div class="demo-controls">
+  <button id="switch-theme-btn">Switch Theme</button>
+  <button id="switch-camera-btn">Camera: white</button>
+  <button id="switch-mode-btn">Mode: light</button>
+  <button id="switch-projection-btn">Projection: perspective</button>
+</div>
 <div class="flex">
     <div class="chessfield" id="board1"></div>
 </div>
@@ -171,23 +199,33 @@
 </div>
 
 <div class="tab-panel active" id="panel-cdn">
-<pre><code><!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.css">
-</head>
-<body>
-  <div id="board" style="width: 600px; height: 600px;"></div>
-  <script src="https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.umd.js"></script>
-  <script>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessfield@2.5.5/dist/chessfield.css"&gt;
+  &lt;script type="importmap"&gt;
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+      "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+      "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.tsl.js",
+      "three/": "https://cdn.jsdelivr.net/npm/three@0.186.1/"
+    }
+  }
+  &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="board" style="width: 600px; height: 600px;"&gt;&lt;/div&gt;
+  &lt;script type="module"&gt;
+    import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield@2.5.5/dist/chessfield.js';
     const chessfield = new Chessfield(document.getElementById('board'), {
       camera: 'white',
       angle: 'right',
       theme: 'green'
     });
-  </script>
-</body>
-</html>
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
 </code></pre>
 </div>
 
@@ -215,15 +253,15 @@ import { Chessfield } from 'chessfield';
 import 'chessfield/style.css';
 
 export function Chessboard({ fen, theme }) {
-const ref = useRef<HTMLDivElement>(null);
-const fieldRef = useRef<Chessfield>(null);
+const ref = useRef&lt;HTMLDivElement&gt;(null);
+const fieldRef = useRef&lt;Chessfield&gt;(null);
 
-useEffect(() => {
+useEffect(() =&gt; {
 if (!ref.current) return;
 fieldRef.current = new Chessfield(ref.current, { fen, theme });
 }, [fen, theme]);
 
-return <div ref={ref} style={{ width: 600, height: 600 }} />;
+return &lt;div ref={ref} style={{ width: 600, height: 600 }} /&gt;;
 }
 </code></pre>
 <pre><code>// Vue 3
@@ -231,24 +269,24 @@ import { onMounted, ref } from 'vue';
 import { Chessfield } from 'chessfield';
 import 'chessfield/style.css';
 
-const boardRef = ref<HTMLDivElement>();
+const boardRef = ref&lt;HTMLDivElement&gt;();
 let chessfield: Chessfield;
 
-onMounted(() => {
+onMounted(() =&gt; {
   chessfield = new Chessfield(boardRef.value!, { theme: 'blue' });
 });
 
-// Template: <div ref="boardRef" style="width: 600px; height: 600px" />
+// Template: &lt;div ref="boardRef" style="width: 600px; height: 600px" /&gt;
 </code></pre>
 <pre><code>// Angular
 import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { Chessfield } from 'chessfield';
 
 @Component({
-  template: '<div #board style="width: 600px; height: 600px"></div>'
+  template: '&lt;div #board style="width: 600px; height: 600px"&gt;&lt;/div&gt;'
 })
 export class ChessboardComponent implements OnInit {
-  @ViewChild('board') boardRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('board') boardRef!: ElementRef&lt;HTMLDivElement&gt;;
   chessfield!: Chessfield;
 
   ngOnInit() {
@@ -265,6 +303,8 @@ export class ChessboardComponent implements OnInit {
     <li><strong>Issues & Contributions</strong>: <a href="https://github.com/unicolored/chessfield" target="_blank">GitHub Issues</a></li>
 </ul>
 
+</div>
+
 <script>
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
@@ -272,17 +312,53 @@ export class ChessboardComponent implements OnInit {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
-      document.getElementById('panel-' + tab.dataset.tab)!.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     });
   });
+</script>
 
-  // Live demo
-  import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield/dist/chessfield.js';
-  const boardContainer = document.getElementById('board1');
-  if (boardContainer) {
-      new Chessfield(boardContainer, {
-          camera: 'white',
-          angle: 'right'
-      });
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+    "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.tsl.js",
+    "three/": "https://cdn.jsdelivr.net/npm/three@0.186.1/"
   }
+}
+</script>
+<script type="module">
+  // Live demo
+  import { Chessfield } from 'https://cdn.jsdelivr.net/npm/chessfield@2.5.5/dist/chessfield.js';
+  const boardEl = document.getElementById('board1');
+  const board = new Chessfield(boardEl, {
+    orientation: 'white',
+    camera: 'white',
+    angle: 'right',
+    theme: 'green',
+    playerNames: { white: 'GM White', black: 'IM Black' },
+  });
+
+  const bind = (id, action, label) => {
+    const btn = document.getElementById(id);
+    const sync = () => { btn.textContent = label(); };
+    sync();
+    btn.addEventListener('click', () => { action(); sync(); });
+  };
+
+  bind('switch-theme-btn', () => board.switchTheme(), () => 'Switch Theme');
+  bind('switch-camera-btn', () => board.switchCamera(), () => `Camera: ${board.getCurrentCamera()}`);
+  bind('switch-mode-btn', () => board.switchMode(), () => `Mode: ${board.getCurrentMode()}`);
+  bind('switch-projection-btn', () => board.switchProjection(), () => `Projection: ${board.getCurrentProjection()}`);
+
+  board.addRing(6, 2, 'ring');
+  board.addRing(7, 2, 'ring');
+  board.addRing(6, 3, 'ringAlt');
+  board.addRing(7, 3, 'ringAlt');
+  board.addRing(6, 4, 'ringCtrl');
+  board.addRing(7, 4, 'ringCtrl');
+  board.addRing(6, 5, 'ringCtrlAlt');
+  board.addRing(7, 5, 'ringCtrlAlt');
+
+  board.setFen('rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1', ['e2', 'e3']);
 </script>
